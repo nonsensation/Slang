@@ -21,6 +21,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
     public enum TokenType
     {
         [TokenInfo( TokenKind.None )] None = 0,
+        [TokenInfo( TokenKind.None )] EndOfFile,
         [TokenInfo( TokenKind.Identifier )] Identifier,
 
         #region Keywords
@@ -155,14 +156,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
         #region Trivia
 
         [TokenInfo( TokenKind.Trivia | TokenKind.WhiteSpace )] WhiteSpace,
-        [TokenInfo( TokenKind.Trivia | TokenKind.WhiteSpace )] EndOfFile,
         [TokenInfo( TokenKind.Trivia | TokenKind.WhiteSpace )] NewLine,
         [TokenInfo( TokenKind.Trivia | TokenKind.WhiteSpace )] IndentationWhiteSpace,
         [TokenInfo( TokenKind.Trivia | TokenKind.WhiteSpace )] AlignmentWhiteSpace,
 
         [TokenInfo( TokenKind.Trivia | TokenKind.Comment )] Comment,
         [TokenInfo( TokenKind.Trivia | TokenKind.Comment | TokenKind.Documentation )] DocComment,
-
 
         #endregion
 
@@ -171,9 +170,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         [TokenInfo( TokenKind.Literal )] StringLiteral,
         [TokenInfo( TokenKind.Literal )] BooleanLiteral,
         [TokenInfo( TokenKind.Literal )] NumericLiteral,
-        [TokenInfo( TokenKind.Literal )] DecimalLiteral,
-        [TokenInfo( TokenKind.Literal )] IntegerLiteral,
-        [TokenInfo( TokenKind.Literal )] CharacterLiteral,
+        // [TokenInfo( TokenKind.Literal )] DecimalLiteral,
+        // [TokenInfo( TokenKind.Literal )] IntegerLiteral,
+        // [TokenInfo( TokenKind.Literal )] CharacterLiteral,
 
         #endregion
     }
@@ -200,6 +199,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         private static IReadOnlyDictionary<TokenType , string> TokenTypeNameCache
             => Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
+                .Where( tt => tt.IsTokenKind( TokenKind.Keyword | TokenKind.Punctuation ) )
                 .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Name ?? FixKeywordNames( tt ) );
 
         private static IReadOnlyDictionary<TokenType , TokenKind> TokenTypeKindCache
@@ -210,13 +210,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
             => tt.ToString().Replace( "Kw" , "" ).ToLower();
 
         public static TokenKind GetTokenKind( this TokenType tt )
-            => TokenTypeKindCache[ tt ];
+            => TokenTypeKindCache.TryGetValue( tt , out var kind ) ? kind : TokenKind.None;
 
         public static bool IsTokenKind( this TokenType tt , TokenKind tk )
             => tt.GetTokenKind().HasFlag( tk );
 
-        public static string GetName( this TokenType tt )
-            => TokenTypeNameCache[ tt ];
+        public static string? GetName( this TokenType tt )
+            => TokenTypeNameCache.TryGetValue( tt , out var name ) ? name : null;
 
         public static TokenInfoAttribute GetTokenInfoAttribute( this TokenType tt )
             => typeof( TokenType ).GetMember( tt.ToString() ).First()

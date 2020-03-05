@@ -12,7 +12,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
             this.Text = text;
         }
 
-        public override TokenType TkType { get; }
+        public TokenType TkType { get; }
+        public override SyntaxKind Kind { get; }
         public override TextSpan Span => new TextSpan( Position , Text?.Length ?? 0 );
 
         public int Position { get; }

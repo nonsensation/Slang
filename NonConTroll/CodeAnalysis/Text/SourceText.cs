@@ -35,8 +35,7 @@ namespace NonConTroll.CodeAnalysis.Text
                 }
                 else
                 {
-                    AddLine( result , sourceText , position , lineStart ,
-                             lineBreakWidth );
+                    AddLine( result , sourceText , position , lineStart , lineBreakWidth );
 
                     position += lineBreakWidth;
                     lineStart = position;

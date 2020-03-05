@@ -25,9 +25,10 @@ namespace NonConTroll.CodeAnalysis.Syntax
             {
                 token = lexer.Lex();
 
-                if( !token.TkType.IsTokenKind( TokenKind.Trivia ) &&
+                if( !token.TkType.IsTokenKind( TokenKind.WhiteSpace ) &&
+                    !token.TkType.IsTokenKind( TokenKind.Documentation ) &&
                     token.TkType != TokenType.None )
-                    this.Tokens.Add( token );
+                    tokens.Add( token );
             }
             while( token.TkType != TokenType.EndOfFile );
 
@@ -41,7 +42,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private void Advance( int count = 1 )
             => this.Position += count;
 
-        private SyntaxToken Peek( int offset = 1 )
+        private SyntaxToken Peek( int offset )
         {
             var idx = this.Position + offset;
 
@@ -84,9 +85,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             var members = ImmutableArray.CreateBuilder<MemberSyntax>();
 
-            while( Current.TkType != TokenType.EndOfFile )
+            while( this.Current.TkType != TokenType.EndOfFile )
             {
-                var startToken = Current;
+                var startToken = this.Current;
 
                 members.Add( this.ParseMember() );
 
@@ -97,7 +98,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 // We don't need to report an error, because we'll
                 // already tried to parse an expression statement
                 // and reported one.
-                if( Current == startToken )
+                if( this.Current == startToken )
                     this.NextToken();
             }
 
@@ -343,6 +344,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseAssignmentExpression()
         {
+            var p0 = this.Peek( 0 );
+            var p1 = this.Peek( 1 );
+
             if( this.Peek( 0 ).TkType == TokenType.Identifier &&
                 this.Peek( 1 ).TkType == TokenType.Eq )
             {
@@ -358,7 +362,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseBinaryExpression( int parentPrecedence = 0 )
         {
-            ExpressionSyntax left;
+            var left = default( ExpressionSyntax );
             var unaryOperatorPrecedence = this.Current.TkType.GetUnaryOperatorPrecedence();
 
             if( unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence )

@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.Text;
 
@@ -21,7 +23,7 @@ namespace NonConTroll.CodeAnalysis
         private void Advance( int count = 1 )
             => this.Position += count;
 
-        private char Peek( int offset = 1 )
+        private char Peek( int offset )
         {
             var index = this.Position + offset;
 
@@ -363,6 +365,8 @@ namespace NonConTroll.CodeAnalysis
                 default:
                 {
                     this.Diagnostics.ReportBadCharacter( this.Position , this.Current );
+                    this.Advance();
+
                     break;
                 }
             }
@@ -394,7 +398,7 @@ namespace NonConTroll.CodeAnalysis
                         done = true;
                         break;
                     case '"':
-                        if( this.Peek() == '"' )
+                        if( this.Peek( 1 ) == '"' )
                         {
                             this.Advance( 2 );
                         }
@@ -431,7 +435,7 @@ namespace NonConTroll.CodeAnalysis
             var length = this.Position - this.StartPos;
             var text = this.Text.ToString( this.StartPos , length );
 
-            this.TkType = TokenType.IntegerLiteral;
+            this.TkType = TokenType.NumericLiteral;
         }
 
         private void ScanIdentifierOrKeyword()

@@ -34,12 +34,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public static ImmutableArray<SyntaxToken> ParseTokens( string text )
         {
             var sourceText = SourceText.From( text );
+
             return ParseTokens( sourceText );
         }
 
         public static ImmutableArray<SyntaxToken> ParseTokens( string text , out ImmutableArray<Diagnostic> diagnostics )
         {
             var sourceText = SourceText.From( text );
+
             return ParseTokens( sourceText , out diagnostics );
         }
 
@@ -50,20 +52,24 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public static ImmutableArray<SyntaxToken> ParseTokens( SourceText text , out ImmutableArray<Diagnostic> diagnostics )
         {
-            IEnumerable<SyntaxToken> LexTokens( Lexer lexer )
+            static IEnumerable<SyntaxToken> LexTokens( Lexer lexer )
             {
                 while( true )
                 {
                     var token = lexer.Lex();
+
                     if( token.TkType == TokenType.EndOfFile )
                         break;
 
                     yield return token;
                 }
             }
-            var l = new Lexer(text);
-            var result = LexTokens(l).ToImmutableArray();
-            diagnostics = l.Diagnostics.ToImmutableArray();
+
+            var lexer = new Lexer( text );
+            var result = LexTokens( lexer ).ToImmutableArray();
+
+            diagnostics = lexer.Diagnostics.ToImmutableArray();
+
             return result;
         }
     }
