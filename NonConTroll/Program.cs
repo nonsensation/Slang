@@ -11,27 +11,3 @@ namespace NonConTroll
         }
     }
 }
-
-namespace NonConTroll.CodeAnalysis
-{
-    public class Lexer
-    {
-        private readonly string Text;
-
-        private int Position;
-        private TokenType TokenType;
-
-        public Lexer( string text )
-        {
-            this.Text = text;
-        }
-    }
-}
-
-namespace NonConTroll.CodeAnalysis.Syntax
-{
-    public enum TokenType
-    {
-
-    }
-}
