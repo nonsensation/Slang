@@ -19,15 +19,15 @@ namespace NonConTroll
         {
             while( true )
             {
-                var text = EditSubmission();
+                var text = this.EditSubmission();
 
                 if( string.IsNullOrEmpty( text ) )
                     return;
 
                 if( !text.Contains( Environment.NewLine ) && text.StartsWith( "#" ) )
-                    EvaluateMetaCommand( text );
+					this.EvaluateMetaCommand( text );
                 else
-                    EvaluateSubmission( text );
+					this.EvaluateSubmission( text );
 
                 this.SubmissionHistory.Add( text );
                 this.SubmissionHistoryIndex = 0;
@@ -38,7 +38,7 @@ namespace NonConTroll
         {
             this.Done = false;
             var document = new ObservableCollection<string>() { "" };
-            var view = new SubmissionView( RenderLine , document );
+            var view = new SubmissionView( this.RenderLine , document );
 
             while( !this.Done )
             {
@@ -343,7 +343,7 @@ namespace NonConTroll
                 this.LineRenderer       = lineRenderer;
                 this.SubmissionDocument = submissionDocument;
                 this.CursorTop          = Console.CursorTop;
-                this.SubmissionDocument.CollectionChanged  += SubmissionDocumentChanged;
+                this.SubmissionDocument.CollectionChanged  += this.SubmissionDocumentChanged;
 
                 this.Render();
             }
@@ -371,7 +371,7 @@ namespace NonConTroll
 
                     Console.ResetColor();
 
-                    LineRenderer( line );
+					this.LineRenderer( line );
 
                     Console.WriteLine( new string( ' ' , Console.WindowWidth - line.Length ) );
 
@@ -410,7 +410,7 @@ namespace NonConTroll
                     if( this.currentLine != value )
                     {
                         this.currentLine = value;
-                        this.currentCharacter = Math.Min( SubmissionDocument[ this.currentLine ].Length , this.currentCharacter );
+                        this.currentCharacter = Math.Min( this.SubmissionDocument[ this.currentLine ].Length , this.currentCharacter );
 
                         this.UpdateCursorPosition();
                     }

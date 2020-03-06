@@ -24,7 +24,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public IEnumerable<SyntaxNode> GetChildren()
         {
-            var properties = GetType().GetProperties( BindingFlags.Public | BindingFlags.Instance );
+            var properties = this.GetType().GetProperties( BindingFlags.Public | BindingFlags.Instance );
 
             foreach( var property in properties )
             {
@@ -35,16 +35,16 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     if( child != null )
                         yield return child;
                 }
-                // else if( typeof( SeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
-                // {
-                //     var separatedSyntaxList = (SeparatedSyntaxList?)property.GetValue( this );
-                //
-                //     if( separatedSyntaxList != null )
-                //     {
-                //         foreach( var child in separatedSyntaxList.GetWithSeparators() )
-                //             yield return child;
-                //     }
-                // }
+                else if( typeof( SeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
+                {
+                    var separatedSyntaxList = (SeparatedSyntaxList?)property.GetValue( this );
+
+                    if( separatedSyntaxList != null )
+                    {
+                        foreach( var child in separatedSyntaxList.GetWithSeparators() )
+                            yield return child;
+                    }
+                }
                 else if( typeof( IEnumerable<SyntaxNode> ).IsAssignableFrom( property.PropertyType ) )
                 {
                     var children = (IEnumerable<SyntaxNode>?)property.GetValue( this );
@@ -67,7 +67,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 return token;
 
             // A syntax node should always contain at least 1 token.
-            return GetChildren().Last().GetLastToken();
+            return this.GetChildren().Last().GetLastToken();
         }
 
         public void WriteTo( TextWriter writer )
@@ -109,7 +109,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             using var writer = new StringWriter();
 
-            WriteTo( writer );
+			this.WriteTo( writer );
 
             return writer.ToString();
         }

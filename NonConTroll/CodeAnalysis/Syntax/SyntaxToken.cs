@@ -14,12 +14,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public TokenType TkType { get; }
         public override SyntaxKind Kind { get; }
-        public override TextSpan Span => new TextSpan( Position , Text?.Length ?? 0 );
+        public override TextSpan Span => new TextSpan( this.Position , this.Text?.Length ?? 0 );
 
         public int Position { get; }
         public string? Text { get; }
 
         /// <summary>A token is missing if it was inserted by the parser and doesn't appear in source.</summary>
-        public bool IsMissing => Text == null;
+        public bool IsMissing => this.Text == null;
     }
 }

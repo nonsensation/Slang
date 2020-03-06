@@ -22,6 +22,6 @@ namespace NonConTroll.CodeAnalysis.Text
         public TextSpan SpanIncludingLineBreak
             => new TextSpan( this.Start , this.LengthIncludingLineBreak );
 
-        public override string ToString() => Text.ToString( this.Span );
+        public override string ToString() => this.Text.ToString( this.Span );
     }
 }

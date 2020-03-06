@@ -12,5 +12,7 @@ namespace NonConTroll.CodeAnalysis
 
         public TextSpan Span { get; }
         public string Msg { get; }
+
+        public override string ToString() => this.Msg;
     }
 }

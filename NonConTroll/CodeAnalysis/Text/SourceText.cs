@@ -104,12 +104,12 @@ namespace NonConTroll.CodeAnalysis.Text
             return lower - 1;
         }
 
-        public override string ToString() => Text;
+        public override string ToString() => this.Text;
 
         public string ToString( int start , int length )
-            => Text.Substring( start , length );
+            => this.Text.Substring( start , length );
 
         public string ToString( TextSpan span )
-            => ToString( span.Start , span.Length );
+            => this.ToString( span.Start , span.Length );
     }
 }

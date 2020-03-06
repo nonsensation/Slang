@@ -21,7 +21,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
         {
             using var writer = new StringWriter();
 
-            WriteTo( writer );
+			this.WriteTo( writer );
 
             return writer.ToString();
         }

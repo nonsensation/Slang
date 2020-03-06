@@ -37,7 +37,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
             writer.WriteIdentifier( symbol.Name );
             writer.WritePunctuation( TokenType.OpenParen );
 
-            for( int i = 0 ; i < symbol.Parameters.Length ; i++ )
+            for( var i = 0 ; i < symbol.Parameters.Length ; i++ )
             {
                 if( i > 0 )
                 {

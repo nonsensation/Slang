@@ -99,7 +99,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 // already tried to parse an expression statement
                 // and reported one.
                 if( this.Current == startToken )
-                    this.NextToken();
+                    _ = this.NextToken();
             }
 
             return members.ToImmutable();
@@ -123,9 +123,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var type = this.ParseOptionalTypeClause();
             var body = this.ParseBlockStatement();
 
-            return new FunctionDeclarationSyntax(
-                functionKeyword , identifier , openParenToken ,
-                parameters , closeParenToken , type , body );
+            return new FunctionDeclarationSyntax( functionKeyword , identifier , openParenToken , parameters , closeParenToken , type , body );
         }
 
 
@@ -135,14 +133,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var parseNextParameter = true;
 
             while( parseNextParameter &&
-                   Current.TkType != TokenType.CloseParen &&
-                   Current.TkType != TokenType.EndOfFile )
+				   this.Current.TkType != TokenType.CloseParen &&
+				   this.Current.TkType != TokenType.EndOfFile )
             {
                 var parameter = this.ParseParameter();
 
                 nodesAndSeparators.Add( parameter );
 
-                if( Current.TkType == TokenType.Comma )
+                if( this.Current.TkType == TokenType.Comma )
                     nodesAndSeparators.Add( this.MatchToken( TokenType.Comma ) );
                 else
                     parseNextParameter = false;
@@ -214,7 +212,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 // already tried to parse an expression statement
                 // and reported one.
                 if( this.Current == startToken )
-                    this.NextToken();
+                    _ = this.NextToken();
             }
 
             var closeBraceToken = this.MatchToken( TokenType.CloseBrace );
@@ -322,7 +320,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             var keyword = this.MatchToken( TokenType.Return );
             var keywordLine = this.Text.GetLineIndex( keyword.Span.Start );
-            var currentLine = this.Text.GetLineIndex( Current.Span.Start );
+            var currentLine = this.Text.GetLineIndex( this.Current.Span.Start );
             var isEof = this.Current.TkType == TokenType.EndOfFile;
             var sameLine = !isEof && keywordLine == currentLine;
             var expression = sameLine ? this.ParseExpression() : null;
@@ -339,7 +337,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseExpression()
         {
-            return ParseAssignmentExpression();
+            return this.ParseAssignmentExpression();
         }
 
         private ExpressionSyntax ParseAssignmentExpression()
@@ -475,7 +473,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 nodesAndSeparators.Add( this.ParseExpression() );
 
                 if( this.Current.TkType == TokenType.Comma )
-                    nodesAndSeparators.Add( MatchToken( TokenType.Comma ) );
+                    nodesAndSeparators.Add( this.MatchToken( TokenType.Comma ) );
                 else
                     parseNextArgument = false;
             }

@@ -55,50 +55,59 @@ namespace NonConTroll.CodeAnalysis
                     break;
                 }
 
-                #region Single char punctuators
+                #region Single character punctuators
                 case '(':
                 {
                     this.TkType = TokenType.OpenParen;
+                    this.Advance();
                     break;
                 }
                 case ')':
                 {
                     this.TkType = TokenType.CloseParen;
+                    this.Advance();
                     break;
                 }
                 case '{':
                 {
-                    this.TkType = TokenType.OpenBracket;
+                    this.TkType = TokenType.OpenBrace;
+                    this.Advance();
                     break;
                 }
                 case '}':
                 {
-                    this.TkType = TokenType.CloseBracket;
+                    this.TkType = TokenType.CloseBrace;
+                    this.Advance();
                     break;
                 }
                 case '[':
                 {
                     this.TkType = TokenType.OpenBracket;
+                    this.Advance();
                     break;
                 }
                 case ']':
                 {
                     this.TkType = TokenType.CloseBracket;
+                    this.Advance();
                     break;
                 }
                 case ',':
                 {
                     this.TkType = TokenType.Comma;
+                    this.Advance();
                     break;
                 }
                 case ':':
                 {
                     this.TkType = TokenType.Colon;
+                    this.Advance();
                     break;
                 }
                 case ';':
                 {
                     this.TkType = TokenType.Semicolon;
+                    this.Advance();
                     break;
                 }
                 #endregion
@@ -389,7 +398,7 @@ namespace NonConTroll.CodeAnalysis
 
             while( !done )
             {
-                switch( Current )
+                switch( this.Current )
                 {
                     case '\0':
                     case '\r':
@@ -419,7 +428,7 @@ namespace NonConTroll.CodeAnalysis
 
         private void ScanWhiteSpace()
         {
-            while( char.IsWhiteSpace( Current ) )
+            while( char.IsWhiteSpace( this.Current ) )
                 this.Advance( 1 );
 
 
@@ -429,7 +438,7 @@ namespace NonConTroll.CodeAnalysis
 
         private void ScanNumber()
         {
-            while( char.IsDigit( Current ) )
+            while( char.IsDigit( this.Current ) )
                 this.Advance();
 
             var length = this.Position - this.StartPos;
@@ -440,7 +449,7 @@ namespace NonConTroll.CodeAnalysis
 
         private void ScanIdentifierOrKeyword()
         {
-            while( char.IsLetter( Current ) )
+            while( char.IsLetter( this.Current ) )
                 this.Advance();
 
             var length = this.Position - this.StartPos;

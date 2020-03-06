@@ -22,18 +22,21 @@ namespace NonConTroll
             foreach( var token in tokens )
             {
                 var isKeyword = token.TkType.IsTokenKind( TokenKind.Keyword );
-                var isIdentifier = token.TkType == TokenType.Identifier;
+                var isIdentifier = token.TkType.IsTokenKind( TokenKind.Identifier );
+                var isPunctuator = token.TkType.IsTokenKind( TokenKind.Punctuation );
                 var isNumber = token.TkType == TokenType.NumericLiteral;
                 var isString = token.TkType == TokenType.StringLiteral;
 
                 if( isKeyword )
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                else if( isPunctuator )
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
                 else if( isIdentifier )
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
                 else if( isNumber )
-                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
                 else if( isString )
-                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
                 else
                     Console.ForegroundColor = ConsoleColor.DarkGray;
 

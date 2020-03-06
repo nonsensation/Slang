@@ -4,7 +4,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         public LiteralExpressionSyntax( SyntaxToken literalToken )
         {
-            LiteralToken = literalToken;
+            this.LiteralToken = literalToken;
         }
 
         public override SyntaxKind Kind => SyntaxKind.LiteralExpression;

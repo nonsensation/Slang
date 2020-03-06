@@ -21,6 +21,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
     public enum TokenType
     {
         [TokenInfo( TokenKind.None )] None = 0,
+        [TokenInfo( TokenKind.None )] BadToken,
         [TokenInfo( TokenKind.None )] EndOfFile,
         [TokenInfo( TokenKind.Identifier )] Identifier,
 
@@ -197,17 +198,32 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public static class TokenExtensions
     {
-        private static IReadOnlyDictionary<TokenType , string> TokenTypeNameCache
-            => Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
-                .Where( tt => tt.IsTokenKind( TokenKind.Keyword | TokenKind.Punctuation ) )
-                .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Name ?? FixKeywordNames( tt ) );
+        private static IReadOnlyDictionary<TokenType , TokenKind>? TokenTypeKindCacheInstance;
+        private static IReadOnlyDictionary<TokenType , string>? TokenTypeNameCacheInstance;
 
-        private static IReadOnlyDictionary<TokenType , TokenKind> TokenTypeKindCache
-            => Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
-                .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Kind ?? TokenKind.None );
+        private static IReadOnlyDictionary<TokenType , TokenKind> TokenTypeKindCache {
+            get {
+                if( TokenTypeKindCacheInstance == null )
+                    TokenTypeKindCacheInstance = Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
+                        .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Kind ?? TokenKind.None );
+
+                return TokenTypeKindCacheInstance;
+            }
+        }
+
+        private static IReadOnlyDictionary<TokenType , string> TokenTypeNameCache {
+            get {
+                if( TokenTypeNameCacheInstance == null )
+                    TokenTypeNameCacheInstance = Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
+                        .Where( tt => tt.IsTokenKind( TokenKind.Keyword | TokenKind.Punctuation ) )
+                        .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Name ?? FixKeywordNames( tt ) );
+
+                return TokenTypeNameCacheInstance;
+            }
+        }
 
         private static string FixKeywordNames( TokenType tt )
-            => tt.ToString().Replace( "Kw" , "" ).ToLower();
+            => tt.ToString().ToLower();
 
         public static TokenKind GetTokenKind( this TokenType tt )
             => TokenTypeKindCache.TryGetValue( tt , out var kind ) ? kind : TokenKind.None;
@@ -226,7 +242,10 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public static class SyntaxInfo
     {
-        private static IReadOnlyDictionary<string , TokenType> TokenTypeKeywordCache
+        private static readonly IReadOnlyDictionary<string , TokenType> TokenTypeKeywordCache
+            = Init_TokenTypeKeywordCache();
+
+        private static IReadOnlyDictionary<string , TokenType> Init_TokenTypeKeywordCache()
             => Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
                 .Where( tt => tt.GetTokenInfoAttribute()?.Kind == TokenKind.Keyword )
                 .ToDictionary( tt => tt.ToString().ToLower() , tt => tt );
@@ -277,26 +296,5 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     return 0;
             }
         }
-
-        public static IEnumerable<TokenType> GetUnaryOperatorKinds()
-        {
-            var kinds = (TokenType[]) Enum.GetValues(typeof(TokenType));
-            foreach( var kind in kinds )
-            {
-                if( GetUnaryOperatorPrecedence( kind ) > 0 )
-                    yield return kind;
-            }
-        }
-
-        public static IEnumerable<TokenType> GetBinaryOperatorKinds()
-        {
-            var kinds = (TokenType[]) Enum.GetValues(typeof(TokenType));
-            foreach( var kind in kinds )
-            {
-                if( GetBinaryOperatorPrecedence( kind ) > 0 )
-                    yield return kind;
-            }
-        }
-
     }
 }

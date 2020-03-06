@@ -4,9 +4,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         public CallExpressionSyntax( SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ExpressionSyntax> arguments , SyntaxToken closeParenthesisToken )
         {
-            this.Identifier            = identifier           ;
-            this.OpenParenthesisToken  = openParenthesisToken ;
-            this.Arguments             = arguments            ;
+            this.Identifier            = identifier;
+            this.OpenParenthesisToken  = openParenthesisToken;
+            this.Arguments             = arguments;
             this.CloseParenthesisToken = closeParenthesisToken;
         }
 

@@ -4,7 +4,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         public NameExpressionSyntax( SyntaxToken identifierToken )
         {
-            IdentifierToken = identifierToken;
+			this.IdentifierToken = identifierToken;
         }
 
         public override SyntaxKind Kind => SyntaxKind.NameExpression;
