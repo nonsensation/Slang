@@ -8,12 +8,11 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public override string ToString()
         {
-            using( var writer = new StringWriter() )
-            {
-                this.WriteTo( writer );
+            using var writer = new StringWriter();
 
-                return writer.ToString();
-            }
+            this.WriteTo( writer );
+
+            return writer.ToString();
         }
     }
 

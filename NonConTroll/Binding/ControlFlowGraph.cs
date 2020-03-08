@@ -49,13 +49,12 @@ namespace NonConTroll.CodeAnalysis.Binding
                 if( this.IsEnd )
                     return "<End>";
 
-                using( var writer = new StringWriter() )
-                {
-                    foreach( var statement in this.Statements )
-                        statement.WriteTo( writer );
+                using var writer = new StringWriter();
 
-                    return writer.ToString();
-                }
+                foreach( var statement in this.Statements )
+                    statement.WriteTo( writer );
+
+                return writer.ToString();
             }
         }
 
@@ -83,8 +82,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public class BasicBlockBuilder
         {
-            private List<BoundStatement> _statements = new List<BoundStatement>();
-            private List<BasicBlock> _blocks = new List<BasicBlock>();
+            private readonly List<BoundStatement> Statements = new List<BoundStatement>();
+            private readonly List<BasicBlock> Blocks = new List<BasicBlock>();
 
             public List<BasicBlock> Build( BoundBlockStatement block )
             {
@@ -94,17 +93,17 @@ namespace NonConTroll.CodeAnalysis.Binding
                     {
                         case BoundNodeKind.LabelStatement:
                             this.StartBlock();
-                            this._statements.Add( statement );
+                            this.Statements.Add( statement );
                             break;
                         case BoundNodeKind.GotoStatement:
                         case BoundNodeKind.ConditionalGotoStatement:
                         case BoundNodeKind.ReturnStatement:
-                            this._statements.Add( statement );
+                            this.Statements.Add( statement );
                             this.StartBlock();
                             break;
                         case BoundNodeKind.VariableDeclaration:
                         case BoundNodeKind.ExpressionStatement:
-                            this._statements.Add( statement );
+                            this.Statements.Add( statement );
                             break;
                         default:
                             throw new Exception( $"Unexpected statement: {statement.Kind}" );
@@ -113,7 +112,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                 this.EndBlock();
 
-                return this._blocks.ToList();
+                return this.Blocks.ToList();
             }
 
             private void StartBlock()
@@ -123,46 +122,48 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             private void EndBlock()
             {
-                if( this._statements.Count > 0 )
+                if( this.Statements.Count > 0 )
                 {
                     var block = new BasicBlock();
-                    block.Statements.AddRange( this._statements );
-                    this._blocks.Add( block );
-                    this._statements.Clear();
+
+                    block.Statements.AddRange( this.Statements );
+
+                    this.Blocks.Add( block );
+                    this.Statements.Clear();
                 }
             }
         }
 
         public class GraphBuilder
         {
-            private Dictionary<BoundStatement, BasicBlock> _blockFromStatement = new Dictionary<BoundStatement, BasicBlock>();
-            private Dictionary<BoundLabel, BasicBlock> _blockFromLabel = new Dictionary<BoundLabel, BasicBlock>();
-            private List<BasicBlockBranch> _branches = new List<BasicBlockBranch>();
-            private BasicBlock _start = new BasicBlock(isStart: true);
-            private BasicBlock _end = new BasicBlock(isStart: false);
+            private readonly Dictionary<BoundStatement, BasicBlock> BlockFromStatement = new Dictionary<BoundStatement, BasicBlock>();
+            private readonly Dictionary<BoundLabel, BasicBlock> BlockFromLabel = new Dictionary<BoundLabel, BasicBlock>();
+            private readonly List<BasicBlockBranch> Branches = new List<BasicBlockBranch>();
+            private readonly BasicBlock Start = new BasicBlock(isStart: true);
+            private readonly BasicBlock End = new BasicBlock(isStart: false);
 
             public ControlFlowGraph Build( List<BasicBlock> blocks )
             {
                 if( !blocks.Any() )
-                    this.Connect( this._start , this._end );
+                    this.Connect( this.Start , this.End );
                 else
-                    this.Connect( this._start , blocks.First() );
+                    this.Connect( this.Start , blocks.First() );
 
                 foreach( var block in blocks )
                 {
                     foreach( var statement in block.Statements )
                     {
-                        this._blockFromStatement.Add( statement , block );
+                        this.BlockFromStatement.Add( statement , block );
 
                         if( statement is BoundLabelStatement labelStatement )
-                            this._blockFromLabel.Add( labelStatement.Label , block );
+                            this.BlockFromLabel.Add( labelStatement.Label , block );
                     }
                 }
 
                 for( var i = 0 ; i < blocks.Count ; i++ )
                 {
                     var current = blocks[i];
-                    var next = i == blocks.Count - 1 ? this._end : blocks[i + 1];
+                    var next = i == blocks.Count - 1 ? this.End : blocks[i + 1];
 
                     foreach( var statement in current.Statements )
                     {
@@ -171,31 +172,43 @@ namespace NonConTroll.CodeAnalysis.Binding
                         switch( statement.Kind )
                         {
                             case BoundNodeKind.GotoStatement:
+                            {
                                 var gs = (BoundGotoStatement)statement;
-                                var toBlock = this._blockFromLabel[gs.Label];
+                                var toBlock = this.BlockFromLabel[gs.Label];
+
                                 this.Connect( current , toBlock );
-                                break;
+                            }
+                            break;
                             case BoundNodeKind.ConditionalGotoStatement:
+                            {
                                 var cgs = (BoundConditionalGotoStatement)statement;
-                                var thenBlock = this._blockFromLabel[cgs.Label];
+                                var thenBlock = this.BlockFromLabel[cgs.Label];
                                 var elseBlock = next;
                                 var negatedCondition = this.Negate(cgs.Condition); ;
                                 var thenCondition = cgs.JumpIfTrue ? cgs.Condition : negatedCondition;
                                 var elseCondition = cgs.JumpIfTrue ? negatedCondition : cgs.Condition;
+
                                 this.Connect( current , thenBlock , thenCondition );
                                 this.Connect( current , elseBlock , elseCondition );
-                                break;
+                            }
+                            break;
                             case BoundNodeKind.ReturnStatement:
-                                this.Connect( current , this._end );
-                                break;
+                            {
+                                this.Connect( current , this.End );
+                            }
+                            break;
                             case BoundNodeKind.VariableDeclaration:
                             case BoundNodeKind.LabelStatement:
                             case BoundNodeKind.ExpressionStatement:
+                            {
                                 if( isLastStatementInBlock )
                                     this.Connect( current , next );
-                                break;
+                            }
+                            break;
                             default:
+                            {
                                 throw new Exception( $"Unexpected statement: {statement.Kind}" );
+                            }
                         }
                     }
                 }
@@ -212,10 +225,10 @@ namespace NonConTroll.CodeAnalysis.Binding
                     }
                 }
 
-                blocks.Insert( 0 , this._start );
-                blocks.Add( this._end );
+                blocks.Insert( 0 , this.Start );
+                blocks.Add( this.End );
 
-                return new ControlFlowGraph( this._start , this._end , blocks , this._branches );
+                return new ControlFlowGraph( this.Start , this.End , blocks , this.Branches );
             }
 
             private void Connect( BasicBlock from , BasicBlock to , BoundExpression? condition = null )
@@ -234,7 +247,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                 from.Outgoing.Add( branch );
                 to.Incoming.Add( branch );
-                this._branches.Add( branch );
+                this.Branches.Add( branch );
             }
 
             private void RemoveBlock( List<BasicBlock> blocks , BasicBlock block )
@@ -242,13 +255,13 @@ namespace NonConTroll.CodeAnalysis.Binding
                 foreach( var branch in block.Incoming )
                 {
                     _ = branch.From.Outgoing.Remove( branch );
-                    _ = this._branches.Remove( branch );
+                    _ = this.Branches.Remove( branch );
                 }
 
                 foreach( var branch in block.Outgoing )
                 {
                     _ = branch.To.Incoming.Remove( branch );
-                    _ = this._branches.Remove( branch );
+                    _ = this.Branches.Remove( branch );
                 }
 
                 _ = blocks.Remove( block );
@@ -271,7 +284,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public void WriteTo( TextWriter writer )
         {
-            string Quote( string text )
+            static string Quote( string text )
             {
                 return "\"" + text.Replace( "\"" , "\\\"" ) + "\"";
             }
@@ -282,14 +295,14 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             for( var i = 0 ; i < this.Blocks.Count ; i++ )
             {
-                var id = $"N{i}";
-                blockIds.Add( this.Blocks[ i ] , id );
+                blockIds.Add( this.Blocks[ i ] , $"N{i}" );
             }
 
             foreach( var block in this.Blocks )
             {
                 var id = blockIds[block];
-                var label = Quote(block.ToString().Replace(Environment.NewLine, "\\l"));
+                var label = Quote( block.ToString().Replace( Environment.NewLine , "\\l" ) );
+
                 writer.WriteLine( $"    {id} [label = {label} shape = box]" );
             }
 
@@ -297,7 +310,8 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 var fromId = blockIds[branch.From];
                 var toId = blockIds[branch.To];
-                var label = Quote(branch.ToString());
+                var label = Quote( branch.ToString() );
+
                 writer.WriteLine( $"    {fromId} -> {toId} [label = {label}]" );
             }
 
@@ -306,20 +320,17 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public static ControlFlowGraph Create( BoundBlockStatement body )
         {
-            var basicBlockBuilder = new BasicBlockBuilder();
-            var blocks = basicBlockBuilder.Build(body);
-
-            var graphBuilder = new GraphBuilder();
-            return graphBuilder.Build( blocks );
+            return new GraphBuilder().Build( new BasicBlockBuilder().Build( body ) );
         }
 
         public static bool AllPathsReturn( BoundBlockStatement body )
         {
-            var graph = Create(body);
+            var graph = Create( body );
 
             foreach( var branch in graph.End.Incoming )
             {
                 var lastStatement = branch.From.Statements.Last();
+
                 if( lastStatement.Kind != BoundNodeKind.ReturnStatement )
                     return false;
             }
