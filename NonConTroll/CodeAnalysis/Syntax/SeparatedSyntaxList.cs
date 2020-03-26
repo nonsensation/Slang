@@ -43,8 +43,6 @@ namespace NonConTroll.CodeAnalysis.Syntax
         }
 
         IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+            => this.GetEnumerator();
     }
 }

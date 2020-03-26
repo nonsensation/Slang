@@ -89,15 +89,10 @@ namespace NonConTroll.CodeAnalysis.Syntax
         [TokenInfo( TokenKind.Keyword )] Continue,
         [TokenInfo( TokenKind.Keyword )] Do,
         [TokenInfo( TokenKind.Keyword )] To,
-
-        #endregion
-
-        #region Keyword Literals
-
-        [TokenInfo( TokenKind.Keyword | TokenKind.Literal )] True,
-        [TokenInfo( TokenKind.Keyword | TokenKind.Literal )] False,
-        [TokenInfo( TokenKind.Keyword | TokenKind.Literal )] Null,
-        [TokenInfo( TokenKind.Keyword | TokenKind.Literal )] Undefined,
+        [TokenInfo( TokenKind.Keyword )] True,
+        [TokenInfo( TokenKind.Keyword )] False,
+        [TokenInfo( TokenKind.Keyword )] Null,
+        [TokenInfo( TokenKind.Keyword )] Undefined,
 
         #endregion
 
@@ -223,7 +218,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         }
 
         private static string FixKeywordNames( TokenType tt )
-            => tt.ToString().ToLower();
+            => tt.ToString().ToLower()
+                .Replace( "keyword" , string.Empty )
+                .Replace( "kw" , string.Empty );
 
         public static TokenKind GetTokenKind( this TokenType tt )
             => TokenTypeKindCache.TryGetValue( tt , out var kind ) ? kind : TokenKind.None;

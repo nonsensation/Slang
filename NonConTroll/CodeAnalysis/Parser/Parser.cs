@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Text;
 
@@ -116,12 +118,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private MemberSyntax ParseFunctionDeclaration()
         {
             var functionKeyword = this.MatchToken( TokenType.Func );
-            var identifier = this.MatchToken( TokenType.Identifier );
-            var openParenToken = this.MatchToken( TokenType.OpenParen );
-            var parameters = this.ParseParameterList();
+            var identifier      = this.MatchToken( TokenType.Identifier );
+            var openParenToken  = this.MatchToken( TokenType.OpenParen );
+            var parameters      = this.ParseParameterList();
             var closeParenToken = this.MatchToken( TokenType.CloseParen );
-            var type = this.ParseOptionalTypeClause();
-            var body = this.ParseBlockStatement();
+            var type            = this.ParseOptionalTypeClause();
+            var body            = this.ParseBlockStatement();
 
             return new FunctionDeclarationSyntax( functionKeyword , identifier , openParenToken , parameters , closeParenToken , type , body );
         }
@@ -133,8 +135,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var parseNextParameter = true;
 
             while( parseNextParameter &&
-				   this.Current.TkType != TokenType.CloseParen &&
-				   this.Current.TkType != TokenType.EndOfFile )
+                   this.Current.TkType != TokenType.CloseParen &&
+                   this.Current.TkType != TokenType.EndOfFile )
             {
                 var parameter = this.ParseParameter();
 
@@ -168,27 +170,17 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             switch( this.Current.TkType )
             {
-                case TokenType.OpenBrace:
-                    return this.ParseBlockStatement();
-                case TokenType.Let:
-                case TokenType.Var:
-                    return this.ParseVariableDeclaration();
-                case TokenType.If:
-                    return this.ParseIfStatement();
-                case TokenType.While:
-                    return this.ParseWhileStatement();
-                case TokenType.Do:
-                    return this.ParseDoWhileStatement();
-                case TokenType.For:
-                    return this.ParseForStatement();
-                case TokenType.Break:
-                    return this.ParseBreakStatement();
-                case TokenType.Continue:
-                    return this.ParseContinueStatement();
-                case TokenType.Return:
-                    return this.ParseReturnStatement();
-                default:
-                    return this.ParseExpressionStatement();
+                case TokenType.OpenBrace: return this.ParseBlockStatement();
+                case TokenType.Let:       return this.ParseVariableDeclaration( TokenType.Let );
+                case TokenType.Var:       return this.ParseVariableDeclaration( TokenType.Var );
+                case TokenType.If:        return this.ParseIfStatement();
+                case TokenType.While:     return this.ParseWhileStatement();
+                case TokenType.Do:        return this.ParseDoWhileStatement();
+                case TokenType.For:       return this.ParseForStatement();
+                case TokenType.Break:     return this.ParseBreakStatement();
+                case TokenType.Continue:  return this.ParseContinueStatement();
+                case TokenType.Return:    return this.ParseReturnStatement();
+                default:                  return this.ParseExpressionStatement();
             }
         }
 
@@ -220,14 +212,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new BlockStatementSyntax( openBraceToken , statements.ToImmutable() , closeBraceToken );
         }
 
-        private StatementSyntax ParseVariableDeclaration()
+        private StatementSyntax ParseVariableDeclaration( TokenType expectedTokenType )
         {
-            var expected = this.Current.TkType == TokenType.Let
-                ? TokenType.Let : TokenType.Var;
-            var keyword = this.MatchToken( expected );
-            var identifier = this.MatchToken( TokenType.Identifier );
-            var typeClause = this.ParseOptionalTypeClause();
-            var equals = this.MatchToken( TokenType.Eq );
+            var keyword     = this.MatchToken( expectedTokenType );
+            var identifier  = this.MatchToken( TokenType.Identifier );
+            var typeClause  = this.ParseOptionalTypeClause();
+            var equals      = this.MatchToken( TokenType.Eq );
             var initializer = this.ParseExpression();
 
             return new VariableDeclarationSyntax( keyword , identifier , typeClause , equals , initializer );
@@ -241,20 +231,79 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return this.ParseTypeClause();
         }
 
+        private TypeNameSyntax /* TypeSyntax */ ParseType()
+        {
+            if( this.Current.TkType == TokenType.OpenParen )
+            {
+                //return this.ParseTupleType();
+            }
+
+            var typeIdentifier     = default( SyntaxToken? );
+            var typeSpecifier      = ImmutableArray.CreateBuilder<TypeSpecifierSyntax>();
+            var arrayTypeSpecifier = ImmutableArray.CreateBuilder<ArrayTypeSpecifierSyntax>();
+            var done = false;
+
+            while( !done )
+            {
+                switch( this.Current.TkType )
+                {
+                    case TokenType.Ref:
+                    case TokenType.Ptr:
+                    //case TokenType.Qm:
+                    case TokenType.Null:
+                        typeSpecifier.Add( this.ParseTypeSpecifier() );
+                        break;
+                    case TokenType.OpenBracket:
+                        arrayTypeSpecifier.Add( this.ParseArrayTypeSpecifier() );
+                        break;
+                    default:
+                        typeIdentifier = this.MatchToken( TokenType.Identifier );
+                        done = true;
+                        break;
+                }
+            }
+
+            return new TypeNameSyntax( typeIdentifier , typeSpecifier.ToImmutable() , arrayTypeSpecifier.ToImmutable() );
+        }
+
+        private TypeSpecifierSyntax ParseTypeSpecifier()
+        {
+            switch( this.Current.TkType )
+            {
+                case TokenType.Ref:  return new TypeSpecifierSyntax( this.MatchToken( TokenType.Ref )   , TypeSpecifierKind.Reference );
+                case TokenType.Ptr:  return new TypeSpecifierSyntax( this.MatchToken( TokenType.Ptr )   , TypeSpecifierKind.Pointer   );
+                case TokenType.Null: return new TypeSpecifierSyntax( this.MatchToken( TokenType.Null )  , TypeSpecifierKind.Nullable  );
+                //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
+                default:
+                    break;
+            }
+
+            throw new Exception( "" );
+        }
+
+        private ArrayTypeSpecifierSyntax ParseArrayTypeSpecifier()
+        {
+            var openBracketToken  = this.MatchToken( TokenType.OpenBracket );
+            var rankExpression    = this.ParseExpression();
+            var closeBracketToken = this.MatchToken( TokenType.CloseBracket );
+
+            return new ArrayTypeSpecifierSyntax( openBracketToken , rankExpression , closeBracketToken );
+        }
+
         private TypeClauseSyntax ParseTypeClause()
         {
             var colonToken = this.MatchToken( TokenType.Colon );
-            var identifier = this.MatchToken( TokenType.Identifier );
+            var type       = this.ParseType();
 
-            return new TypeClauseSyntax( colonToken , identifier );
+            return new TypeClauseSyntax( colonToken , type );
         }
 
         private StatementSyntax ParseIfStatement()
         {
-            var keyword = this.MatchToken( TokenType.If );
-            var condition = this.ParseExpression();
-            var statement = this.ParseStatement();
-            var elseClause = this.ParseElseClause();
+            var keyword     = this.MatchToken( TokenType.If );
+            var condition   = this.ParseExpression();
+            var statement   = this.ParseStatement();
+            var elseClause  = this.ParseElseClause();
 
             return new IfStatementSyntax( keyword , condition , statement , elseClause );
         }
@@ -264,7 +313,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             if( this.Current.TkType != TokenType.Else )
                 return null;
 
-            var keyword = this.NextToken();
+            var keyword   = this.NextToken();
             var statement = this.ParseStatement();
 
             return new ElseClauseSyntax( keyword , statement );
@@ -272,32 +321,32 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private StatementSyntax ParseWhileStatement()
         {
-            var keyword = this.MatchToken( TokenType.While );
-            var condition = this.ParseExpression();
-            var body = this.ParseStatement();
+            var keyword     = this.MatchToken( TokenType.While );
+            var condition   = this.ParseExpression();
+            var body        = this.ParseStatement();
 
             return new WhileStatementSyntax( keyword , condition , body );
         }
 
         private StatementSyntax ParseDoWhileStatement()
         {
-            var doKeyword = this.MatchToken( TokenType.Do );
-            var body = this.ParseStatement();
+            var doKeyword    = this.MatchToken( TokenType.Do );
+            var body         = this.ParseStatement();
             var whileKeyword = this.MatchToken( TokenType.While );
-            var condition = this.ParseExpression();
+            var condition    = this.ParseExpression();
 
             return new DoWhileStatementSyntax( doKeyword , body , whileKeyword , condition );
         }
 
         private StatementSyntax ParseForStatement()
         {
-            var keyword = this.MatchToken( TokenType.For );
-            var identifier = this.MatchToken( TokenType.Identifier );
+            var keyword     = this.MatchToken( TokenType.For );
+            var identifier  = this.MatchToken( TokenType.Identifier );
             var equalsToken = this.MatchToken( TokenType.Eq );
-            var lowerBound = this.ParseExpression();
-            var toKeyword = this.MatchToken( TokenType.To );
-            var upperBound = this.ParseExpression();
-            var body = this.ParseStatement();
+            var lowerBound  = this.ParseExpression();
+            var toKeyword   = this.MatchToken( TokenType.To );
+            var upperBound  = this.ParseExpression();
+            var body        = this.ParseStatement();
 
             return new ForStatementSyntax( keyword , identifier , equalsToken , lowerBound , toKeyword , upperBound , body );
         }
@@ -318,12 +367,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private StatementSyntax ParseReturnStatement()
         {
-            var keyword = this.MatchToken( TokenType.Return );
+            var keyword     = this.MatchToken( TokenType.Return );
             var keywordLine = this.Text.GetLineIndex( keyword.Span.Start );
             var currentLine = this.Text.GetLineIndex( this.Current.Span.Start );
-            var isEof = this.Current.TkType == TokenType.EndOfFile;
-            var sameLine = !isEof && keywordLine == currentLine;
-            var expression = sameLine ? this.ParseExpression() : null;
+            var isEof       = this.Current.TkType == TokenType.EndOfFile;
+            var sameLine    = !isEof && keywordLine == currentLine;
+            var expression  = sameLine ? this.ParseExpression() : null;
 
             return new ReturnStatementSyntax( keyword , expression );
         }
@@ -342,15 +391,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseAssignmentExpression()
         {
-            var p0 = this.Peek( 0 );
-            var p1 = this.Peek( 1 );
-
             if( this.Peek( 0 ).TkType == TokenType.Identifier &&
                 this.Peek( 1 ).TkType == TokenType.Eq )
             {
                 var identifierToken = this.NextToken();
-                var operatorToken = this.NextToken();
-                var right = this.ParseAssignmentExpression();
+                var operatorToken   = this.NextToken();
+                var right           = this.ParseAssignmentExpression();
 
                 return new AssignmentExpressionSyntax( identifierToken , operatorToken , right );
             }
@@ -366,7 +412,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             if( unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence )
             {
                 var operatorToken = this.NextToken();
-                var operand = this.ParseBinaryExpression( unaryOperatorPrecedence );
+                var operand       = this.ParseBinaryExpression( unaryOperatorPrecedence );
 
                 left = new UnaryExpressionSyntax( operatorToken , operand );
             }
@@ -383,7 +429,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     break;
 
                 var operatorToken = this.NextToken();
-                var right = this.ParseBinaryExpression( precedence );
+                var right         = this.ParseBinaryExpression( precedence );
 
                 left = new BinaryExpressionSyntax( left , operatorToken , right );
             }
@@ -395,35 +441,28 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             switch( this.Current.TkType )
             {
-                case TokenType.OpenParen:
-                    return this.ParseParenthesizedExpression();
-                case TokenType.False:
-                case TokenType.True:
-                    return this.ParseBooleanLiteral();
-                case TokenType.NumericLiteral:
-                    return this.ParseNumberLiteral();
-                case TokenType.StringLiteral:
-                    return this.ParseStringLiteral();
+                case TokenType.OpenParen:      return this.ParseParenthesizedExpression();
+                case TokenType.False:          return this.ParseBooleanLiteral( this.Current.TkType );
+                case TokenType.True:           return this.ParseBooleanLiteral( this.Current.TkType );
+                case TokenType.NumericLiteral: return this.ParseNumberLiteral();
+                case TokenType.StringLiteral:  return this.ParseStringLiteral();
                 case TokenType.Identifier:
-                default:
-                    return this.ParseNameOrCallExpression();
+                default:                       return this.ParseNameOrCallExpression();
             }
         }
 
         private ExpressionSyntax ParseParenthesizedExpression()
         {
-            var left = this.MatchToken( TokenType.OpenParen );
+            var left       = this.MatchToken( TokenType.OpenParen );
             var expression = this.ParseExpression();
-            var right = this.MatchToken( TokenType.CloseParen );
+            var right      = this.MatchToken( TokenType.CloseParen );
 
             return new ParenthesizedExpressionSyntax( left , expression , right );
         }
 
-        private ExpressionSyntax ParseBooleanLiteral()
+        private ExpressionSyntax ParseBooleanLiteral( TokenType expectedTokenType )
         {
-            var keywordToken = this.Current.TkType == TokenType.True ?
-                this.MatchToken( TokenType.True ) :
-                this.MatchToken( TokenType.False );
+            var keywordToken = this.MatchToken( expectedTokenType );
 
             return new LiteralExpressionSyntax( keywordToken );
         }
@@ -453,9 +492,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseCallExpression()
         {
-            var identifier = this.MatchToken( TokenType.Identifier );
-            var openParenthesisToken = this.MatchToken( TokenType.OpenParen );
-            var arguments = this.ParseArguments();
+            var identifier            = this.MatchToken( TokenType.Identifier );
+            var openParenthesisToken  = this.MatchToken( TokenType.OpenParen );
+            var arguments             = this.ParseArguments();
             var closeParenthesisToken = this.MatchToken( TokenType.CloseParen );
 
             return new CallExpressionSyntax( identifier , openParenthesisToken , arguments , closeParenthesisToken );

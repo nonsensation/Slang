@@ -441,8 +441,8 @@ namespace NonConTroll.CodeAnalysis
             while( char.IsDigit( this.Current ) )
                 this.Advance();
 
-            var length = this.Position - this.StartPos;
-            var text = this.Text.ToString( this.StartPos , length );
+            // var length = this.Position - this.StartPos;
+            // var text = this.Text.ToString( this.StartPos , length );
 
             this.TkType = TokenType.NumericLiteral;
         }

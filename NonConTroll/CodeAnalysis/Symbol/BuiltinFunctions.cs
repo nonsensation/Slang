@@ -18,7 +18,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
 			=> typeof( BuiltinFunctions )
 				.GetFields( BindingFlags.Public | BindingFlags.Static )
 				.Where( f => f.FieldType == typeof( FunctionSymbol ) )
-				.Select( f => (FunctionSymbol?)f.GetValue( null ) )
+				.Select( f => f.GetValue( null ) )
 				.Where( f => f != null )
 				.Cast<FunctionSymbol>();
 	}

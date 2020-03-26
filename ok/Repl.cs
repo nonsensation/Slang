@@ -10,7 +10,7 @@ namespace NonConTroll
 {
     internal abstract class Repl
     {
-        private List<string> SubmissionHistory = new List<string>();
+        private readonly List<string> SubmissionHistory = new List<string>();
         private int SubmissionHistoryIndex;
 
         private bool Done;

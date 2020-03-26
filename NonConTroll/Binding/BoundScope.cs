@@ -3,11 +3,12 @@ using System.Collections.Immutable;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Symbols;
 
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundScope
     {
-        private Dictionary<string, Symbol>? _symbols;
+        private Dictionary<string, Symbol>? Symbols;
 
         public BoundScope( BoundScope? parent )
         {
@@ -25,12 +26,13 @@ namespace NonConTroll.CodeAnalysis.Binding
         private bool TryDeclareSymbol<TSymbol>( TSymbol symbol )
             where TSymbol : Symbol
         {
-            if( this._symbols == null )
-                this._symbols = new Dictionary<string , Symbol>();
-            else if( this._symbols.ContainsKey( symbol.Name ) )
+            if( this.Symbols == null )
+                this.Symbols = new Dictionary<string , Symbol>();
+            else if( this.Symbols.ContainsKey( symbol.Name ) )
                 return false;
 
-            this._symbols.Add( symbol.Name , symbol );
+            this.Symbols.Add( symbol.Name , symbol );
+
             return true;
         }
 
@@ -45,7 +47,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             symbol = null;
 
-            if( this._symbols != null && this._symbols.TryGetValue( name , out var declaredSymbol ) )
+            if( this.Symbols != null && this.Symbols.TryGetValue( name , out var declaredSymbol ) )
             {
                 if( declaredSymbol is TSymbol matchingSymbol )
                 {
@@ -72,10 +74,10 @@ namespace NonConTroll.CodeAnalysis.Binding
         private ImmutableArray<TSymbol> GetDeclaredSymbols<TSymbol>()
             where TSymbol : Symbol
         {
-            if( this._symbols == null )
+            if( this.Symbols == null )
                 return ImmutableArray<TSymbol>.Empty;
 
-            return this._symbols.Values.OfType<TSymbol>().ToImmutableArray();
+            return this.Symbols.Values.OfType<TSymbol>().ToImmutableArray();
         }
     }
 

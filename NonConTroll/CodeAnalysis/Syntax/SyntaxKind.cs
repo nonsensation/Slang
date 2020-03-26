@@ -19,6 +19,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         BreakStatement,
         ContinueStatement,
         ReturnStatement,
+        DeferStatement,
         ExpressionStatement,
         IfStatement,
         ElseClause,
@@ -29,6 +30,20 @@ namespace NonConTroll.CodeAnalysis.Syntax
         BinaryExpression,
         AssignmentExpression,
         ParenthesizedExpression,
-        LiteralExpression
+        LiteralExpression,
+        TupleExpression,
+
+        Type,
+        TupleType,
+        TupleElementType,
+        TypeSpecifier,
+        ArrayTypeSpecifier,
+
+        Discard,
+        Annotation,
+
+        QualifiedName,
+        IdentifierName,
+
     }
 }

@@ -23,12 +23,11 @@ namespace NonConTroll.CodeAnalysis.Binding
         public TypeSymbol OperandType { get; }
         public TypeSymbol Type { get; }
 
-        private static BoundUnaryOperator[] _operators =
-        {
-            new BoundUnaryOperator(TokenType.Exm, BoundUnaryOperatorKind.LogicalNegation, TypeSymbol.Bool),
-            new BoundUnaryOperator(TokenType.Plus, BoundUnaryOperatorKind.Identity, TypeSymbol.Int),
-            new BoundUnaryOperator(TokenType.Minus, BoundUnaryOperatorKind.Negation, TypeSymbol.Int),
-            new BoundUnaryOperator(TokenType.Tilde, BoundUnaryOperatorKind.OnesComplement, TypeSymbol.Int),
+        private static readonly BoundUnaryOperator[] _operators = {
+            new BoundUnaryOperator( TokenType.Exm   , BoundUnaryOperatorKind.LogicalNegation , TypeSymbol.Bool ) ,
+            new BoundUnaryOperator( TokenType.Plus  , BoundUnaryOperatorKind.Identity        , TypeSymbol.Int  ) ,
+            new BoundUnaryOperator( TokenType.Minus , BoundUnaryOperatorKind.Negation        , TypeSymbol.Int  ) ,
+            new BoundUnaryOperator( TokenType.Tilde , BoundUnaryOperatorKind.OnesComplement  , TypeSymbol.Int  ) ,
         };
 
         public static BoundUnaryOperator? Bind( TokenType tokenType , TypeSymbol operandType )

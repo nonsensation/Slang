@@ -12,7 +12,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.CallExpression;
-        public override TypeSymbol Type => this.Function.Type;
+        public override TypeSymbol Type => this.Function.ReturnType;
         public FunctionSymbol Function { get; }
         public ImmutableArray<BoundExpression> Arguments { get; }
     }

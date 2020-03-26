@@ -15,7 +15,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private readonly FunctionSymbol? Function;
 
-        private Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)> LoopStack = new Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)>();
+        private readonly Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)> LoopStack = new Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)>();
         private int LabelCounter;
         private BoundScope? Scope;
 
@@ -43,7 +43,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             foreach( var globalStatement in syntax.Members.OfType<GlobalStatementSyntax>() )
             {
-                var statement = binder.BindStatement(globalStatement.Statement);
+                var statement = binder.BindStatement( globalStatement.Statement );
                 statements.Add( statement );
             }
 
@@ -59,9 +59,9 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public static BoundProgram BindProgram( BoundGlobalScope globalScope )
         {
-            var parentScope = CreateParentScope(globalScope);
+            var parentScope    = CreateParentScope(globalScope);
             var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
-            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+            var diagnostics    = ImmutableArray.CreateBuilder<Diagnostic>();
 
             BoundGlobalScope? scope = globalScope;
 
@@ -69,22 +69,21 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 foreach( var function in scope.Functions )
                 {
-                    var binder = new Binder(parentScope, function);
-                    var body = binder.BindStatement(function.Declaration!.Body);
+                    var binder      = new Binder(parentScope, function);
+                    var body        = binder.BindStatement(function.Declaration!.Body);
                     var loweredBody = Lowerer.Lower(body);
 
-                    if( function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn( loweredBody ) )
+                    if( function.ReturnType != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn( loweredBody ) )
                         binder.DiagBag.ReportAllPathsMustReturn( function.Declaration.Identifier.Span );
 
                     functionBodies.Add( function , loweredBody );
-
                     diagnostics.AddRange( binder.Diagnostics );
                 }
 
                 scope = scope.Previous;
             }
 
-            var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+            var statement = Lowerer.Lower( new BoundBlockStatement( globalScope.Statements ) );
 
             return new BoundProgram( diagnostics.ToImmutable() , functionBodies.ToImmutable() , statement );
         }
@@ -97,21 +96,16 @@ namespace NonConTroll.CodeAnalysis.Binding
             foreach( var parameterSyntax in syntax.Parameters )
             {
                 var parameterName = parameterSyntax.Identifier.Text!;
-                var parameterType = this.BindTypeClause(parameterSyntax.Type)!;
+                var parameterType = this.BindTypeClause( parameterSyntax.Type )!;
 
                 if( !seenParameterNames.Add( parameterName ) )
-                {
                     this.DiagBag.ReportParameterAlreadyDeclared( parameterSyntax.Span , parameterName );
-                }
                 else
-                {
-                    var parameter = new ParameterSymbol(parameterName, parameterType);
-                    parameters.Add( parameter );
-                }
+                    parameters.Add( new ParameterSymbol( parameterName , parameterType ) );
             }
 
-            var type = this.BindTypeClause( syntax.ReturnType ) ?? TypeSymbol.Void;
-            var function = new FunctionSymbol(syntax.Identifier.Text!, parameters.ToImmutable(), type, syntax);
+            var returnType = this.BindTypeClause( syntax.ReturnType ) ?? TypeSymbol.Void;
+            var function   = new FunctionSymbol( syntax.Identifier.Text! , parameters.ToImmutable() , returnType , syntax );
 
             if( !this.Scope!.TryDeclareFunction( function ) )
                 this.DiagBag.ReportSymbolAlreadyDeclared( syntax.Identifier.Span , function.Name );
@@ -133,7 +127,8 @@ namespace NonConTroll.CodeAnalysis.Binding
             while( stack.Count > 0 )
             {
                 previous = stack.Pop();
-                var scope = new BoundScope(parent);
+
+                var scope = new BoundScope( parent );
 
                 foreach( var f in previous.Functions )
                     _ = scope.TryDeclareFunction( f );
@@ -166,41 +161,28 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             switch( syntax.Kind )
             {
-                case SyntaxKind.BlockStatement:
-                    return this.BindBlockStatement( (BlockStatementSyntax)syntax );
-                case SyntaxKind.VariableDeclaration:
-                    return this.BindVariableDeclaration( (VariableDeclarationSyntax)syntax );
-                case SyntaxKind.IfStatement:
-                    return this.BindIfStatement( (IfStatementSyntax)syntax );
-                case SyntaxKind.WhileStatement:
-                    return this.BindWhileStatement( (WhileStatementSyntax)syntax );
-                case SyntaxKind.DoWhileStatement:
-                    return this.BindDoWhileStatement( (DoWhileStatementSyntax)syntax );
-                case SyntaxKind.ForStatement:
-                    return this.BindForStatement( (ForStatementSyntax)syntax );
-                case SyntaxKind.BreakStatement:
-                    return this.BindBreakStatement( (BreakStatementSyntax)syntax );
-                case SyntaxKind.ContinueStatement:
-                    return this.BindContinueStatement( (ContinueStatementSyntax)syntax );
-                case SyntaxKind.ReturnStatement:
-                    return this.BindReturnStatement( (ReturnStatementSyntax)syntax );
-                case SyntaxKind.ExpressionStatement:
-                    return this.BindExpressionStatement( (ExpressionStatementSyntax)syntax );
-                default:
-                    throw new Exception( $"Unexpected syntax {syntax.Kind}" );
+                case SyntaxKind.BlockStatement:      return this.BindBlockStatement( (BlockStatementSyntax)syntax );
+                case SyntaxKind.VariableDeclaration: return this.BindVariableDeclaration( (VariableDeclarationSyntax)syntax );
+                case SyntaxKind.IfStatement:         return this.BindIfStatement( (IfStatementSyntax)syntax );
+                case SyntaxKind.WhileStatement:      return this.BindWhileStatement( (WhileStatementSyntax)syntax );
+                case SyntaxKind.DoWhileStatement:    return this.BindDoWhileStatement( (DoWhileStatementSyntax)syntax );
+                case SyntaxKind.ForStatement:        return this.BindForStatement( (ForStatementSyntax)syntax );
+                case SyntaxKind.BreakStatement:      return this.BindBreakStatement( (BreakStatementSyntax)syntax );
+                case SyntaxKind.ContinueStatement:   return this.BindContinueStatement( (ContinueStatementSyntax)syntax );
+                case SyntaxKind.ReturnStatement:     return this.BindReturnStatement( (ReturnStatementSyntax)syntax );
+                case SyntaxKind.ExpressionStatement: return this.BindExpressionStatement( (ExpressionStatementSyntax)syntax );
+                default:                             throw new Exception( $"Unexpected syntax {syntax.Kind}" );
             }
         }
 
         private BoundStatement BindBlockStatement( BlockStatementSyntax syntax )
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
+
             this.Scope = new BoundScope( this.Scope );
 
             foreach( var statementSyntax in syntax.Statements )
-            {
-                var statement = this.BindStatement(statementSyntax);
-                statements.Add( statement );
-            }
+                statements.Add( this.BindStatement( statementSyntax ) );
 
             this.Scope = this.Scope.Parent;
 
@@ -209,59 +191,65 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundStatement BindVariableDeclaration( VariableDeclarationSyntax syntax )
         {
-            var isReadOnly = syntax.Keyword.TkType == TokenType.Let;
-            var type = this.BindTypeClause(syntax.TypeClause);
-            var initializer = this.BindExpression(syntax.Initializer);
-            var variableType = type ?? initializer.Type;
-            var variable = this.BindVariable(syntax.Identifier, isReadOnly, variableType);
-            var convertedInitializer = this.BindConversion(syntax.Initializer.Span, initializer, variableType);
+            var isReadOnly           = syntax.Keyword.TkType == TokenType.Let;
+            var type                 = this.BindTypeClause( syntax.TypeClause );
+            var initializer          = this.BindExpression( syntax.Initializer );
+            var variableType         = type ?? initializer.Type;
+            var variable             = this.BindVariable( syntax.Identifier , isReadOnly , variableType );
+            var convertedInitializer = this.BindConversion( syntax.Initializer.Span , initializer , variableType );
 
             return new BoundVariableDeclaration( variable , convertedInitializer );
         }
 
         private TypeSymbol? BindTypeClause( TypeClauseSyntax? syntax )
         {
+            // TODO: how to handle inferred types with no identifier?
+
             if( syntax == null )
                 return null;
 
-            var type = this.LookupType(syntax.Identifier.Text!);
+            var type = this.LookupType( syntax.TypeName.Identifier!.Text! );
+
             if( type == null )
-                this.DiagBag.ReportUndefinedType( syntax.Identifier.Span , syntax.Identifier.Text! );
+                this.DiagBag.ReportUndefinedType( syntax.TypeName.Identifier!.Span , syntax.TypeName.Identifier!.Text! );
 
             return type;
         }
 
         private BoundStatement BindIfStatement( IfStatementSyntax syntax )
         {
-            var condition = this.BindExpression(syntax.Condition, TypeSymbol.Bool);
-            var thenStatement = this.BindStatement(syntax.ThenStatement);
-            var elseStatement = syntax.ElseClause == null ? null : this.BindStatement(syntax.ElseClause.ElseStatement);
+            var condition     = this.BindExpression( syntax.Condition , TypeSymbol.Bool );
+            var thenStatement = this.BindStatement( syntax.ThenStatement );
+            var elseStatement = syntax.ElseClause == null ? null : this.BindStatement( syntax.ElseClause.ElseStatement );
+
             return new BoundIfStatement( condition , thenStatement , elseStatement );
         }
 
         private BoundStatement BindWhileStatement( WhileStatementSyntax syntax )
         {
-            var condition = this.BindExpression(syntax.Condition, TypeSymbol.Bool);
-            var body = this.BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
+            var condition = this.BindExpression( syntax.Condition , TypeSymbol.Bool );
+            var body      = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
+
             return new BoundWhileStatement( condition , body , breakLabel , continueLabel );
         }
 
         private BoundStatement BindDoWhileStatement( DoWhileStatementSyntax syntax )
         {
-            var body = this.BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
-            var condition = this.BindExpression(syntax.Condition, TypeSymbol.Bool);
+            var body      = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
+            var condition = this.BindExpression( syntax.Condition , TypeSymbol.Bool );
+
             return new BoundDoWhileStatement( body , condition , breakLabel , continueLabel );
         }
 
         private BoundStatement BindForStatement( ForStatementSyntax syntax )
         {
-            var lowerBound = this.BindExpression(syntax.LowerBound, TypeSymbol.Int);
-            var upperBound = this.BindExpression(syntax.UpperBound, TypeSymbol.Int);
+            var lowerBound = this.BindExpression( syntax.LowerBound , TypeSymbol.Int );
+            var upperBound = this.BindExpression( syntax.UpperBound , TypeSymbol.Int );
 
             this.Scope = new BoundScope( this.Scope );
 
-            var variable = this.BindVariable(syntax.Identifier, isReadOnly: true, TypeSymbol.Int);
-            var body = this.BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
+            var variable = this.BindVariable( syntax.Identifier , isReadOnly: true , TypeSymbol.Int );
+            var body     = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
 
             this.Scope = this.Scope.Parent;
 
@@ -271,11 +259,14 @@ namespace NonConTroll.CodeAnalysis.Binding
         private BoundStatement BindLoopBody( StatementSyntax body , out BoundLabel breakLabel , out BoundLabel continueLabel )
         {
             this.LabelCounter++;
-            breakLabel = new BoundLabel( $"break{this.LabelCounter}" );
+
+            breakLabel    = new BoundLabel( $"break{this.LabelCounter}" );
             continueLabel = new BoundLabel( $"continue{this.LabelCounter}" );
 
-            this.LoopStack.Push( (breakLabel, continueLabel) );
-            var boundBody = this.BindStatement(body);
+            this.LoopStack.Push( (breakLabel , continueLabel) );
+
+            var boundBody = this.BindStatement( body );
+
             _ = this.LoopStack.Pop();
 
             return boundBody;
@@ -286,11 +277,11 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( this.LoopStack.Count == 0 )
             {
                 this.DiagBag.ReportInvalidBreakOrContinue( syntax.Keyword.Span , syntax.Keyword.Text! );
+
                 return this.BindErrorStatement();
             }
 
-            var breakLabel = this.LoopStack.Peek().BreakLabel;
-            return new BoundGotoStatement( breakLabel );
+            return new BoundGotoStatement( this.LoopStack.Peek().BreakLabel );
         }
 
         private BoundStatement BindContinueStatement( ContinueStatementSyntax syntax )
@@ -298,11 +289,11 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( this.LoopStack.Count == 0 )
             {
                 this.DiagBag.ReportInvalidBreakOrContinue( syntax.Keyword.Span , syntax.Keyword.Text! );
+
                 return this.BindErrorStatement();
             }
 
-            var continueLabel = this.LoopStack.Peek().ContinueLabel;
-            return new BoundGotoStatement( continueLabel );
+            return new BoundGotoStatement( this.LoopStack.Peek().ContinueLabel );
         }
 
         private BoundStatement BindReturnStatement( ReturnStatementSyntax syntax )
@@ -315,7 +306,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
             else
             {
-                if( this.Function.Type == TypeSymbol.Void )
+                if( this.Function.ReturnType == TypeSymbol.Void )
                 {
                     if( expression != null )
                         this.DiagBag.ReportInvalidReturnExpression( syntax.Expression!.Span , this.Function.Name );
@@ -323,9 +314,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 else
                 {
                     if( expression == null )
-                        this.DiagBag.ReportMissingReturnExpression( syntax.ReturnKeyword.Span , this.Function.Type );
+                        this.DiagBag.ReportMissingReturnExpression( syntax.ReturnKeyword.Span , this.Function.ReturnType );
                     else
-                        expression = this.BindConversion( syntax.Expression!.Span , expression , this.Function.Type );
+                        expression = this.BindConversion( syntax.Expression!.Span , expression , this.Function.ReturnType );
                 }
             }
 
@@ -334,7 +325,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundStatement BindExpressionStatement( ExpressionStatementSyntax syntax )
         {
-            var expression = this.BindExpression(syntax.Expression, canBeVoid: true);
+            var expression = this.BindExpression( syntax.Expression , canBeVoid: true );
+
             return new BoundExpressionStatement( expression );
         }
 
@@ -453,19 +445,19 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( variable!.IsReadOnly )
                 this.DiagBag.ReportCannotAssign( syntax.EqualsToken.Span , name );
 
-            var convertedExpression = this.BindConversion(syntax.Expression.Span, boundExpression, variable.Type);
+            var convertedExpression = this.BindConversion( syntax.Expression.Span , boundExpression , variable.Type );
 
             return new BoundAssignmentExpression( variable , convertedExpression );
         }
 
         private BoundExpression BindUnaryExpression( UnaryExpressionSyntax syntax )
         {
-            var boundOperand = this.BindExpression(syntax.Operand);
+            var boundOperand = this.BindExpression( syntax.Operand );
 
             if( boundOperand.Type == TypeSymbol.Error )
                 return new BoundErrorExpression();
 
-            var boundOperator = BoundUnaryOperator.Bind(syntax.OperatorToken.TkType , boundOperand.Type);
+            var boundOperator = BoundUnaryOperator.Bind( syntax.OperatorToken.TkType , boundOperand.Type );
 
             if( boundOperator == null )
             {
@@ -479,13 +471,13 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindBinaryExpression( BinaryExpressionSyntax syntax )
         {
-            var boundLeft = this.BindExpression(syntax.Left);
-            var boundRight = this.BindExpression(syntax.Right);
+            var boundLeft  = this.BindExpression( syntax.Left );
+            var boundRight = this.BindExpression( syntax.Right );
 
             if( boundLeft.Type == TypeSymbol.Error || boundRight.Type == TypeSymbol.Error )
                 return new BoundErrorExpression();
 
-            var boundOperator = BoundBinaryOperator.Bind(syntax.OperatorToken.TkType, boundLeft.Type, boundRight.Type);
+            var boundOperator = BoundBinaryOperator.Bind( syntax.OperatorToken.TkType , boundLeft.Type , boundRight.Type );
 
             if( boundOperator == null )
             {
@@ -506,11 +498,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var boundArguments = ImmutableArray.CreateBuilder<BoundExpression>();
 
             foreach( var argument in syntax.Arguments )
-            {
-                var boundArgument = this.BindExpression(argument);
-
-                boundArguments.Add( boundArgument );
-            }
+                boundArguments.Add( this.BindExpression( argument ) );
 
             if( !this.Scope!.TryLookupFunction( identifierText , out var function ) )
             {
@@ -521,18 +509,18 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             if( syntax.Arguments.Count != function!.Parameters.Length )
             {
-                TextSpan span;
+                var span = default( TextSpan );
 
                 if( syntax.Arguments.Count > function.Parameters.Length )
                 {
-                    SyntaxNode firstExceedingNode;
+                    var firstExceedingNode = default( SyntaxNode );
 
                     if( function.Parameters.Length > 0 )
                         firstExceedingNode = syntax.Arguments.GetSeparator( function.Parameters.Length - 1 )!;
                     else
                         firstExceedingNode = syntax.Arguments[ 0 ];
 
-                    var lastExceedingArgument = syntax.Arguments[syntax.Arguments.Count - 1];
+                    var lastExceedingArgument = syntax.Arguments[ ^1 ];
 
                     span = TextSpan.FromBounds( firstExceedingNode.Span.Start , lastExceedingArgument.Span.End );
                 }
@@ -570,7 +558,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindConversion( ExpressionSyntax syntax , TypeSymbol type , bool allowExplicit = false )
         {
-            var expression = this.BindExpression(syntax);
+            var expression = this.BindExpression( syntax );
 
             return this.BindConversion( syntax.Span , expression , type , allowExplicit );
         }
@@ -600,11 +588,11 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private VariableSymbol BindVariable( SyntaxToken identifier , bool isReadOnly , TypeSymbol type )
         {
-            var name = identifier.Text ?? "?";
-            var declare = !identifier.IsMissing;
+            var name     = identifier.Text ?? "?";
+            var declare  = !identifier.IsMissing;
             var variable = this.Function == null
-                                ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type)
-                                : new LocalVariableSymbol(name, isReadOnly, type);
+                ? (VariableSymbol) new GlobalVariableSymbol( name , isReadOnly , type )
+                : new LocalVariableSymbol( name , isReadOnly , type );
 
             if( declare && !this.Scope!.TryDeclareVariable( variable ) )
                 this.DiagBag.ReportSymbolAlreadyDeclared( identifier.Span , name );
@@ -616,14 +604,10 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             switch( name )
             {
-                case "bool":
-                    return TypeSymbol.Bool;
-                case "int":
-                    return TypeSymbol.Int;
-                case "string":
-                    return TypeSymbol.String;
-                default:
-                    return null;
+                case "bool":   return TypeSymbol.Bool;
+                case "int":    return TypeSymbol.Int;
+                case "string": return TypeSymbol.String;
+                default:       return null;
             }
         }
     }

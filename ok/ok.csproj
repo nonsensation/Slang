@@ -10,8 +10,22 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DebugSymbols>true</DebugSymbols>
+      <DebugType>full</DebugType>
+      <Optimize>false</Optimize>
+      <OutputPath>bin\Debug\</OutputPath>
+      <DefineConstants>TRACE;DEBUG</DefineConstants>
+      <ErrorReport>prompt</ErrorReport>
+      <WarningLevel>4</WarningLevel>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+      <WarningsNotAsErrors></WarningsNotAsErrors>
+      <NoWarn>
+        IDE0066, <!-- Use 'switch' expression -->
+        IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
+        IDE0060  <!-- Remove unused parameter -->
+      </NoWarn>
+      <WarningsAsErrors></WarningsAsErrors>
   </PropertyGroup>
 
 </Project>
