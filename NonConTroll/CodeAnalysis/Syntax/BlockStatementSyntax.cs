@@ -4,8 +4,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class BlockStatementSyntax : StatementSyntax
     {
-        public BlockStatementSyntax( SyntaxToken openBraceToken , ImmutableArray<StatementSyntax> statements , SyntaxToken closeBraceToken )
-        {
+        public BlockStatementSyntax( SyntaxTree syntaxTree , SyntaxToken openBraceToken , ImmutableArray<StatementSyntax> statements , SyntaxToken closeBraceToken )
+			: base( syntaxTree )
+		{
             this.OpenBraceToken  = openBraceToken;
             this.Statements      = statements;
             this.CloseBraceToken = closeBraceToken;

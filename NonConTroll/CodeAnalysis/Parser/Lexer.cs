@@ -7,8 +7,8 @@ namespace NonConTroll.CodeAnalysis
 {
     public class Lexer
     {
-        private readonly SyntaxTree Tree;
-        private SourceText Text => this.Tree.Text;
+        private readonly SyntaxTree SyntaxTree;
+        private SourceText Text => this.SyntaxTree.Text;
         private int Position;
         private TokenType TkType;
         public DiagnosticBag Diagnostics = new DiagnosticBag();
@@ -16,7 +16,7 @@ namespace NonConTroll.CodeAnalysis
 
         public Lexer( SyntaxTree syntaxTree )
         {
-            this.Tree = syntaxTree;
+            this.SyntaxTree = syntaxTree;
         }
 
         private char Current => this.Peek( 0 );
@@ -387,7 +387,7 @@ namespace NonConTroll.CodeAnalysis
             if( text == null )
                 text = this.Text.ToString( this.StartPos , length );
 
-            return new SyntaxToken( this.TkType , this.StartPos , text );
+            return new SyntaxToken( this.SyntaxTree , this.TkType , this.StartPos , text );
         }
 
         private void ScanString()
@@ -454,7 +454,8 @@ namespace NonConTroll.CodeAnalysis
                 this.Advance();
 
             var length = this.Position - this.StartPos;
-            var text = this.Text.ToString( this.StartPos , length);
+            var text = this.Text.ToString( this.StartPos , length );
+
             this.TkType = SyntaxInfo.GetKeywordTokenType( text );
         }
     }

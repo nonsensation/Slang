@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class BinaryExpressionSyntax : ExpressionSyntax
     {
-        public BinaryExpressionSyntax( ExpressionSyntax left , SyntaxToken operatorToken , ExpressionSyntax right )
+        public BinaryExpressionSyntax( SyntaxTree syntaxTree , ExpressionSyntax left , SyntaxToken operatorToken , ExpressionSyntax right )
+			: base( syntaxTree )
         {
             this.Left          = left         ;
             this.OperatorToken = operatorToken;

@@ -2,8 +2,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class FunctionDeclarationSyntax : MemberSyntax
     {
-        public FunctionDeclarationSyntax( SyntaxToken functionKeyword , SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ParameterSyntax> parameters , SyntaxToken closeParenthesisToken , TypeClauseSyntax? returnType , BlockStatementSyntax body )
-        {
+        public FunctionDeclarationSyntax( SyntaxTree syntaxTree , SyntaxToken functionKeyword , SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ParameterSyntax> parameters , SyntaxToken closeParenthesisToken , TypeClauseSyntax? returnType , BlockStatementSyntax body )
+			: base( syntaxTree )
+		{
             this.FunctionKeyword       = functionKeyword;
             this.Identifier            = identifier;
             this.OpenParenthesisToken  = openParenthesisToken;

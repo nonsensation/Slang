@@ -18,7 +18,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var parser = new Parser( this );
 
             handler( this , out var root , out var diagnostics );
-            
+
             this.Root = root;
             this.Diagnostics = diagnostics;
         }
@@ -82,7 +82,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
                     if( token.TkType == TokenType.EndOfFile )
                     {
-                        root = new CompilationUnitSyntax( ImmutableArray<MemberSyntax>.Empty , token );
+                        root = new CompilationUnitSyntax( syntaxTree , ImmutableArray<MemberSyntax>.Empty , token );
 
                         break;
                     }

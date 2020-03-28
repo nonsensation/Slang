@@ -2,8 +2,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class CallExpressionSyntax : ExpressionSyntax
     {
-        public CallExpressionSyntax( SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ExpressionSyntax> arguments , SyntaxToken closeParenthesisToken )
-        {
+        public CallExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ExpressionSyntax> arguments , SyntaxToken closeParenthesisToken )
+			: base( syntaxTree )
+		{
             this.Identifier            = identifier;
             this.OpenParenthesisToken  = openParenthesisToken;
             this.Arguments             = arguments;

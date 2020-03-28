@@ -2,8 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class NameExpressionSyntax : IdentifierNameSyntax
     {
-        public NameExpressionSyntax( SyntaxToken identifierToken )
-            : base( identifierToken )
+        public NameExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifierToken )
+			: base( syntaxTree , identifierToken )
         {
         }
 
@@ -12,11 +12,15 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public abstract class NameSyntax : TypeSyntax
     {
+        public NameSyntax( SyntaxTree syntaxTree ) : base( syntaxTree )
+        {
+        }
     }
 
     public class IdentifierNameSyntax : NameSyntax
     {
-        public IdentifierNameSyntax( SyntaxToken identifierToken )
+        public IdentifierNameSyntax( SyntaxTree syntaxTree , SyntaxToken identifierToken )
+			: base( syntaxTree )
         {
             this.IdentifierToken = identifierToken;
         }
@@ -27,7 +31,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public class QualifiedNameSyntax : NameSyntax
     {
-        public QualifiedNameSyntax( NameSyntax lhsName , SyntaxToken dotToken , NameSyntax rhsName )
+        public QualifiedNameSyntax( SyntaxTree syntaxTree , NameSyntax lhsName , SyntaxToken dotToken , NameSyntax rhsName )
+			: base( syntaxTree )
         {
             this.LhsName  = lhsName;
             this.DotToken = dotToken;

@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class ContinueStatementSyntax : StatementSyntax
     {
-        public ContinueStatementSyntax( SyntaxToken keyword )
+        public ContinueStatementSyntax( SyntaxTree syntaxTree , SyntaxToken keyword )
+			: base( syntaxTree )
         {
             this.Keyword = keyword;
         }

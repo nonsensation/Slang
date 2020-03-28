@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class ParameterSyntax : SyntaxNode
     {
-        public ParameterSyntax( SyntaxToken identifier , TypeClauseSyntax type )
+        public ParameterSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , TypeClauseSyntax type )
+			: base( syntaxTree )
         {
             this.Identifier = identifier;
             this.Type       = type;

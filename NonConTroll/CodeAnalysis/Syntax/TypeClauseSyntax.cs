@@ -5,7 +5,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class TypeClauseSyntax : SyntaxNode
     {
-        public TypeClauseSyntax( SyntaxToken colonToken , TypeNameSyntax typeName )
+        public TypeClauseSyntax( SyntaxTree syntaxTree , SyntaxToken colonToken , TypeNameSyntax typeName )
+			: base( syntaxTree )
         {
             this.ColonToken = colonToken;
             this.TypeName   = typeName;
@@ -19,11 +20,15 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public abstract class TypeSyntax : ExpressionSyntax
     {
+        public TypeSyntax( SyntaxTree syntaxTree ) : base( syntaxTree )
+        {
+        }
     }
 
     public class TypeNameSyntax : TypeSyntax
     {
-        public TypeNameSyntax( SyntaxToken? identifier , ImmutableArray<TypeSpecifierSyntax> typeSpecifier , ImmutableArray<ArrayTypeSpecifierSyntax> arrayTypeSpecifier )
+        public TypeNameSyntax( SyntaxTree syntaxTree , SyntaxToken? identifier , ImmutableArray<TypeSpecifierSyntax> typeSpecifier , ImmutableArray<ArrayTypeSpecifierSyntax> arrayTypeSpecifier )
+			: base( syntaxTree )
         {
             this.Identifier         = identifier;
             this.TypeSpecifier      = typeSpecifier;
@@ -39,19 +44,28 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public class TupleTypeSyntax : TypeSyntax
     {
-        public override SyntaxKind Kind => SyntaxKind.TupleType;
+        public TupleTypeSyntax( SyntaxTree syntaxTree )
+			: base( syntaxTree )
+        {
+        }
 
+        public override SyntaxKind Kind => SyntaxKind.TupleType;
     }
 
     public class TupleTypeElementSyntax : TypeSyntax
     {
-        public override SyntaxKind Kind => SyntaxKind.TupleElementType;
+        public TupleTypeElementSyntax( SyntaxTree syntaxTree )
+			: base( syntaxTree )
+        {
+        }
 
+        public override SyntaxKind Kind => SyntaxKind.TupleElementType;
     }
 
     public class ArrayTypeSpecifierSyntax : SyntaxNode
     {
-        public ArrayTypeSpecifierSyntax( SyntaxToken openBracket , ExpressionSyntax rankExpression , SyntaxToken closeBracket )
+        public ArrayTypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken openBracket , ExpressionSyntax rankExpression , SyntaxToken closeBracket )
+			: base( syntaxTree )
         {
             this.OpenBracket    = openBracket;
             this.RankExpression = rankExpression;
@@ -68,7 +82,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public class TypeSpecifierSyntax : SyntaxNode
     {
-        public TypeSpecifierSyntax( SyntaxToken specifierToken , TypeSpecifierKind specifierKind )
+        public TypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken specifierToken , TypeSpecifierKind specifierKind )
+			: base( syntaxTree )
         {
             this.SpecifierToken = specifierToken;
             this.SpecifierKind  = specifierKind;
@@ -90,7 +105,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public class TupleExpressionSyntax : ExpressionSyntax
     {
-        public TupleExpressionSyntax( SyntaxToken openParen , SeparatedSyntaxList<IdentifierNameSyntax> arguments , SyntaxToken closeParen )
+        public TupleExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken openParen , SeparatedSyntaxList<IdentifierNameSyntax> arguments , SyntaxToken closeParen )
+			: base( syntaxTree )
         {
             this.OpenParen  = openParen;
             this.Arguments  = arguments;
@@ -107,19 +123,28 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public class DiscardSyntax : SyntaxNode
     {
-        public override SyntaxKind Kind => SyntaxKind.Discard;
+        public DiscardSyntax( SyntaxTree syntaxTree )
+			: base( syntaxTree )
+        {
+        }
 
+        public override SyntaxKind Kind => SyntaxKind.Discard;
     }
 
     public class AnnotationSyntax : SyntaxNode
     {
-        public override SyntaxKind Kind => SyntaxKind.Annotation;
+        public AnnotationSyntax( SyntaxTree syntaxTree )
+			: base( syntaxTree )
+        {
+        }
 
+        public override SyntaxKind Kind => SyntaxKind.Annotation;
     }
 
     public class DeferStatementSyntax : StatementSyntax
     {
-        public DeferStatementSyntax( SyntaxToken deferKeyword , ExpressionSyntax expression )
+        public DeferStatementSyntax( SyntaxTree syntaxTree , SyntaxToken deferKeyword , ExpressionSyntax expression )
+			: base( syntaxTree )
         {
             this.DeferKeyword = deferKeyword;
             this.Expression   = expression;
@@ -130,5 +155,4 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public SyntaxToken DeferKeyword { get; }
         public ExpressionSyntax Expression { get; }
     }
-
 }

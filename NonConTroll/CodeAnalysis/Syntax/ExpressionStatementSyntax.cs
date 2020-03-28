@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class ExpressionStatementSyntax : StatementSyntax
     {
-        public ExpressionStatementSyntax( ExpressionSyntax expression )
+        public ExpressionStatementSyntax( SyntaxTree syntaxTree , ExpressionSyntax expression )
+			: base( syntaxTree )
         {
             this.Expression = expression;
         }

@@ -12,8 +12,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         public readonly DiagnosticBag Diagnostics = new DiagnosticBag();
 
-        private readonly SyntaxTree Tree;
-        private SourceText Text => this.Tree.Text;
+        private readonly SyntaxTree SyntaxTree;
+        private SourceText Text => this.SyntaxTree.Text;
         private readonly ImmutableArray<SyntaxToken> Tokens;
 
         private int Position;
@@ -35,7 +35,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
             while( token.TkType != TokenType.EndOfFile );
 
-            this.Tree = syntaxTree;
+            this.SyntaxTree = syntaxTree;
             this.Tokens = tokens.ToImmutableArray();
             this.Diagnostics.AddRange( lexer.Diagnostics );
         }
@@ -62,7 +62,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
             this.Diagnostics.ReportUnexpectedToken( this.Current.Span , this.Current.TkType , tokenType );
 
-            return new SyntaxToken( tokenType , this.Current.Position , null );
+            return new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null );
         }
 
         private SyntaxToken NextToken()
@@ -81,7 +81,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var members = this.ParseMembers();
             var endOfFileToken = this.MatchToken( TokenType.EndOfFile );
 
-            return new CompilationUnitSyntax( members , endOfFileToken );
+            return new CompilationUnitSyntax( this.SyntaxTree , members , endOfFileToken );
         }
 
         private ImmutableArray<MemberSyntax> ParseMembers()
@@ -126,7 +126,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var type            = this.ParseOptionalTypeClause();
             var body            = this.ParseBlockStatement();
 
-            return new FunctionDeclarationSyntax( functionKeyword , identifier , openParenToken , parameters , closeParenToken , type , body );
+            return new FunctionDeclarationSyntax( this.SyntaxTree , functionKeyword , identifier , openParenToken , parameters , closeParenToken , type , body );
         }
 
 
@@ -157,14 +157,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var identifier = this.MatchToken(TokenType.Identifier);
             var type = this.ParseTypeClause();
 
-            return new ParameterSyntax( identifier , type );
+            return new ParameterSyntax( this.SyntaxTree , identifier , type );
         }
 
         private MemberSyntax ParseGlobalStatement()
         {
             var statement = this.ParseStatement();
 
-            return new GlobalStatementSyntax( statement );
+            return new GlobalStatementSyntax( this.SyntaxTree , statement );
         }
 
         private StatementSyntax ParseStatement()
@@ -210,7 +210,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
             var closeBraceToken = this.MatchToken( TokenType.CloseBrace );
 
-            return new BlockStatementSyntax( openBraceToken , statements.ToImmutable() , closeBraceToken );
+            return new BlockStatementSyntax( this.SyntaxTree , openBraceToken , statements.ToImmutable() , closeBraceToken );
         }
 
         private StatementSyntax ParseVariableDeclaration( TokenType expectedTokenType )
@@ -221,7 +221,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var equals      = this.MatchToken( TokenType.Eq );
             var initializer = this.ParseExpression();
 
-            return new VariableDeclarationSyntax( keyword , identifier , typeClause , equals , initializer );
+            return new VariableDeclarationSyntax( this.SyntaxTree , keyword , identifier , typeClause , equals , initializer );
         }
 
         private TypeClauseSyntax? ParseOptionalTypeClause()
@@ -264,16 +264,16 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 }
             }
 
-            return new TypeNameSyntax( typeIdentifier , typeSpecifier.ToImmutable() , arrayTypeSpecifier.ToImmutable() );
+            return new TypeNameSyntax( this.SyntaxTree , typeIdentifier , typeSpecifier.ToImmutable() , arrayTypeSpecifier.ToImmutable() );
         }
 
         private TypeSpecifierSyntax ParseTypeSpecifier()
         {
             switch( this.Current.TkType )
             {
-                case TokenType.Ref:  return new TypeSpecifierSyntax( this.MatchToken( TokenType.Ref )   , TypeSpecifierKind.Reference );
-                case TokenType.Ptr:  return new TypeSpecifierSyntax( this.MatchToken( TokenType.Ptr )   , TypeSpecifierKind.Pointer   );
-                case TokenType.Null: return new TypeSpecifierSyntax( this.MatchToken( TokenType.Null )  , TypeSpecifierKind.Nullable  );
+                case TokenType.Ref:  return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( TokenType.Ref )   , TypeSpecifierKind.Reference );
+                case TokenType.Ptr:  return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( TokenType.Ptr )   , TypeSpecifierKind.Pointer   );
+                case TokenType.Null: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( TokenType.Null )  , TypeSpecifierKind.Nullable  );
                 //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
                 default:
                     break;
@@ -288,7 +288,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var rankExpression    = this.ParseExpression();
             var closeBracketToken = this.MatchToken( TokenType.CloseBracket );
 
-            return new ArrayTypeSpecifierSyntax( openBracketToken , rankExpression , closeBracketToken );
+            return new ArrayTypeSpecifierSyntax( this.SyntaxTree , openBracketToken , rankExpression , closeBracketToken );
         }
 
         private TypeClauseSyntax ParseTypeClause()
@@ -296,7 +296,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var colonToken = this.MatchToken( TokenType.Colon );
             var type       = this.ParseType();
 
-            return new TypeClauseSyntax( colonToken , type );
+            return new TypeClauseSyntax( this.SyntaxTree , colonToken , type );
         }
 
         private StatementSyntax ParseIfStatement()
@@ -306,7 +306,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var statement   = this.ParseStatement();
             var elseClause  = this.ParseElseClause();
 
-            return new IfStatementSyntax( keyword , condition , statement , elseClause );
+            return new IfStatementSyntax( this.SyntaxTree , keyword , condition , statement , elseClause );
         }
 
         private ElseClauseSyntax? ParseElseClause()
@@ -317,7 +317,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var keyword   = this.NextToken();
             var statement = this.ParseStatement();
 
-            return new ElseClauseSyntax( keyword , statement );
+            return new ElseClauseSyntax( this.SyntaxTree , keyword , statement );
         }
 
         private StatementSyntax ParseWhileStatement()
@@ -326,7 +326,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var condition   = this.ParseExpression();
             var body        = this.ParseStatement();
 
-            return new WhileStatementSyntax( keyword , condition , body );
+            return new WhileStatementSyntax( this.SyntaxTree , keyword , condition , body );
         }
 
         private StatementSyntax ParseDoWhileStatement()
@@ -336,7 +336,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var whileKeyword = this.MatchToken( TokenType.While );
             var condition    = this.ParseExpression();
 
-            return new DoWhileStatementSyntax( doKeyword , body , whileKeyword , condition );
+            return new DoWhileStatementSyntax( this.SyntaxTree , doKeyword , body , whileKeyword , condition );
         }
 
         private StatementSyntax ParseForStatement()
@@ -349,21 +349,21 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var upperBound  = this.ParseExpression();
             var body        = this.ParseStatement();
 
-            return new ForStatementSyntax( keyword , identifier , equalsToken , lowerBound , toKeyword , upperBound , body );
+            return new ForStatementSyntax( this.SyntaxTree , keyword , identifier , equalsToken , lowerBound , toKeyword , upperBound , body );
         }
 
         private StatementSyntax ParseBreakStatement()
         {
             var keyword = this.MatchToken( TokenType.Break );
 
-            return new BreakStatementSyntax( keyword );
+            return new BreakStatementSyntax( this.SyntaxTree , keyword );
         }
 
         private StatementSyntax ParseContinueStatement()
         {
             var keyword = this.MatchToken( TokenType.Continue );
 
-            return new ContinueStatementSyntax( keyword );
+            return new ContinueStatementSyntax( this.SyntaxTree , keyword );
         }
 
         private StatementSyntax ParseReturnStatement()
@@ -375,14 +375,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var sameLine    = !isEof && keywordLine == currentLine;
             var expression  = sameLine ? this.ParseExpression() : null;
 
-            return new ReturnStatementSyntax( keyword , expression );
+            return new ReturnStatementSyntax( this.SyntaxTree , keyword , expression );
         }
 
         private ExpressionStatementSyntax ParseExpressionStatement()
         {
             var expression = this.ParseExpression();
 
-            return new ExpressionStatementSyntax( expression );
+            return new ExpressionStatementSyntax( this.SyntaxTree , expression );
         }
 
         private ExpressionSyntax ParseExpression()
@@ -399,7 +399,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 var operatorToken   = this.NextToken();
                 var right           = this.ParseAssignmentExpression();
 
-                return new AssignmentExpressionSyntax( identifierToken , operatorToken , right );
+                return new AssignmentExpressionSyntax( this.SyntaxTree , identifierToken , operatorToken , right );
             }
 
             return this.ParseBinaryExpression();
@@ -415,7 +415,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 var operatorToken = this.NextToken();
                 var operand       = this.ParseBinaryExpression( unaryOperatorPrecedence );
 
-                left = new UnaryExpressionSyntax( operatorToken , operand );
+                left = new UnaryExpressionSyntax( this.SyntaxTree , operatorToken , operand );
             }
             else
             {
@@ -432,7 +432,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 var operatorToken = this.NextToken();
                 var right         = this.ParseBinaryExpression( precedence );
 
-                left = new BinaryExpressionSyntax( left , operatorToken , right );
+                left = new BinaryExpressionSyntax( this.SyntaxTree , left , operatorToken , right );
             }
 
             return left;
@@ -458,28 +458,28 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var expression = this.ParseExpression();
             var right      = this.MatchToken( TokenType.CloseParen );
 
-            return new ParenthesizedExpressionSyntax( left , expression , right );
+            return new ParenthesizedExpressionSyntax( this.SyntaxTree , left , expression , right );
         }
 
         private ExpressionSyntax ParseBooleanLiteral( TokenType expectedTokenType )
         {
             var keywordToken = this.MatchToken( expectedTokenType );
 
-            return new LiteralExpressionSyntax( keywordToken );
+            return new LiteralExpressionSyntax( this.SyntaxTree , keywordToken );
         }
 
         private ExpressionSyntax ParseNumberLiteral()
         {
             var numberToken = this.MatchToken( TokenType.NumericLiteral );
 
-            return new LiteralExpressionSyntax( numberToken );
+            return new LiteralExpressionSyntax( this.SyntaxTree , numberToken );
         }
 
         private ExpressionSyntax ParseStringLiteral()
         {
             var stringToken = this.MatchToken( TokenType.StringLiteral );
 
-            return new LiteralExpressionSyntax( stringToken );
+            return new LiteralExpressionSyntax( this.SyntaxTree , stringToken );
         }
 
         private ExpressionSyntax ParseNameOrCallExpression()
@@ -498,7 +498,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var arguments             = this.ParseArguments();
             var closeParenthesisToken = this.MatchToken( TokenType.CloseParen );
 
-            return new CallExpressionSyntax( identifier , openParenthesisToken , arguments , closeParenthesisToken );
+            return new CallExpressionSyntax( this.SyntaxTree , identifier , openParenthesisToken , arguments , closeParenthesisToken );
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
@@ -525,7 +525,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             var identifierToken = this.MatchToken( TokenType.Identifier );
 
-            return new NameExpressionSyntax( identifierToken );
+            return new NameExpressionSyntax( this.SyntaxTree , identifierToken );
         }
 
         #endregion

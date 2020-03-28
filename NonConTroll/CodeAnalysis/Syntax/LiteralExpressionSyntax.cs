@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class LiteralExpressionSyntax : ExpressionSyntax
     {
-        public LiteralExpressionSyntax( SyntaxToken literalToken )
+        public LiteralExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken literalToken )
+			: base( syntaxTree )
         {
             this.LiteralToken = literalToken;
         }

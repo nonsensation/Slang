@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class ElseClauseSyntax : SyntaxNode
     {
-        public ElseClauseSyntax( SyntaxToken elseKeyword , StatementSyntax elseStatement )
+        public ElseClauseSyntax( SyntaxTree syntaxTree , SyntaxToken elseKeyword , StatementSyntax elseStatement )
+			: base( syntaxTree )
         {
             this.ElseKeyword   = elseKeyword;
             this.ElseStatement = elseStatement;

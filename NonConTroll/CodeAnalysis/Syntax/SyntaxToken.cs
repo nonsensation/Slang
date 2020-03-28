@@ -5,17 +5,18 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class SyntaxToken : SyntaxNode
     {
-        public SyntaxToken( TokenType tokenType , int position , string? text )
+        public SyntaxToken( SyntaxTree syntaxTree , TokenType tokenType , int position , string? text )
+            : base( syntaxTree )
         {
-            this.TkType = tokenType;
-            this.Position = position;
-            this.Text = text;
+            this.TkType     = tokenType;
+            this.Position   = position;
+            this.Text       = text;
         }
 
-        public TokenType TkType { get; }
         public override SyntaxKind Kind { get; }
         public override TextSpan Span => new TextSpan( this.Position , this.Text?.Length ?? 0 );
 
+        public TokenType TkType { get; }
         public int Position { get; }
         public string? Text { get; }
 

@@ -2,7 +2,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class BreakStatementSyntax : StatementSyntax
     {
-        public BreakStatementSyntax( SyntaxToken keyword )
+        public BreakStatementSyntax( SyntaxTree syntaxTree , SyntaxToken keyword )
+			: base( syntaxTree )
         {
             this.Keyword = keyword;
         }

@@ -2,8 +2,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class ReturnStatementSyntax : StatementSyntax
     {
-        public ReturnStatementSyntax( SyntaxToken returnKeyword , ExpressionSyntax? expression )
-        {
+        public ReturnStatementSyntax( SyntaxTree syntaxTree , SyntaxToken returnKeyword , ExpressionSyntax? expression )
+			: base( syntaxTree )
+		{
             this.ReturnKeyword = returnKeyword;
             this.Expression    = expression;
         }
