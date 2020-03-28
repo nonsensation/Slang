@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NonConTroll.CodeAnalysis.Syntax;
+using NonConTroll.CodeAnalysis.IO;
 
 namespace NonConTroll.CodeAnalysis.Symbols
 {

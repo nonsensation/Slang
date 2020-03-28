@@ -5,7 +5,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
 {
     public class FunctionSymbol : Symbol
     {
-        public FunctionSymbol( string name , ImmutableArray<ParameterSymbol> parameters , TypeSymbol returnType , FunctionDeclarationSyntax declaration )
+        public FunctionSymbol( string name , ImmutableArray<ParameterSymbol> parameters , TypeSymbol returnType , FunctionDeclarationSyntax? declaration = null )
             : base( name )
         {
             this.Parameters  = parameters;
@@ -14,21 +14,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
         }
 
         public override SymbolKind Kind => SymbolKind.Function;
-        public FunctionDeclarationSyntax Declaration { get; }
-        public ImmutableArray<ParameterSymbol> Parameters { get; }
-        public TypeSymbol ReturnType { get; }
-    }
-
-    public sealed class BuiltinFunctionSymbol : Symbol
-    {
-        public BuiltinFunctionSymbol( string name , ImmutableArray<ParameterSymbol> parameters , TypeSymbol returnType )
-            : base( name )
-        {
-            this.Parameters  = parameters;
-            this.ReturnType  = returnType;
-        }
-
-        public override SymbolKind Kind => SymbolKind.Function;
+        public FunctionDeclarationSyntax? Declaration { get; }
         public ImmutableArray<ParameterSymbol> Parameters { get; }
         public TypeSymbol ReturnType { get; }
     }

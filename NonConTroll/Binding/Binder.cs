@@ -59,7 +59,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public static BoundProgram BindProgram( BoundGlobalScope globalScope )
         {
-            var parentScope    = CreateParentScope(globalScope);
+            var parentScope    = CreateParentScope( globalScope );
             var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
             var diagnostics    = ImmutableArray.CreateBuilder<Diagnostic>();
 
@@ -107,7 +107,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var returnType = this.BindTypeClause( syntax.ReturnType ) ?? TypeSymbol.Void;
             var function   = new FunctionSymbol( syntax.Identifier.Text! , parameters.ToImmutable() , returnType , syntax );
 
-            if( function.Declaration.Identifier.Text != null &&
+            if( function.Declaration!.Identifier.Text != null &&
                 !this.Scope!.TryDeclareFunction( function ) )
                 this.DiagBag.ReportSymbolAlreadyDeclared( syntax.Identifier.Span , function.Name );
         }

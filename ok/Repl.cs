@@ -61,45 +61,19 @@ namespace NonConTroll
             {
                 switch( key.Key )
                 {
-                    case ConsoleKey.Escape:
-                        this.HandleEscape( document , view );
-                        break;
-                    case ConsoleKey.Enter:
-                        this.HandleEnter( document , view );
-                        break;
-                    case ConsoleKey.LeftArrow:
-                        this.HandleLeftArrow( document , view );
-                        break;
-                    case ConsoleKey.RightArrow:
-                        this.HandleRightArrow( document , view );
-                        break;
-                    case ConsoleKey.UpArrow:
-                        this.HandleUpArrow( document , view );
-                        break;
-                    case ConsoleKey.DownArrow:
-                        this.HandleDownArrow( document , view );
-                        break;
-                    case ConsoleKey.Backspace:
-                        this.HandleBackspace( document , view );
-                        break;
-                    case ConsoleKey.Delete:
-                        this.HandleDelete( document , view );
-                        break;
-                    case ConsoleKey.Home:
-                        this.HandleHome( document , view );
-                        break;
-                    case ConsoleKey.End:
-                        this.HandleEnd( document , view );
-                        break;
-                    case ConsoleKey.Tab:
-                        this.HandleTab( document , view );
-                        break;
-                    case ConsoleKey.PageUp:
-                        this.HandlePageUp( document , view );
-                        break;
-                    case ConsoleKey.PageDown:
-                        this.HandlePageDown( document , view );
-                        break;
+                    case ConsoleKey.Escape:     this.HandleEscape    ( document , view ); break;
+                    case ConsoleKey.Enter:      this.HandleEnter     ( document , view ); break;
+                    case ConsoleKey.LeftArrow:  this.HandleLeftArrow ( document , view ); break;
+                    case ConsoleKey.RightArrow: this.HandleRightArrow( document , view ); break;
+                    case ConsoleKey.UpArrow:    this.HandleUpArrow   ( document , view ); break;
+                    case ConsoleKey.DownArrow:  this.HandleDownArrow ( document , view ); break;
+                    case ConsoleKey.Backspace:  this.HandleBackspace ( document , view ); break;
+                    case ConsoleKey.Delete:     this.HandleDelete    ( document , view ); break;
+                    case ConsoleKey.Home:       this.HandleHome      ( document , view ); break;
+                    case ConsoleKey.End:        this.HandleEnd       ( document , view ); break;
+                    case ConsoleKey.Tab:        this.HandleTab       ( document , view ); break;
+                    case ConsoleKey.PageUp:     this.HandlePageUp    ( document , view ); break;
+                    case ConsoleKey.PageDown:   this.HandlePageDown  ( document , view ); break;
                 }
             }
             else if( key.Modifiers == ConsoleModifiers.Control )

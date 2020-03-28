@@ -6,16 +6,18 @@ namespace NonConTroll.CodeAnalysis.Text
     public sealed class SourceText
     {
         private readonly string Text;
+        private readonly string FileName;
 
-        private SourceText( string text )
+        private SourceText( string text , string fileName )
         {
             this.Text = text;
+            this.FileName = fileName;
             this.Lines = ParseLines( this , text );
         }
 
-        public static SourceText From( string text )
+        public static SourceText From( string text , string fileName = "" )
         {
-            return new SourceText( text );
+            return new SourceText( text , fileName );
         }
 
         private static ImmutableArray<TextLine> ParseLines( SourceText sourceText , string text )

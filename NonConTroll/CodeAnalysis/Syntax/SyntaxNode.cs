@@ -87,10 +87,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
             writer.Write( marker );
 
             if( isToConsole )
-                Console.ForegroundColor = node is SyntaxToken ?
-                    ConsoleColor.Blue : ConsoleColor.Cyan;
+                Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.DarkCyan : ConsoleColor.Cyan;
 
-            writer.Write( node.Kind );
+            if( node is SyntaxToken token )
+                writer.Write( token.TkType );
+            else
+                writer.Write( node.Kind );
 
             if( isToConsole )
                 Console.ResetColor();

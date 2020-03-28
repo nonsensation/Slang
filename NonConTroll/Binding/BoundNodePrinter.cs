@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
+using NonConTroll.CodeAnalysis.IO;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {

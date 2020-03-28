@@ -7,15 +7,16 @@ namespace NonConTroll.CodeAnalysis
 {
     public class Lexer
     {
-        private readonly SourceText Text;
+        private readonly SyntaxTree Tree;
+        private SourceText Text => this.Tree.Text;
         private int Position;
         private TokenType TkType;
         public DiagnosticBag Diagnostics = new DiagnosticBag();
         private int StartPos;
 
-        public Lexer( SourceText sourceText )
+        public Lexer( SyntaxTree syntaxTree )
         {
-            this.Text = sourceText;
+            this.Tree = syntaxTree;
         }
 
         private char Current => this.Peek( 0 );

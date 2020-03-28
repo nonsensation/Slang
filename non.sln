@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ok", "ok\ok.csproj", "{2B65
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonConTroll", "NonConTroll\NonConTroll.csproj", "{B39797D6-394D-4854-9D2A-B7F47C9EE97C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kk", "kk\kk.csproj", "{52F44522-7414-45AE-A736-AB5599CEF7F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -24,5 +26,9 @@ Global
 		{2B65F7AD-137E-4F98-AD28-6DB455328E26}.Debug|x64.Build.0 = Debug|Any CPU
 		{2B65F7AD-137E-4F98-AD28-6DB455328E26}.Release|x64.ActiveCfg = Release|Any CPU
 		{2B65F7AD-137E-4F98-AD28-6DB455328E26}.Release|x64.Build.0 = Release|Any CPU
+		{52F44522-7414-45AE-A736-AB5599CEF7F7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52F44522-7414-45AE-A736-AB5599CEF7F7}.Debug|x64.Build.0 = Debug|Any CPU
+		{52F44522-7414-45AE-A736-AB5599CEF7F7}.Release|x64.ActiveCfg = Release|Any CPU
+		{52F44522-7414-45AE-A736-AB5599CEF7F7}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

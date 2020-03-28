@@ -12,15 +12,16 @@ namespace NonConTroll.CodeAnalysis.Syntax
     {
         public readonly DiagnosticBag Diagnostics = new DiagnosticBag();
 
-        private readonly SourceText Text;
+        private readonly SyntaxTree Tree;
+        private SourceText Text => this.Tree.Text;
         private readonly ImmutableArray<SyntaxToken> Tokens;
 
         private int Position;
 
-        public Parser( SourceText text )
+        public Parser( SyntaxTree syntaxTree )
         {
             var tokens = new List<SyntaxToken>();
-            var lexer = new Lexer( text );
+            var lexer = new Lexer( syntaxTree );
             var token = default( SyntaxToken );
 
             do
@@ -34,7 +35,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
             while( token.TkType != TokenType.EndOfFile );
 
-            this.Text = text;
+            this.Tree = syntaxTree;
             this.Tokens = tokens.ToImmutableArray();
             this.Diagnostics.AddRange( lexer.Diagnostics );
         }

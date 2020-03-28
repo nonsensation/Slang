@@ -1,35 +1,53 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class SyntaxTree
     {
-        private SyntaxTree( SourceText text )
-        {
-            var parser = new Parser( text );
+        private delegate void ParseHandler( SyntaxTree syntaxTree ,
+                                            out CompilationUnitSyntax compilationUnit ,
+                                            out ImmutableArray<Diagnostic> diagnostics );
 
+        private SyntaxTree( SourceText text , ParseHandler handler )
+        {
             this.Text = text;
-            this.Root = parser.ParseCompilationUnit();
-            this.Diagnostics = parser.Diagnostics.ToImmutableArray();
+
+            var parser = new Parser( this );
+
+            handler( this , out var root , out var diagnostics );
+            
+            this.Root = root;
+            this.Diagnostics = diagnostics;
         }
 
         public SourceText Text { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
         public CompilationUnitSyntax Root { get; }
 
-        public static SyntaxTree Parse( string text )
+        public static SyntaxTree Load( string fileName )
         {
-            var sourceText = SourceText.From( text );
+            var text = File.ReadAllText( fileName );
+            var sourceText = SourceText.From( text , fileName );
 
             return Parse( sourceText );
         }
 
-        public static SyntaxTree Parse( SourceText text )
+        public static void Parse( SyntaxTree syntaxTree , out CompilationUnitSyntax root , out ImmutableArray<Diagnostic> diagnostics )
         {
-            return new SyntaxTree( text );
+            var parser = new Parser( syntaxTree );
+
+            root = parser.ParseCompilationUnit();
+            diagnostics = parser.Diagnostics.ToImmutableArray();
         }
+
+        public static SyntaxTree Parse( SourceText text )
+            => new SyntaxTree( text , Parse );
+
+        public static SyntaxTree Parse( string text )
+            => new SyntaxTree( SourceText.From( text ) , Parse );
 
         public static ImmutableArray<SyntaxToken> ParseTokens( string text )
         {
@@ -52,25 +70,34 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public static ImmutableArray<SyntaxToken> ParseTokens( SourceText text , out ImmutableArray<Diagnostic> diagnostics )
         {
-            static IEnumerable<SyntaxToken> LexTokens( Lexer lexer )
+            var tokens = new List<SyntaxToken>();
+
+            void ParseTokens( SyntaxTree syntaxTree , out CompilationUnitSyntax root , out ImmutableArray<Diagnostic> diagnostics )
             {
+                var lexer = new Lexer( syntaxTree );
+
                 while( true )
                 {
                     var token = lexer.Lex();
 
                     if( token.TkType == TokenType.EndOfFile )
-                        break;
+                    {
+                        root = new CompilationUnitSyntax( ImmutableArray<MemberSyntax>.Empty , token );
 
-                    yield return token;
+                        break;
+                    }
+
+                    tokens.Add( token );
                 }
+
+                diagnostics = lexer.Diagnostics.ToImmutableArray();
             }
 
-            var lexer = new Lexer( text );
-            var result = LexTokens( lexer ).ToImmutableArray();
+            var syntaxTree = new SyntaxTree( text , ParseTokens );
 
-            diagnostics = lexer.Diagnostics.ToImmutableArray();
 
-            return result;
+
+            return tokens.ToImmutableArray();
         }
     }
 }

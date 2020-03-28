@@ -13,9 +13,9 @@ namespace NonConTroll.CodeAnalysis.Binding
     {
         private ControlFlowGraph( BasicBlock start , BasicBlock end , List<BasicBlock> blocks , List<BasicBlockBranch> branches )
         {
-            this.Start = start;
-            this.End = end;
-            this.Blocks = blocks;
+            this.Start    = start;
+            this.End      = end;
+            this.Blocks   = blocks;
             this.Branches = branches;
         }
 
@@ -165,9 +165,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 for( var i = 0 ; i < blocks.Count ; i++ )
                 {
                     var current = blocks[ i ];
-                    var next = i == blocks.Count - 1
-                        ? this.End
-                        : blocks[ i + 1 ];
+                    var next = i == blocks.Count - 1 ? this.End : blocks[ i + 1 ];
 
                     foreach( var statement in current.Statements )
                     {
@@ -317,8 +315,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             foreach( var branch in this.Branches )
             {
-                var fromId = blockIds[branch.From];
-                var toId = blockIds[branch.To];
+                var fromId = blockIds[ branch.From ];
+                var toId = blockIds [branch.To ];
                 var label = Quote( branch.ToString() );
 
                 writer.WriteLine( $"    {fromId} -> {toId} [label = {label}]" );

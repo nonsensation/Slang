@@ -1,7 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\NonConTroll\NonConTroll.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -14,7 +18,7 @@
       <DefineConstants>TRACE;DEBUG</DefineConstants>
       <ErrorReport>prompt</ErrorReport>
       <WarningLevel>4</WarningLevel>
-      <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
       <WarningsNotAsErrors></WarningsNotAsErrors>
       <NoWarn>
         IDE0066, <!-- Use 'switch' expression -->
