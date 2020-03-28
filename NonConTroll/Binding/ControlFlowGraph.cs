@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -50,9 +51,10 @@ namespace NonConTroll.CodeAnalysis.Binding
                     return "<End>";
 
                 using var writer = new StringWriter();
+                using var indentedWriter = new IndentedTextWriter( writer );
 
                 foreach( var statement in this.Statements )
-                    statement.WriteTo( writer );
+                    statement.WriteTo( indentedWriter );
 
                 return writer.ToString();
             }
@@ -162,8 +164,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                 for( var i = 0 ; i < blocks.Count ; i++ )
                 {
-                    var current = blocks[i];
-                    var next = i == blocks.Count - 1 ? this.End : blocks[i + 1];
+                    var current = blocks[ i ];
+                    var next = i == blocks.Count - 1
+                        ? this.End
+                        : blocks[ i + 1 ];
 
                     foreach( var statement in current.Statements )
                     {
@@ -174,7 +178,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                             case BoundNodeKind.GotoStatement:
                             {
                                 var gs = (BoundGotoStatement)statement;
-                                var toBlock = this.BlockFromLabel[gs.Label];
+                                var toBlock = this.BlockFromLabel[ gs.Label ];
 
                                 this.Connect( current , toBlock );
                             }
@@ -182,10 +186,10 @@ namespace NonConTroll.CodeAnalysis.Binding
                             case BoundNodeKind.ConditionalGotoStatement:
                             {
                                 var cgs = (BoundConditionalGotoStatement)statement;
-                                var thenBlock = this.BlockFromLabel[cgs.Label];
+                                var thenBlock = this.BlockFromLabel[ cgs.Label ];
                                 var elseBlock = next;
-                                var negatedCondition = this.Negate(cgs.Condition); ;
-                                var thenCondition = cgs.JumpIfTrue ? cgs.Condition : negatedCondition;
+                                var negatedCondition = this.Negate( cgs.Condition );
+                                var thenCondition = cgs.JumpIfTrue ? cgs.Condition    : negatedCondition;
                                 var elseCondition = cgs.JumpIfTrue ? negatedCondition : cgs.Condition;
 
                                 this.Connect( current , thenBlock , thenCondition );
@@ -286,7 +290,12 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             static string Quote( string text )
             {
-                return "\"" + text.Replace( "\"" , "\\\"" ) + "\"";
+                return "\"" + text
+                    .TrimEnd()
+                    .Replace( "\\" , "\\\\" )
+                    .Replace( "\"" , "\\\"" )
+                    .Replace( Environment.NewLine , "\\l" )
+                    + "\"";
             }
 
             writer.WriteLine( "digraph G {" );
@@ -300,10 +309,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             foreach( var block in this.Blocks )
             {
-                var id = blockIds[block];
-                var label = Quote( block.ToString().Replace( Environment.NewLine , "\\l" ) );
+                var id = blockIds[ block ];
+                var label = Quote( block.ToString() );
 
-                writer.WriteLine( $"    {id} [label = {label} shape = box]" );
+                writer.WriteLine( $"    {id} [label = {label}, shape = box]" );
             }
 
             foreach( var branch in this.Branches )
@@ -329,9 +338,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             foreach( var branch in graph.End.Incoming )
             {
-                var lastStatement = branch.From.Statements.Last();
+                var lastStatement = branch.From.Statements.LastOrDefault();
 
-                if( lastStatement.Kind != BoundNodeKind.ReturnStatement )
+                if( lastStatement == null ||
+                    lastStatement.Kind != BoundNodeKind.ReturnStatement )
                     return false;
             }
 

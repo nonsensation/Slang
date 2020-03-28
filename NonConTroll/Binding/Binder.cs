@@ -107,7 +107,8 @@ namespace NonConTroll.CodeAnalysis.Binding
             var returnType = this.BindTypeClause( syntax.ReturnType ) ?? TypeSymbol.Void;
             var function   = new FunctionSymbol( syntax.Identifier.Text! , parameters.ToImmutable() , returnType , syntax );
 
-            if( !this.Scope!.TryDeclareFunction( function ) )
+            if( function.Declaration.Identifier.Text != null &&
+                !this.Scope!.TryDeclareFunction( function ) )
                 this.DiagBag.ReportSymbolAlreadyDeclared( syntax.Identifier.Span , function.Name );
         }
 
@@ -195,10 +196,23 @@ namespace NonConTroll.CodeAnalysis.Binding
             var type                 = this.BindTypeClause( syntax.TypeClause );
             var initializer          = this.BindExpression( syntax.Initializer );
             var variableType         = type ?? initializer.Type;
-            var variable             = this.BindVariable( syntax.Identifier , isReadOnly , variableType );
+            var variable             = this.BindVariableDeclaration( syntax.Identifier , isReadOnly , variableType );
             var convertedInitializer = this.BindConversion( syntax.Initializer.Span , initializer , variableType );
 
             return new BoundVariableDeclaration( variable , convertedInitializer );
+        }
+
+        private VariableSymbol BindVariableDeclaration( SyntaxToken identifier , bool isReadOnly , TypeSymbol type )
+        {
+            var name = identifier.Text ?? "?";
+            var variable = this.Function == null
+                                ? (VariableSymbol) new GlobalVariableSymbol( name , isReadOnly , type )
+                                : new LocalVariableSymbol( name , isReadOnly , type );
+
+            if( !identifier.IsMissing && !this.Scope!.TryDeclareVariable( variable ) )
+                this.Diagnostics.ReportSymbolAlreadyDeclared( identifier.Span , name );
+
+            return variable;
         }
 
         private TypeSymbol? BindTypeClause( TypeClauseSyntax? syntax )
@@ -248,7 +262,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             this.Scope = new BoundScope( this.Scope );
 
-            var variable = this.BindVariable( syntax.Identifier , isReadOnly: true , TypeSymbol.Int );
+            var variable = this.BindVariableDeclaration( syntax.Identifier , isReadOnly: true , TypeSymbol.Int );
             var body     = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
 
             this.Scope = this.Scope.Parent;
@@ -420,27 +434,22 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }
 
-            if( !this.Scope!.TryLookupVariable( name , out var variable ) )
-            {
-                this.DiagBag.ReportUndefinedName( syntax.IdentifierToken.Span , name );
+            var variable = this.BindVariableReference( name , syntax.IdentifierToken.Span );
 
+            if( variable == null )
                 return new BoundErrorExpression();
-            }
 
-            return new BoundVariableExpression( variable! );
+            return new BoundVariableExpression( variable );
         }
 
         private BoundExpression BindAssignmentExpression( AssignmentExpressionSyntax syntax )
         {
             var name = syntax.IdentifierToken.Text!;
-            var boundExpression = this.BindExpression(syntax.Expression);
+            var boundExpression = this.BindExpression( syntax.Expression );
+            var variable = this.BindVariableReference( name , syntax.IdentifierToken.Span );
 
-            if( !this.Scope!.TryLookupVariable( name , out var variable ) )
-            {
-                this.DiagBag.ReportUndefinedName( syntax.IdentifierToken.Span , name );
-
+            if( variable == null )
                 return boundExpression;
-            }
 
             if( variable!.IsReadOnly )
                 this.DiagBag.ReportCannotAssign( syntax.EqualsToken.Span , name );
@@ -500,9 +509,20 @@ namespace NonConTroll.CodeAnalysis.Binding
             foreach( var argument in syntax.Arguments )
                 boundArguments.Add( this.BindExpression( argument ) );
 
-            if( !this.Scope!.TryLookupFunction( identifierText , out var function ) )
+            var symbol = this.Scope!.TryLookupSymbol( syntax.Identifier.Text! );
+
+            if( symbol == null )
             {
                 this.DiagBag.ReportUndefinedFunction( syntax.Identifier.Span , identifierText );
+
+                return new BoundErrorExpression();
+            }
+
+            var function = symbol as FunctionSymbol;
+
+            if( function == null )
+            {
+                this.DiagBag.ReportNotAFunction( syntax.Identifier.Span , identifierText );
 
                 return new BoundErrorExpression();
             }
@@ -598,6 +618,21 @@ namespace NonConTroll.CodeAnalysis.Binding
                 this.DiagBag.ReportSymbolAlreadyDeclared( identifier.Span , name );
 
             return variable;
+        }
+
+        private VariableSymbol? BindVariableReference( string name , TextSpan span )
+        {
+            switch( this.Scope!.TryLookupSymbol( name ) )
+            {
+                case VariableSymbol variable:
+                    return variable;
+                case null:
+                    this.Diagnostics.ReportUndefinedVariable( span , name );
+                    return null;
+                default:
+                    this.Diagnostics.ReportNotAVariable( span , name );
+                    return null;
+            }
         }
 
         private TypeSymbol? LookupType( string name )

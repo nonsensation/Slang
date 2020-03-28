@@ -214,16 +214,20 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteGotoStatement( BoundGotoStatement node , IndentedTextWriter writer )
         {
-            writer.Write( "goto " );
+            writer.Write( "goto" );
+            writer.WriteSpace();
             writer.WriteIdentifier( node.Label.Name );
             writer.WriteLine();
         }
 
         private static void WriteConditionalGotoStatement( BoundConditionalGotoStatement node , IndentedTextWriter writer )
         {
-            writer.Write( "goto " );
+            writer.Write( "goto" );
+            writer.WriteSpace();
             writer.WriteIdentifier( node.Label.Name );
-            writer.Write( node.JumpIfTrue ? " if " : " unless " );
+            writer.WriteSpace();
+            writer.Write( node.JumpIfTrue ? "if" : "unless" );
+            writer.WriteSpace();
             node.Condition.WriteTo( writer );
             writer.WriteLine();
         }

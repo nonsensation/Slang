@@ -36,33 +36,12 @@ namespace NonConTroll.CodeAnalysis.Binding
             return true;
         }
 
-        public bool TryLookupVariable( string name , out VariableSymbol? variable )
-            => this.TryLookupSymbol( name , out variable );
-
-        public bool TryLookupFunction( string name , out FunctionSymbol? function )
-            => this.TryLookupSymbol( name , out function );
-
-        private bool TryLookupSymbol<TSymbol>( string name , out TSymbol? symbol )
-            where TSymbol : Symbol
+        public Symbol? TryLookupSymbol( string name )
         {
-            symbol = null;
+            if( this.Symbols != null && this.Symbols.TryGetValue( name , out var symbol ) )
+                return symbol;
 
-            if( this.Symbols != null && this.Symbols.TryGetValue( name , out var declaredSymbol ) )
-            {
-                if( declaredSymbol is TSymbol matchingSymbol )
-                {
-                    symbol = matchingSymbol;
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            if( this.Parent == null )
-                return false;
-
-            return this.Parent.TryLookupSymbol( name , out symbol );
+            return this.Parent?.TryLookupSymbol( name );
         }
 
         public ImmutableArray<VariableSymbol> GetDeclaredVariables()

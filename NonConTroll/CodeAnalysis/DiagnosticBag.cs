@@ -88,12 +88,22 @@ namespace NonConTroll.CodeAnalysis
             => this.Report( span , $"Since the function '{functionName}' does not return a value the 'return' keyword cannot be followed by an expression." );
 
         public void ReportMissingReturnExpression( TextSpan span , TypeSymbol returnType )
-            => this.Report( span , $"An expression of type '{returnType}' expected." );
+            => this.Report( span , $"An expression of type '{returnType}' is expected." );
 
         internal void ReportExpressionInvalidLiteral( TextSpan span )
             => this.Report( span , "Invalid literal." );
 
         internal void ReportExpressionInvalidNumericLiteral( TextSpan span , string literalText )
             => this.Report( span , $"The numeric literal '{literalText}' is not a valid number." );
+
+        internal void ReportUndefinedVariable( TextSpan span , string name )
+            => this.Report( span , $"Variable '{name}' doesn't exist." );
+
+        internal void ReportNotAVariable( TextSpan span , string name )
+            => this.Report( span , $"'{name}' is not a variable." );
+
+        internal void ReportNotAFunction( TextSpan span , string name )
+            => this.Report( span , $"'{name}' is not a function." );
+
     }
 }
