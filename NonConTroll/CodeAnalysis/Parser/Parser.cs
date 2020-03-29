@@ -60,7 +60,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             if( this.Current.TkType == tokenType )
                 return this.NextToken();
 
-            this.Diagnostics.ReportUnexpectedToken( this.Current.Span , this.Current.TkType , tokenType );
+            this.Diagnostics.ReportUnexpectedToken( this.Current.Location , this.Current.TkType , tokenType );
 
             return new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null );
         }

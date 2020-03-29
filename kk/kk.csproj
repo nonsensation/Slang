@@ -8,6 +8,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
+    <Features>strict</Features>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -18,12 +19,13 @@
       <DefineConstants>TRACE;DEBUG</DefineConstants>
       <ErrorReport>prompt</ErrorReport>
       <WarningLevel>4</WarningLevel>
-      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+      <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
       <WarningsNotAsErrors></WarningsNotAsErrors>
       <NoWarn>
         IDE0066, <!-- Use 'switch' expression -->
         IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
-        IDE0060  <!-- Remove unused parameter -->
+        IDE0060, <!-- Remove unused parameter -->
+        IDE0019  <!-- Use pattern macthing -->
       </NoWarn>
       <WarningsAsErrors></WarningsAsErrors>
   </PropertyGroup>

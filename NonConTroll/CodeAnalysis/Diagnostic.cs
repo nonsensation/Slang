@@ -4,13 +4,13 @@ namespace NonConTroll.CodeAnalysis
 {
     public class Diagnostic
     {
-        public Diagnostic( TextSpan span , string msg )
+        public Diagnostic( TextLocation textLocation , string msg )
         {
-            this.Span = span;
+            this.Location = textLocation;
             this.Msg = msg;
         }
 
-        public TextSpan Span { get; }
+        public TextLocation Location { get; }
         public string Msg { get; }
 
         public override string ToString() => this.Msg;

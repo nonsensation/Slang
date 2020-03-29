@@ -374,7 +374,10 @@ namespace NonConTroll.CodeAnalysis
 
                 default:
                 {
-                    this.Diagnostics.ReportBadCharacter( this.Position , this.Current );
+                    var span = new TextSpan( this.Position , 1 );
+                    var location = new TextLocation( this.Text , span );
+
+                    this.Diagnostics.ReportBadCharacter( location , this.Current );
                     this.Advance();
 
                     break;
@@ -392,7 +395,6 @@ namespace NonConTroll.CodeAnalysis
 
         private void ScanString()
         {
-
             this.Advance(); // Skip the current quote
 
             var done = false;
@@ -404,9 +406,15 @@ namespace NonConTroll.CodeAnalysis
                     case '\0':
                     case '\r':
                     case '\n':
-                        this.Diagnostics.ReportUnterminatedString( new TextSpan( this.StartPos , 1 ) );
+                    {
+                        var span = new TextSpan( this.StartPos , 1 );
+                        var location = new TextLocation( this.Text , span );
+
+                        this.Diagnostics.ReportUnterminatedString( location );
+
                         done = true;
-                        break;
+                    }
+                    break;
                     case '"':
                         if( this.Peek( 1 ) == '"' )
                         {
@@ -415,6 +423,7 @@ namespace NonConTroll.CodeAnalysis
                         else
                         {
                             this.Advance( 1 );
+
                             done = true;
                         }
                         break;

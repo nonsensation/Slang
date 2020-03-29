@@ -215,9 +215,9 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         protected virtual BoundExpression RewriteBinaryExpression( BoundBinaryExpression node )
         {
-            var left = this.RewriteExpression(node.Left);
-            var right = this.RewriteExpression(node.Right);
-            if( left == node.Left && right == node.Right )
+            var left = this.RewriteExpression(node.Lhs);
+            var right = this.RewriteExpression(node.Rhs);
+            if( left == node.Lhs && right == node.Rhs )
                 return node;
 
             return new BoundBinaryExpression( left , node.Op , right );

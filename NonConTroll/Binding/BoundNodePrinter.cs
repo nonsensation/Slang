@@ -304,11 +304,11 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             var precedence = node.Op.TkType.GetBinaryOperatorPrecedence();
 
-            writer.WriteNestedExpression( precedence , node.Left );
+            writer.WriteNestedExpression( precedence , node.Lhs );
             writer.WriteSpace();
             writer.WritePunctuation( node.Op.TkType );
             writer.WriteSpace();
-            writer.WriteNestedExpression( precedence , node.Right );
+            writer.WriteNestedExpression( precedence , node.Rhs );
         }
 
         private static void WriteCallExpression( BoundCallExpression node , IndentedTextWriter writer )

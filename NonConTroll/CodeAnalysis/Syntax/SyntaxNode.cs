@@ -19,6 +19,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public abstract SyntaxKind Kind { get; }
 
+        public TextLocation Location => new TextLocation( this.SyntaxTree.Text , this.Span );
+
         public virtual TextSpan Span {
             get {
                 var children = this.GetChildren();

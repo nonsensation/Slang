@@ -11,6 +11,8 @@ namespace NonConTroll.CodeAnalysis.Text
         public SourceText Text { get; }
         public TextSpan Span { get; }
 
+        public readonly string FileName => this.Text.FileName;
+
         public int StartLine => this.Text.GetLineIndex( this.Span.Start );
         public int EndLine => this.Text.GetLineIndex( this.Span.End );
         public int StartCharacter => this.Span.Start - this.Text.Lines[ this.StartLine ].Start;

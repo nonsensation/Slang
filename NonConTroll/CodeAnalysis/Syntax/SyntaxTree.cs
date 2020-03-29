@@ -93,9 +93,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 diagnostics = lexer.Diagnostics.ToImmutableArray();
             }
 
-            var syntaxTree = new SyntaxTree( text , ParseTokens );
+            var tree = new SyntaxTree( text , ParseTokens );
 
-
+            diagnostics = tree.Diagnostics.ToImmutableArray();
 
             return tokens.ToImmutableArray();
         }

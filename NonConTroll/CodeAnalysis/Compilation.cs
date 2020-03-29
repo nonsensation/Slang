@@ -14,25 +14,25 @@ namespace NonConTroll.CodeAnalysis
     {
         private BoundGlobalScope? _globalScope;
 
-        public Compilation( SyntaxTree syntaxTree )
-            : this( null , syntaxTree )
+        public Compilation( params SyntaxTree[] syntaxTrees )
+            : this( null , syntaxTrees )
         {
         }
 
-        private Compilation( Compilation? previous , SyntaxTree syntaxTree )
+        private Compilation( Compilation? previous , params SyntaxTree[] syntaxTrees )
         {
-            this.Previous   = previous;
-            this.SyntaxTree = syntaxTree;
+            this.Previous    = previous;
+            this.SyntaxTrees = syntaxTrees.ToImmutableArray();
         }
 
         public Compilation? Previous { get; }
-        public SyntaxTree SyntaxTree { get; }
+        public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
 
         internal BoundGlobalScope GlobalScope {
             get {
                 if( this._globalScope == null )
                 {
-                    var globalScope = Binder.BindGlobalScope(this.Previous?.GlobalScope, this.SyntaxTree.Root);
+                    var globalScope = Binder.BindGlobalScope( this.Previous?.GlobalScope , this.SyntaxTrees );
 
                     _ = Interlocked.CompareExchange( ref this._globalScope! , globalScope , null );
                 }
@@ -48,19 +48,22 @@ namespace NonConTroll.CodeAnalysis
 
         public EvaluationResult Evaluate( Dictionary<VariableSymbol , object> variables )
         {
-            var diagnostics = this.SyntaxTree.Diagnostics.Concat(this.GlobalScope.Diagnostics).ToImmutableArray();
+            var diagnostics = this.SyntaxTrees
+                .SelectMany( x => x.Diagnostics )
+                .Concat( this.GlobalScope.Diagnostics )
+                .ToImmutableArray();
 
             if( diagnostics.Any() )
                 return new EvaluationResult( diagnostics , null );
 
-            var program = Binder.BindProgram(this.GlobalScope);
-            var appPath = Environment.GetCommandLineArgs()[0];
-            var appDirectory = Path.GetDirectoryName(appPath)!;
-            var cfgPath = Path.Combine(appDirectory, "cfg.dot");
+            var program      = Binder.BindProgram( this.GlobalScope );
+            var appPath      = Environment.GetCommandLineArgs()[ 0 ];
+            var appDirectory = Path.GetDirectoryName( appPath )!;
+            var cfgPath      = Path.Combine( appDirectory , "cfg.dot" );
             var cfgStatement = !program.Statement.Statements.Any() && program.Functions.Any()
-                                  ? program.Functions.Last().Value
-                                  : program.Statement;
-            var cfg = ControlFlowGraph.Create(cfgStatement);
+                             ? program.Functions.Last().Value
+                             : program.Statement;
+            var cfg = ControlFlowGraph.Create( cfgStatement );
 
             using( var streamWriter = new StreamWriter( cfgPath ) )
                 cfg.WriteTo( streamWriter );
@@ -262,53 +265,42 @@ namespace NonConTroll.CodeAnalysis
 
         private object EvaluateBinaryExpression( BoundBinaryExpression b )
         {
-            var left = this.EvaluateExpression(b.Left)!;
-            var right = this.EvaluateExpression(b.Right)!;
+            var lhs = this.EvaluateExpression( b.Lhs )!;
+            var rhs = this.EvaluateExpression( b.Rhs )!;
 
             switch( b.Op.Kind )
             {
                 case BoundBinaryOperatorKind.Addition:
                     if( b.Type == TypeSymbol.Int )
-                        return (int)left + (int)right;
+                        return (int)lhs + (int)rhs;
                     else
-                        return (string)left + (string)right;
-                case BoundBinaryOperatorKind.Subtraction:
-                    return (int)left - (int)right;
-                case BoundBinaryOperatorKind.Multiplication:
-                    return (int)left * (int)right;
-                case BoundBinaryOperatorKind.Division:
-                    return (int)left / (int)right;
-                case BoundBinaryOperatorKind.BitwiseAnd:
-                    if( b.Type == TypeSymbol.Int )
-                        return (int)left & (int)right;
-                    else
-                        return (bool)left & (bool)right;
-                case BoundBinaryOperatorKind.BitwiseOr:
-                    if( b.Type == TypeSymbol.Int )
-                        return (int)left | (int)right;
-                    else
-                        return (bool)left | (bool)right;
+                        return ((string)lhs).Replace( "\"" , "" ) + ((string)rhs).Replace( "\"" , "" );
+
+                case BoundBinaryOperatorKind.Subtraction:     return (bool)lhs && (bool)rhs;
+                case BoundBinaryOperatorKind.LogicalOr:       return (bool)lhs || (bool)rhs;
+                case BoundBinaryOperatorKind.Equals:          return Equals( lhs , rhs );
+                case BoundBinaryOperatorKind.NotEquals:       return !Equals( lhs , rhs );
+                case BoundBinaryOperatorKind.Less:            return (int)lhs < (int)rhs;
+                case BoundBinaryOperatorKind.LessOrEquals:    return (int)lhs <= (int)rhs;
+                case BoundBinaryOperatorKind.Greater:         return (int)lhs > (int)rhs;
+                case BoundBinaryOperatorKind.GreaterOrEquals: return (int)lhs >= (int)rhs;
+
                 case BoundBinaryOperatorKind.BitwiseXor:
                     if( b.Type == TypeSymbol.Int )
-                        return (int)left ^ (int)right;
+                        return (int)lhs ^ (int)rhs;
                     else
-                        return (bool)left ^ (bool)right;
-                case BoundBinaryOperatorKind.LogicalAnd:
-                    return (bool)left && (bool)right;
-                case BoundBinaryOperatorKind.LogicalOr:
-                    return (bool)left || (bool)right;
-                case BoundBinaryOperatorKind.Equals:
-                    return Equals( left , right );
-                case BoundBinaryOperatorKind.NotEquals:
-                    return !Equals( left , right );
-                case BoundBinaryOperatorKind.Less:
-                    return (int)left < (int)right;
-                case BoundBinaryOperatorKind.LessOrEquals:
-                    return (int)left <= (int)right;
-                case BoundBinaryOperatorKind.Greater:
-                    return (int)left > (int)right;
-                case BoundBinaryOperatorKind.GreaterOrEquals:
-                    return (int)left >= (int)right;
+                        return (bool)lhs ^ (bool)rhs;
+                case BoundBinaryOperatorKind.BitwiseOr:
+                    if( b.Type == TypeSymbol.Int )
+                        return (int)lhs | (int)rhs;
+                    else
+                        return (bool)lhs | (bool)rhs;
+                case BoundBinaryOperatorKind.BitwiseAnd:
+                    if( b.Type == TypeSymbol.Int )
+                        return (int)lhs & (int)rhs;
+                    else
+                        return (bool)lhs & (bool)rhs;
+
                 default:
                     throw new Exception( $"Unexpected binary operator {b.Op}" );
             }

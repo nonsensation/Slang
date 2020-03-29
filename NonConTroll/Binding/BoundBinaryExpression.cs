@@ -4,18 +4,18 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundBinaryExpression : BoundExpression
     {
-        public BoundBinaryExpression( BoundExpression left , BoundBinaryOperator op , BoundExpression right )
+        public BoundBinaryExpression( BoundExpression lhs , BoundBinaryOperator op , BoundExpression rhs )
         {
-            this.Left = left;
+            this.Lhs = lhs;
             this.Op = op;
-            this.Right = right;
+            this.Rhs = rhs;
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression;
         public override TypeSymbol Type => this.Op.Type;
-        public BoundExpression Left { get; }
+        public BoundExpression Lhs { get; }
         public BoundBinaryOperator Op { get; }
-        public BoundExpression Right { get; }
+        public BoundExpression Rhs { get; }
     }
 
 }

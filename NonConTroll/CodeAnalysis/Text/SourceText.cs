@@ -3,10 +3,10 @@ using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Text
 {
-    public sealed class SourceText
+    public class SourceText
     {
-        private readonly string Text;
-        private readonly string FileName;
+        public readonly string Text;
+        public readonly string FileName;
 
         private SourceText( string text , string fileName )
         {

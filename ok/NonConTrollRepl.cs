@@ -70,18 +70,22 @@ namespace NonConTroll
                 return true;
 
             var lastTwoLinesAreBlank = text
-                .Split(Environment.NewLine).Reverse()
+                .Split( Environment.NewLine )
+                .Reverse()
                 .TakeWhile( s => string.IsNullOrEmpty( s ) )
-                .Take( 2 ).Count() == 2;
+                .Take( 2 )
+                .Count() == 2;
 
             if( lastTwoLinesAreBlank )
                 return true;
 
-            var syntaxTree = SyntaxTree.Parse(text);
+            var syntaxTree = SyntaxTree.Parse( text );
 
             // Use Members because we need to exclude the EndOfFileToken.
-            if( syntaxTree.Root.Members.Last().GetLastToken().IsMissing )
+            if( !syntaxTree.Root.Members.Any() ||
+                syntaxTree.Root.Members.Last().GetLastToken().IsMissing )
                 return false;
+
 
             return true;
         }
@@ -114,7 +118,7 @@ namespace NonConTroll
             }
             else
             {
-                Console.Error.WriteDiagnostics( result.Diagnostics , syntaxTree );
+                Console.Error.WriteDiagnostics( result.Diagnostics );
             }
         }
     }

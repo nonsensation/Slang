@@ -84,24 +84,33 @@ namespace NonConTroll.CodeAnalysis.IO
             writer.ResetColor();
         }
 
-        public static void WriteDiagnostics( this TextWriter writer , IEnumerable<Diagnostic> diagnostics , SyntaxTree syntaxTree )
+        public static void WriteDiagnostics( this TextWriter writer , IEnumerable<Diagnostic> diagnostics )
         {
-            foreach( var diagnostic in diagnostics.OrderBy( diag => diag.Span.Start )
-                                                  .ThenBy( diag => diag.Span.Length ) )
+            var diags = diagnostics
+                .OrderBy( diag => diag.Location.Text.FileName )
+                .ThenBy( diag => diag.Location.Span.Start )
+                .ThenBy( diag => diag.Location.Span.Length );
+
+            foreach( var diagnostic in diags )
             {
-                var lineIndex  = syntaxTree.Text.GetLineIndex( diagnostic.Span.Start );
-                var line       = syntaxTree.Text.Lines[ lineIndex ];
-                var lineNumber = lineIndex + 1;
-                var character  = diagnostic.Span.Start - line.Start + 1;
-                var prefixSpan = TextSpan.FromBounds( line.Start , diagnostic.Span.Start );
-                var suffixSpan = TextSpan.FromBounds( diagnostic.Span.End , line.End );
-                var prefix     = syntaxTree.Text.ToString( prefixSpan );
-                var error      = syntaxTree.Text.ToString( diagnostic.Span );
-                var suffix     = syntaxTree.Text.ToString( suffixSpan );
+                var span           = diagnostic.Location.Span;
+                var text           = diagnostic.Location.Text;
+                var lineIndex      = text.GetLineIndex( span.Start );
+                var line           = text.Lines[ lineIndex ];
+                var prefixSpan     = TextSpan.FromBounds( line.Start , span.Start );
+                var suffixSpan     = TextSpan.FromBounds( span.End , line.End );
+                var prefix         = text.ToString( prefixSpan );
+                var suffix         = text.ToString( suffixSpan );
+                var error          = text.ToString( span );
+                var fileName       = diagnostic.Location.FileName;
+                var startLine      = diagnostic.Location.StartLine + 1;
+                var endLine        = diagnostic.Location.EndLine + 1;
+                var startCharacter = diagnostic.Location.StartCharacter + 1;
+                var endCharacter   = diagnostic.Location.EndCharacter + 1;
 
                 Console.WriteLine();
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.Write( $"({lineNumber}, {character}): " );
+                Console.Write( $"{fileName}({startLine},{startCharacter},{endLine},{endCharacter}): error: " );
                 Console.WriteLine( diagnostic );
                 Console.ResetColor();
                 Console.Write( "    " );

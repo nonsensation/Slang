@@ -20,90 +20,93 @@ namespace NonConTroll.CodeAnalysis
         public void AddRange( DiagnosticBag diagnostics )
             => this.Diagnostics.AddRange( diagnostics.Diagnostics );
 
-        private void Report( TextSpan span , string message )
-            => this.Diagnostics.Add( new Diagnostic( span , message ) );
+        private void Report( TextLocation location , string message )
+            => this.Diagnostics.Add( new Diagnostic( location , message ) );
 
+    #region Reports
 
+        public void ReportInvalidNumber( TextLocation location , string text , TypeSymbol type )
+            => this.Report( location , $"The number {text} isn't valid {type}." );
 
-        public void ReportInvalidNumber( TextSpan span , string text , TypeSymbol type )
-            => this.Report( span , $"The number {text} isn't valid {type}." );
-        public void ReportBadCharacter( int position , char character )
-            => this.Report( new TextSpan( position , 1 ) , $"Bad character input: '{character}'." );
+        public void ReportBadCharacter( TextLocation location , char character )
+            => this.Report( location , $"Bad character input: '{character}'." );
 
-        public void ReportUnterminatedString( TextSpan span )
-            => this.Report( span , $"Unterminated string literal." );
+        public void ReportUnterminatedString( TextLocation location )
+            => this.Report( location , $"Unterminated string literal." );
 
-        public void ReportUnexpectedToken( TextSpan span , TokenType tokenType , TokenType expectedTokenType )
-            => this.Report( span , $"Unexpected token <{tokenType}>, expected <{expectedTokenType}>." );
+        public void ReportUnexpectedToken( TextLocation location , TokenType tokenType , TokenType expectedTokenType )
+            => this.Report( location , $"Unexpected token <{tokenType}>, expected <{expectedTokenType}>." );
 
-        public void ReportUndefinedUnaryOperator( TextSpan span , string operatorText , TypeSymbol operandType )
-            => this.Report( span , $"Unary operator '{operatorText}' is not defined for type '{operandType}'." );
+        public void ReportUndefinedUnaryOperator( TextLocation location , string operatorText , TypeSymbol operandType )
+            => this.Report( location , $"Unary operator '{operatorText}' is not defined for type '{operandType}'." );
 
-        public void ReportUndefinedBinaryOperator( TextSpan span , string operatorText , TypeSymbol leftType , TypeSymbol rightType )
-            => this.Report( span , $"Binary operator '{operatorText}' is not defined for types '{leftType}' and '{rightType}'." );
+        public void ReportUndefinedBinaryOperator( TextLocation location , string operatorText , TypeSymbol leftType , TypeSymbol rightType )
+            => this.Report( location , $"Binary operator '{operatorText}' is not defined for types '{leftType}' and '{rightType}'." );
 
-        public void ReportParameterAlreadyDeclared( TextSpan span , string parameterName )
-            => this.Report( span , $"A parameter with the name '{parameterName}' already exists." );
+        public void ReportParameterAlreadyDeclared( TextLocation location , string parameterName )
+            => this.Report( location , $"A parameter with the name '{parameterName}' already exists." );
 
-        public void ReportUndefinedName( TextSpan span , string name )
-            => this.Report( span , $"Variable '{name}' doesn't exist." );
+        public void ReportUndefinedName( TextLocation location , string name )
+            => this.Report( location , $"Variable '{name}' doesn't exist." );
 
-        public void ReportUndefinedType( TextSpan span , string name )
-            => this.Report( span , $"Type '{name}' doesn't exist." );
+        public void ReportUndefinedType( TextLocation location , string name )
+            => this.Report( location , $"Type '{name}' doesn't exist." );
 
-        public void ReportCannotConvert( TextSpan span , TypeSymbol fromType , TypeSymbol toType )
-            => this.Report( span , $"Cannot convert type '{fromType}' to '{toType}'." );
+        public void ReportCannotConvert( TextLocation location , TypeSymbol fromType , TypeSymbol toType )
+            => this.Report( location , $"Cannot convert type '{fromType}' to '{toType}'." );
 
-        public void ReportCannotConvertImplicit( TextSpan span , TypeSymbol fromType , TypeSymbol toType )
-            => this.Report( span , $"Cannot convert type '{fromType}' to '{toType}'. An explicit conversion exists (are you missing a cast?)" );
+        public void ReportCannotConvertImplicit( TextLocation location , TypeSymbol fromType , TypeSymbol toType )
+            => this.Report( location , $"Cannot convert type '{fromType}' to '{toType}'. An explicit conversion exists (are you missing a cast?)" );
 
-        public void ReportSymbolAlreadyDeclared( TextSpan span , string name )
-            => this.Report( span , $"'{name}' is already declared." );
+        public void ReportSymbolAlreadyDeclared( TextLocation location , string name )
+            => this.Report( location , $"'{name}' is already declared." );
 
-        public void ReportCannotAssign( TextSpan span , string name )
-            => this.Report( span , $"Variable '{name}' is read-only and cannot be assigned to." );
+        public void ReportCannotAssign( TextLocation location , string name )
+            => this.Report( location , $"Variable '{name}' is read-only and cannot be assigned to." );
 
-        public void ReportUndefinedFunction( TextSpan span , string name )
-            => this.Report( span , $"Function '{name}' doesn't exist." );
+        public void ReportUndefinedFunction( TextLocation location , string name )
+            => this.Report( location , $"Function '{name}' doesn't exist." );
 
-        public void ReportWrongArgumentCount( TextSpan span , string name , int expectedCount , int actualCount )
-            => this.Report( span , $"Function '{name}' requires {expectedCount} arguments but was given {actualCount}." );
+        public void ReportWrongArgumentCount( TextLocation location , string name , int expectedCount , int actualCount )
+            => this.Report( location , $"Function '{name}' requires {expectedCount} arguments but was given {actualCount}." );
 
-        public void ReportWrongArgumentType( TextSpan span , string name , TypeSymbol expectedType , TypeSymbol actualType )
-            => this.Report( span , $"Parameter '{name}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
+        public void ReportWrongArgumentType( TextLocation location , string name , TypeSymbol expectedType , TypeSymbol actualType )
+            => this.Report( location , $"Parameter '{name}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
 
-        public void ReportExpressionMustHaveValue( TextSpan span )
-            => this.Report( span , "Expression must have a value." );
+        public void ReportExpressionMustHaveValue( TextLocation location )
+            => this.Report( location , "Expression must have a value." );
 
-        public void ReportInvalidBreakOrContinue( TextSpan span , string text )
-            => this.Report( span , $"The keyword '{text}' can only be used inside of loops." );
+        public void ReportInvalidBreakOrContinue( TextLocation location , string text )
+            => this.Report( location , $"The keyword '{text}' can only be used inside of loops." );
 
-        public void ReportAllPathsMustReturn( TextSpan span )
-            => this.Report( span , "Not all code paths return a value." );
+        public void ReportAllPathsMustReturn( TextLocation location )
+            => this.Report( location , "Not all code paths return a value." );
 
-        public void ReportInvalidReturn( TextSpan span )
-            => this.Report( span , "The 'return' keyword can only be used inside of functions." );
+        public void ReportInvalidReturn( TextLocation location )
+            => this.Report( location , "The 'return' keyword can only be used inside of functions." );
 
-        public void ReportInvalidReturnExpression( TextSpan span , string functionName )
-            => this.Report( span , $"Since the function '{functionName}' does not return a value the 'return' keyword cannot be followed by an expression." );
+        public void ReportInvalidReturnExpression( TextLocation location , string functionName )
+            => this.Report( location , $"Since the function '{functionName}' does not return a value the 'return' keyword cannot be followed by an expression." );
 
-        public void ReportMissingReturnExpression( TextSpan span , TypeSymbol returnType )
-            => this.Report( span , $"An expression of type '{returnType}' is expected." );
+        public void ReportMissingReturnExpression( TextLocation location , TypeSymbol returnType )
+            => this.Report( location , $"An expression of type '{returnType}' is expected." );
 
-        internal void ReportExpressionInvalidLiteral( TextSpan span )
-            => this.Report( span , "Invalid literal." );
+        internal void ReportExpressionInvalidLiteral( TextLocation location )
+            => this.Report( location , "Invalid literal." );
 
-        internal void ReportExpressionInvalidNumericLiteral( TextSpan span , string literalText )
-            => this.Report( span , $"The numeric literal '{literalText}' is not a valid number." );
+        internal void ReportExpressionInvalidNumericLiteral( TextLocation location , string literalText )
+            => this.Report( location , $"The numeric literal '{literalText}' is not a valid number." );
 
-        internal void ReportUndefinedVariable( TextSpan span , string name )
-            => this.Report( span , $"Variable '{name}' doesn't exist." );
+        internal void ReportUndefinedVariable( TextLocation location , string name )
+            => this.Report( location , $"Variable '{name}' doesn't exist." );
 
-        internal void ReportNotAVariable( TextSpan span , string name )
-            => this.Report( span , $"'{name}' is not a variable." );
+        internal void ReportNotAVariable( TextLocation location , string name )
+            => this.Report( location , $"'{name}' is not a variable." );
 
-        internal void ReportNotAFunction( TextSpan span , string name )
-            => this.Report( span , $"'{name}' is not a function." );
+        internal void ReportNotAFunction( TextLocation location , string name )
+            => this.Report( location , $"'{name}' is not a function." );
+
+    #endregion
 
     }
 }
