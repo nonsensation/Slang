@@ -38,7 +38,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public Symbol? TryLookupSymbol( string name )
         {
-            if( this.Symbols != null && this.Symbols.TryGetValue( name , out var symbol ) )
+            if( this.Symbols != null &&
+                this.Symbols.TryGetValue( name , out var symbol ) )
                 return symbol;
 
             return this.Parent?.TryLookupSymbol( name );
