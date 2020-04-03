@@ -280,15 +280,14 @@ namespace NonConTroll
 
         private void UpdateDocumentFromHistory( ObservableCollection<string> document , SubmissionView view )
         {
-            if( this.SubmissionHistory.Count == 0 )
+            if( !this.SubmissionHistory.Any() )
                 return;
 
             document.Clear();
 
-            var historyItem = this.SubmissionHistory[this.SubmissionHistoryIndex];
-            var lines = historyItem.Split( Environment.NewLine );
+            var historyItem = this.SubmissionHistory[ this.SubmissionHistoryIndex ];
 
-            foreach( var line in lines )
+            foreach( var line in historyItem.Split( Environment.NewLine ) )
                 document.Add( line );
 
             view.CurrentLine = document.Count - 1;
@@ -298,10 +297,8 @@ namespace NonConTroll
         private void HandleTyping( ObservableCollection<string> document , SubmissionView view , string text )
         {
             var lineIndex = view.CurrentLine;
-            var start = view.CurrentCharacter;
 
-            document[ lineIndex ] = document[ lineIndex ].Insert( start , text );
-
+            document[ lineIndex ] = document[ lineIndex ].Insert( view.CurrentCharacter , text );
             view.CurrentCharacter += text.Length;
         }
 
@@ -317,19 +314,87 @@ namespace NonConTroll
 
         private void EvaluateMetaCommand( string input )
         {
-            var cmdName = input.Substring( 1 );
+            var pos = 1;
+            var quotes = false;
+            var args = new List<string>();
+            var sb = new StringBuilder();
+
+            while( pos < input.Length )
+            {
+                var c = input[ pos ];
+                var l = pos + 1 >= input.Length ? '\0' : input[ pos + 1 ];
+
+                if( char.IsWhiteSpace( c ) )
+                {
+                    if( !quotes )
+                        CommitPendingArgument();
+                    else
+                        sb.Append( c );
+                }
+
+                if( c == '\"' )
+                {
+                    if( !quotes )
+                        quotes = true;
+                    else if( l == '\"' )
+                    {
+                        sb.Append( c );
+                        pos++;
+                    }
+                    else
+                        quotes = false;
+                }
+                else
+                {
+                    sb.Append( c );
+                }
+
+                pos++;
+            }
+
+            CommitPendingArgument();
+
+            void CommitPendingArgument()
+            {
+                var arg = sb.ToString();
+
+                if( !string.IsNullOrWhiteSpace( arg ) )
+                    args.Add( arg );
+
+                sb.Clear();
+            }
+
+            var cmdName = args.FirstOrDefault();
+
+            if( args.Count > 0 )
+                args.RemoveAt( 0 );
+
             var cmd =  this.MetaCommands.SingleOrDefault( x => x.Name == cmdName );
 
-            if( cmd != null )
-            {
-                _ = cmd.MethodInfo.Invoke( this , null );
-            }
-            else
+            if( cmd == null )
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine( $"Invalid command {input}." );
                 Console.ResetColor();
+
+                return;
             }
+
+            var parameters = cmd.MethodInfo.GetParameters();
+
+            if( args.Count != parameters.Length )
+            {
+                var paramNames = string.Join( " " , parameters.Select( x => $"<{x.Name}>" ) );
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( $"Invalid number of arguments (given {args.Count}, expected {paramNames.Length})" );
+                Console.WriteLine( $"usage: #{cmd.Name} {paramNames}" );
+                Console.ResetColor();
+
+                return;
+            }
+
+            _ = cmd.MethodInfo.Invoke( this , args.ToArray() );
         }
 
         protected abstract bool IsCompleteSubmission( string text );
@@ -477,6 +542,12 @@ namespace NonConTroll
 
                 Console.WriteLine( $"#{paddedName}{metaCmd.Description}" );
             }
+        }
+
+        [MetaCommand( "test" , "Shows help" )]
+        protected void Evaluate_Test( string a1 , string a2 )
+        {
+            Console.WriteLine( $"{a1} {a2}" );
         }
     }
 }
