@@ -8,7 +8,7 @@ using NonConTroll.CodeAnalysis.IO;
 
 namespace NonConTroll
 {
-    internal sealed class NonConTrollRepl : Repl
+    internal class NonConTrollRepl : Repl
     {
         private Compilation? Previous;
         private bool ShowTree;
@@ -39,29 +39,33 @@ namespace NonConTroll
             }
         }
 
-        protected override void EvaluateMetaCommand( string input )
+        [MetaCommand( "tree" , "Shows the parse tree" )]
+        protected void Evaluate_Tree()
         {
-            switch( input )
-            {
-                case "#showTree":
-                    this.ShowTree = !this.ShowTree;
-                    Console.WriteLine( this.ShowTree ? "Showing parse trees." : "Not showing parse trees." );
-                    break;
-                case "#showProgram":
-                    this.ShowProgram = !this.ShowProgram;
-                    Console.WriteLine( this.ShowProgram ? "Showing bound tree." : "Not showing bound tree." );
-                    break;
-                case "#cls":
-                    Console.Clear();
-                    break;
-                case "#reset":
-                    this.Previous = null;
-                    this.Variables.Clear();
-                    break;
-                default:
-                    base.EvaluateMetaCommand( input );
-                    break;
-            }
+            this.ShowTree = !this.ShowTree;
+
+            Console.WriteLine( this.ShowTree ? "Showing parse trees." : "Not showing parse trees." );
+        }
+
+        [MetaCommand( "program" , "Shows the bound tree" )]
+        protected void Evaluate_Program()
+        {
+            this.ShowProgram = !this.ShowProgram;
+
+            Console.WriteLine( this.ShowProgram ? "Showing bound tree." : "Not showing bound tree." );
+        }
+
+        [MetaCommand( "cls" , "Clear screen" )]
+        protected void Evaluate_Cls()
+        {
+            Console.Clear();
+        }
+
+        [MetaCommand( "reset" , "Reset the REPL" )]
+        protected void Evaluate_Reset()
+        {
+            this.Previous = null;
+            this.Variables.Clear();
         }
 
         protected override bool IsCompleteSubmission( string text )

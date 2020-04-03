@@ -2,9 +2,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     public enum BoundNodeKind
     {
-        #region Statements
-        BlockStatement,
         VariableDeclaration,
+        TypeDeclaration,
+
+        #region Statements
+
+        BlockStatement,
         IfStatement,
         WhileStatement,
         DoWhileStatement,
@@ -14,9 +17,11 @@ namespace NonConTroll.CodeAnalysis.Binding
         ConditionalGotoStatement,
         ReturnStatement,
         ExpressionStatement,
+
         #endregion
 
         #region Expressions
+
         ErrorExpression,
         LiteralExpression,
         VariableExpression,
@@ -25,7 +30,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         BinaryExpression,
         CallExpression,
         ConversionExpression,
+
         #endregion
     }
-
 }

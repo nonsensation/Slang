@@ -234,7 +234,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public static TokenInfoAttribute GetTokenInfoAttribute( this TokenType tt )
             => typeof( TokenType ).GetMember( tt.ToString() ).First()
                 .GetCustomAttributes( typeof( TokenInfoAttribute ) , inherit: false )
-                .Cast<TokenInfoAttribute>().FirstOrDefault();
+                .Cast<TokenInfoAttribute>().FirstOrDefault()!;
     }
 
     public static class SyntaxInfo

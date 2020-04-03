@@ -217,7 +217,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 rhs == node.Rhs )
                 return node;
 
-            return new BoundBinaryExpression( lhs , node.Op , rhs );
+            return new BoundBinaryExpression( lhs , node.Operator , rhs );
         }
 
         protected virtual BoundExpression RewriteCallExpression( BoundCallExpression node )

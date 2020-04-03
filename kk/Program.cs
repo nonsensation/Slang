@@ -11,13 +11,13 @@ namespace NonConTroll
 {
     public class Program
     {
-        public static void Main( string[] args )
+        public static int Main( string[] args )
         {
             if( !args.Any() )
             {
                 Console.Error.WriteLine( "usage: kk <source-files>" );
 
-                return;
+                return 1;
             }
 
             var paths = GetFilePaths( args );
@@ -28,7 +28,7 @@ namespace NonConTroll
             {
                 if( !File.Exists( path ) )
                 {
-                    Console.WriteLine( $"error: file '{path}' doesn't exist" );
+                    Console.Error.WriteLine( $"error: file '{path}' doesn't exist" );
 
                     hasErrors = true;
 
@@ -41,7 +41,7 @@ namespace NonConTroll
             }
 
             if( hasErrors )
-                return;
+                return 1;
 
             var compilation = new Compilation( syntaxTrees.ToArray() );
             var result = compilation.Evaluate( new Dictionary<VariableSymbol,object>() );
@@ -50,11 +50,13 @@ namespace NonConTroll
             {
                 Console.Error.WriteDiagnostics( result.Diagnostics );
 
-                return;
+                return 1;
             }
 
             if( result.Value != null )
                 Console.WriteLine( result.Value );
+
+            return 0;
         }
 
         private static IEnumerable<string> GetFilePaths( IEnumerable<string> paths )

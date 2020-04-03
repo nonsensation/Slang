@@ -13,9 +13,7 @@ namespace NonConTroll.CodeAnalysis.Binding
     {
         private readonly DiagnosticBag DiagBag = new DiagnosticBag();
         public DiagnosticBag Diagnostics => this.DiagBag;
-
         private readonly FunctionSymbol? Function;
-
         private readonly Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)> LoopStack = new Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)>();
         private int LabelCounter;
         private BoundScope? Scope;
@@ -70,9 +68,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 foreach( var function in scope.Functions )
                 {
-                    var binder      = new Binder(parentScope, function);
-                    var body        = binder.BindStatement(function.Declaration!.Body);
-                    var loweredBody = Lowerer.Lower(body);
+                    var binder      = new Binder( parentScope , function );
+                    var body        = binder.BindStatement( function.Declaration!.Body );
+                    var loweredBody = Lowerer.Lower( body );
 
                     if( function.ReturnType != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn( loweredBody ) )
                         binder.DiagBag.ReportAllPathsMustReturn( function.Declaration.Identifier.Location );
@@ -146,7 +144,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static BoundScope CreateRootScope()
         {
-            var result = new BoundScope(null);
+            var result = new BoundScope( null );
 
             foreach( var f in BuiltinFunctions.GetAll() )
                 _ = result.TryDeclareFunction( f );
@@ -207,7 +205,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             var name = identifier.Text ?? "?";
             var variable = this.Function == null
-                                ? (VariableSymbol) new GlobalVariableSymbol( name , isReadOnly , type )
+                                ? (VariableSymbol)new GlobalVariableSymbol( name , isReadOnly , type )
                                 : new LocalVariableSymbol( name , isReadOnly , type );
 
             if( !identifier.IsMissing && !this.Scope!.TryDeclareVariable( variable ) )
@@ -352,7 +350,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindExpression( ExpressionSyntax syntax , bool canBeVoid = false )
         {
-            var result = this.BindExpressionpublic(syntax);
+            var result = this.BindExpressionpublic( syntax );
 
             if( !canBeVoid && result.Type == TypeSymbol.Void )
             {
@@ -368,22 +366,14 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             switch( syntax.Kind )
             {
-                case SyntaxKind.ParenthesizedExpression:
-                    return this.BindParenthesizedExpression( (ParenthesizedExpressionSyntax)syntax );
-                case SyntaxKind.LiteralExpression:
-                    return this.BindLiteralExpression( (LiteralExpressionSyntax)syntax );
-                case SyntaxKind.NameExpression:
-                    return this.BindNameExpression( (NameExpressionSyntax)syntax );
-                case SyntaxKind.AssignmentExpression:
-                    return this.BindAssignmentExpression( (AssignmentExpressionSyntax)syntax );
-                case SyntaxKind.UnaryExpression:
-                    return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
-                case SyntaxKind.BinaryExpression:
-                    return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
-                case SyntaxKind.CallExpression:
-                    return this.BindCallExpression( (CallExpressionSyntax)syntax );
-                default:
-                    throw new Exception( $"Unexpected syntax {syntax.Kind}" );
+                case SyntaxKind.ParenthesizedExpression: return this.BindParenthesizedExpression( (ParenthesizedExpressionSyntax)syntax );
+                case SyntaxKind.LiteralExpression:       return this.BindLiteralExpression( (LiteralExpressionSyntax)syntax );
+                case SyntaxKind.NameExpression:          return this.BindNameExpression( (NameExpressionSyntax)syntax );
+                case SyntaxKind.AssignmentExpression:    return this.BindAssignmentExpression( (AssignmentExpressionSyntax)syntax );
+                case SyntaxKind.UnaryExpression:         return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
+                case SyntaxKind.BinaryExpression:        return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
+                case SyntaxKind.CallExpression:          return this.BindCallExpression( (CallExpressionSyntax)syntax );
+                default: throw new Exception( $"Unexpected syntax {syntax.Kind}" );
             }
         }
 
@@ -399,6 +389,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             switch( syntax.LiteralToken.TkType )
             {
                 case TokenType.NumericLiteral:
+                {
                     if( !int.TryParse( syntax.LiteralToken.Text , out var intVal ) )
                     {
                         this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location , syntax.LiteralToken.Text! );
@@ -408,10 +399,14 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                     value = intVal;
 
-                    break;
+                }
+                break;
+
                 case TokenType.StringLiteral:
+                {
                     value = syntax.LiteralToken.Text;
-                    break;
+                }
+                break;
             }
 
             if( value == null )
@@ -484,7 +479,8 @@ namespace NonConTroll.CodeAnalysis.Binding
             var boundLeft  = this.BindExpression( syntax.Left );
             var boundRight = this.BindExpression( syntax.Right );
 
-            if( boundLeft.Type == TypeSymbol.Error || boundRight.Type == TypeSymbol.Error )
+            if( boundLeft.Type == TypeSymbol.Error ||
+                boundRight.Type == TypeSymbol.Error )
                 return new BoundErrorExpression();
 
             var boundOperator = BoundBinaryOperator.Bind( syntax.OperatorToken.TkType , boundLeft.Type , boundRight.Type );
@@ -561,8 +557,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             for( var i = 0 ; i < syntax.Arguments.Count ; i++ )
             {
-                var argument = boundArguments[i];
-                var parameter = function.Parameters[i];
+                var argument = boundArguments[ i ];
+                var parameter = function.Parameters[ i ];
 
                 if( argument.Type != parameter.Type )
                 {
@@ -588,11 +584,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindConversion( TextLocation location , BoundExpression expression , TypeSymbol type , bool allowExplicit = false )
         {
-            var conversion = Conversion.Classify(expression.Type, type);
+            var conversion = Conversion.Classify( expression.Type , type );
 
             if( !conversion.Exists )
             {
-                if( expression.Type != TypeSymbol.Error && type != TypeSymbol.Error )
+                if( expression.Type != TypeSymbol.Error &&
+                    type != TypeSymbol.Error )
                     this.DiagBag.ReportCannotConvert( location , expression.Type , type );
 
                 return new BoundErrorExpression();

@@ -4,16 +4,40 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text;
 using System.Linq;
-
+using System.Reflection;
 
 namespace NonConTroll
 {
     internal abstract class Repl
     {
+        private readonly List<MetaCommand> MetaCommands = new List<MetaCommand>();
         private readonly List<string> SubmissionHistory = new List<string>();
         private int SubmissionHistoryIndex;
+        private bool IsDone;
 
-        private bool Done;
+        protected Repl()
+        {
+            this.InitMetaCOmmands();
+        }
+
+        private void InitMetaCOmmands()
+        {
+            var flags = BindingFlags.NonPublic |
+                        BindingFlags.Public |
+                        BindingFlags.Static |
+                        BindingFlags.Instance |
+                        BindingFlags.FlattenHierarchy;
+
+            foreach( var method in GetType().GetMethods( flags ) )
+            {
+                var attribute = method.GetCustomAttribute<MetaCommandAttribute>();
+
+                if( attribute == null )
+                    continue;
+
+                this.MetaCommands.Add( new MetaCommand( attribute.Name , attribute.Description , method ) );
+            }
+        }
 
         public void Run()
         {
@@ -25,9 +49,9 @@ namespace NonConTroll
                     return;
 
                 if( !text.Contains( Environment.NewLine ) && text.StartsWith( "#" ) )
-					this.EvaluateMetaCommand( text );
+                    this.EvaluateMetaCommand( text );
                 else
-					this.EvaluateSubmission( text );
+                    this.EvaluateSubmission( text );
 
                 this.SubmissionHistory.Add( text );
                 this.SubmissionHistoryIndex = 0;
@@ -36,11 +60,11 @@ namespace NonConTroll
 
         private string EditSubmission()
         {
-            this.Done = false;
+            this.IsDone = false;
             var document = new ObservableCollection<string>() { "" };
             var view = new SubmissionView( this.RenderLine , document );
 
-            while( !this.Done )
+            while( !this.IsDone )
             {
                 var key = Console.ReadKey( true );
 
@@ -61,19 +85,19 @@ namespace NonConTroll
             {
                 switch( key.Key )
                 {
-                    case ConsoleKey.Escape:     this.HandleEscape    ( document , view ); break;
-                    case ConsoleKey.Enter:      this.HandleEnter     ( document , view ); break;
-                    case ConsoleKey.LeftArrow:  this.HandleLeftArrow ( document , view ); break;
+                    case ConsoleKey.Escape:     this.HandleEscape( document , view );     break;
+                    case ConsoleKey.Enter:      this.HandleEnter( document , view );      break;
+                    case ConsoleKey.LeftArrow:  this.HandleLeftArrow( document , view );  break;
                     case ConsoleKey.RightArrow: this.HandleRightArrow( document , view ); break;
-                    case ConsoleKey.UpArrow:    this.HandleUpArrow   ( document , view ); break;
-                    case ConsoleKey.DownArrow:  this.HandleDownArrow ( document , view ); break;
-                    case ConsoleKey.Backspace:  this.HandleBackspace ( document , view ); break;
-                    case ConsoleKey.Delete:     this.HandleDelete    ( document , view ); break;
-                    case ConsoleKey.Home:       this.HandleHome      ( document , view ); break;
-                    case ConsoleKey.End:        this.HandleEnd       ( document , view ); break;
-                    case ConsoleKey.Tab:        this.HandleTab       ( document , view ); break;
-                    case ConsoleKey.PageUp:     this.HandlePageUp    ( document , view ); break;
-                    case ConsoleKey.PageDown:   this.HandlePageDown  ( document , view ); break;
+                    case ConsoleKey.UpArrow:    this.HandleUpArrow( document , view );    break;
+                    case ConsoleKey.DownArrow:  this.HandleDownArrow( document , view );  break;
+                    case ConsoleKey.Backspace:  this.HandleBackspace( document , view );  break;
+                    case ConsoleKey.Delete:     this.HandleDelete( document , view );     break;
+                    case ConsoleKey.Home:       this.HandleHome( document , view );       break;
+                    case ConsoleKey.End:        this.HandleEnd( document , view );        break;
+                    case ConsoleKey.Tab:        this.HandleTab( document , view );        break;
+                    case ConsoleKey.PageUp:     this.HandlePageUp( document , view );     break;
+                    case ConsoleKey.PageDown:   this.HandlePageDown( document , view );   break;
                 }
             }
             else if( key.Modifiers == ConsoleModifiers.Control )
@@ -105,7 +129,7 @@ namespace NonConTroll
 
             if( submissionText.StartsWith( "#" ) || this.IsCompleteSubmission( submissionText ) )
             {
-                this.Done = true;
+                this.IsDone = true;
 
                 return;
             }
@@ -291,11 +315,21 @@ namespace NonConTroll
             Console.Write( line );
         }
 
-        protected virtual void EvaluateMetaCommand( string input )
+        private void EvaluateMetaCommand( string input )
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine( $"Invalid command {input}." );
-            Console.ResetColor();
+            var cmdName = input.Substring( 1 );
+            var cmd =  this.MetaCommands.SingleOrDefault( x => x.Name == cmdName );
+
+            if( cmd != null )
+            {
+                _ = cmd.MethodInfo.Invoke( this , null );
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( $"Invalid command {input}." );
+                Console.ResetColor();
+            }
         }
 
         protected abstract bool IsCompleteSubmission( string text );
@@ -317,7 +351,7 @@ namespace NonConTroll
                 this.LineRenderer       = lineRenderer;
                 this.SubmissionDocument = submissionDocument;
                 this.CursorTop          = Console.CursorTop;
-                this.SubmissionDocument.CollectionChanged  += this.SubmissionDocumentChanged;
+                this.SubmissionDocument.CollectionChanged  += this.SubmissionDocumentChanged!;
 
                 this.Render();
             }
@@ -345,7 +379,7 @@ namespace NonConTroll
 
                     Console.ResetColor();
 
-					this.LineRenderer( line );
+                    this.LineRenderer( line );
 
                     Console.WriteLine( new string( ' ' , Console.WindowWidth - line.Length ) );
 
@@ -401,6 +435,47 @@ namespace NonConTroll
                         this.UpdateCursorPosition();
                     }
                 }
+            }
+        }
+
+        [AttributeUsage( AttributeTargets.Method , AllowMultiple = false )]
+        protected class MetaCommandAttribute : Attribute
+        {
+            public MetaCommandAttribute( string name , string description )
+            {
+                this.Name = name;
+                this.Description = description;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+        }
+
+
+        protected class MetaCommand
+        {
+            public MetaCommand( string name , string description , MethodInfo methodInfo )
+            {
+                this.Name = name;
+                this.Description = description;
+                this.MethodInfo = methodInfo;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+            public MethodInfo MethodInfo { get; }
+        }
+
+        [MetaCommand( "help" , "Shows help" )]
+        protected void Evaluate_Help()
+        {
+            var maxNameLength = this.MetaCommands.Max( x => x.Name.Length );
+
+            foreach( var metaCmd in this.MetaCommands.OrderBy( x => x.Name ) )
+            {
+                var paddedName = metaCmd.Name.PadRight( maxNameLength );
+
+                Console.WriteLine( $"#{paddedName}{metaCmd.Description}" );
             }
         }
     }

@@ -6,14 +6,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Features>strict</Features>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <DebugSymbols>true</DebugSymbols>
-      <DebugType>full</DebugType>
+      <!-- <DebugType>full</DebugType> -->
+      <DebugType>portable</DebugType>
       <Optimize>false</Optimize>
       <OutputPath>bin\Debug\</OutputPath>
       <DefineConstants>TRACE;DEBUG</DefineConstants>
