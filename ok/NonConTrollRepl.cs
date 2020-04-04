@@ -5,6 +5,7 @@ using NonConTroll.CodeAnalysis;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.IO;
+using System.IO;
 
 namespace NonConTroll
 {
@@ -13,7 +14,13 @@ namespace NonConTroll
         private Compilation? Previous;
         private bool ShowTree;
         private bool ShowProgram;
+        private bool LoadingSubmissions;
         private readonly Dictionary<VariableSymbol, object> Variables = new Dictionary<VariableSymbol, object>();
+
+        public NonConTrollRepl()
+        {
+            this.LoadSubmissions();
+        }
 
         protected override void RenderLine( string line )
         {
@@ -21,18 +28,12 @@ namespace NonConTroll
 
             foreach( var token in tokens )
             {
-                var isKeyword    = token.TkType.IsTokenKind( TokenKind.Keyword );
-                var isIdentifier = token.TkType.IsTokenKind( TokenKind.Identifier );
-                var isPunctuator = token.TkType.IsTokenKind( TokenKind.Punctuation );
-                var isNumber     = token.TkType == TokenType.NumericLiteral;
-                var isString     = token.TkType == TokenType.StringLiteral;
-
-                if( isKeyword )         Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                else if( isPunctuator ) Console.ForegroundColor = ConsoleColor.DarkGray;
-                else if( isIdentifier ) Console.ForegroundColor = ConsoleColor.DarkCyan;
-                else if( isNumber )     Console.ForegroundColor = ConsoleColor.DarkGreen;
-                else if( isString )     Console.ForegroundColor = ConsoleColor.DarkYellow;
-                else                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                if(      token.TkType.IsTokenKind( TokenKind.Keyword ) )     Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                else if( token.TkType.IsTokenKind( TokenKind.Punctuation ) ) Console.ForegroundColor = ConsoleColor.DarkGray;
+                else if( token.TkType.IsTokenKind( TokenKind.Identifier ) )  Console.ForegroundColor = ConsoleColor.DarkCyan;
+                else if( token.TkType == TokenType.NumericLiteral )          Console.ForegroundColor = ConsoleColor.DarkGreen;
+                else if( token.TkType == TokenType.StringLiteral )           Console.ForegroundColor = ConsoleColor.DarkYellow;
+                else                                                         Console.ForegroundColor = ConsoleColor.DarkGray;
 
                 Console.Write( token.Text );
                 Console.ResetColor();
@@ -66,6 +67,41 @@ namespace NonConTroll
         {
             this.Previous = null;
             this.Variables.Clear();
+            this.ClearSubmissions();
+        }
+
+        [MetaCommand( "load" , "Loads a script file" )]
+        protected void Evaluate_Load( string path )
+        {
+            if( !File.Exists( path ) )
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( $"error: file '{path}' does not exist!" );
+                Console.ResetColor();
+
+                return;
+            }
+
+            var file = File.ReadAllText( path );
+
+            this.EvaluateSubmission( file );
+        }
+
+        [MetaCommand( "symbols" , "Lists all symbols" )]
+        protected void Evaluate_Symbols()
+        {
+            var submission = this.Previous;
+
+            while( submission != null )
+            {
+                foreach( var symbol in submission.GetSymbols().OrderBy( x => x.Name ) )
+                {
+                    symbol.WriteTo( Console.Out );
+                    Console.WriteLine();
+                }
+
+                submission = submission.Previous;
+            }
         }
 
         protected override bool IsCompleteSubmission( string text )
@@ -119,11 +155,70 @@ namespace NonConTroll
                 }
 
                 this.Previous = compilation;
+
+                this.SaveSubmission( text );
             }
             else
             {
                 Console.Error.WriteDiagnostics( result.Diagnostics );
             }
+        }
+
+        private string GetSubmissionDirectory()
+        {
+            var localAppData = Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData );
+
+            return Path.Combine( localAppData , "Slang" , "Submissions" );
+        }
+
+        private void LoadSubmissions()
+        {
+            var submissionsDir = this.GetSubmissionDirectory();
+
+            if( !Directory.Exists( submissionsDir ) )
+                return;
+
+            var files = Directory.GetFiles( submissionsDir ).OrderBy( x => x ).ToArray();
+
+            if( !files.Any() )
+                return;
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine( $"Loaded {files.Length} submissions" );
+            Console.ResetColor();
+
+            this.LoadingSubmissions = true;
+
+            foreach( var file in files )
+            {
+                var text = File.ReadAllText( file );
+
+                this.EvaluateSubmission( text );
+            }
+
+            this.LoadingSubmissions = false;
+        }
+
+
+        private void ClearSubmissions()
+        {
+            Directory.Delete( this.GetSubmissionDirectory() , recursive: true );
+        }
+
+        private void SaveSubmission( string text )
+        {
+            if( this.LoadingSubmissions )
+                return;
+
+            var submissionsDir = this.GetSubmissionDirectory();
+
+            Directory.CreateDirectory( submissionsDir );
+
+            var count = Directory.GetFiles( submissionsDir ).Length;
+            var name = $"Submission{count:0000}";
+            var fileName = Path.Combine( submissionsDir , name );
+
+            File.WriteAllText( fileName , text );
         }
     }
 }

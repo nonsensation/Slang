@@ -50,7 +50,9 @@ namespace NonConTroll.CodeAnalysis.Symbols
             }
 
             writer.WritePunctuation( TokenType.CloseParen );
-            writer.WriteLine();
+            writer.WritePunctuation( TokenType.Colon );
+
+            symbol.ReturnType.WriteTo( writer );
         }
 
         private static void WriteGlobalVariableTo( GlobalVariableSymbol symbol , TextWriter writer )

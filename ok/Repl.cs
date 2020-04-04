@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Text;
 using System.Linq;
 using System.Reflection;
+using NonConTroll.CodeAnalysis.IO;
 
 namespace NonConTroll
 {
@@ -316,29 +317,28 @@ namespace NonConTroll
         {
             var pos = 1;
             var quotes = false;
-            var args = new List<string>();
             var sb = new StringBuilder();
+            var args = new List<string>();
 
             while( pos < input.Length )
             {
-                var c = input[ pos ];
-                var l = pos + 1 >= input.Length ? '\0' : input[ pos + 1 ];
+                var currentChar = input[ pos ];
+                var lookaheadChar = pos + 1 >= input.Length ? '\0' : input[ pos + 1 ];
 
-                if( char.IsWhiteSpace( c ) )
+                if( char.IsWhiteSpace( currentChar ) )
                 {
                     if( !quotes )
                         CommitPendingArgument();
                     else
-                        sb.Append( c );
+                        sb.Append( currentChar );
                 }
-
-                if( c == '\"' )
+                else if( currentChar == '\"' )
                 {
                     if( !quotes )
                         quotes = true;
-                    else if( l == '\"' )
+                    else if( lookaheadChar == '\"' )
                     {
-                        sb.Append( c );
+                        sb.Append( currentChar );
                         pos++;
                     }
                     else
@@ -346,7 +346,7 @@ namespace NonConTroll
                 }
                 else
                 {
-                    sb.Append( c );
+                    sb.Append( currentChar );
                 }
 
                 pos++;
@@ -540,14 +540,12 @@ namespace NonConTroll
             {
                 var paddedName = metaCmd.Name.PadRight( maxNameLength );
 
-                Console.WriteLine( $"#{paddedName}{metaCmd.Description}" );
+                Console.Out.WritePunctuation( "#" );
+                Console.Out.WriteIdentifier( paddedName );
+                Console.Out.WriteSpace();
+                Console.Out.WritePunctuation( metaCmd.Description );
+                Console.Out.WriteLine();
             }
-        }
-
-        [MetaCommand( "test" , "Shows help" )]
-        protected void Evaluate_Test( string a1 , string a2 )
-        {
-            Console.WriteLine( $"{a1} {a2}" );
         }
     }
 }
