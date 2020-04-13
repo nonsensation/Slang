@@ -38,14 +38,11 @@ namespace NonConTroll.CodeAnalysis.Binding
             foreach( var function in syntaxTrees.SelectMany( x => x.Root.Members ).OfType<FunctionDeclarationSyntax>() )
                 binder.BindFunctionDeclaration( function );
 
-            var statements = ImmutableArray.CreateBuilder<BoundStatement>();
-
-            foreach( var globalStatement in syntaxTrees.SelectMany( x => x.Root.Members ).OfType<GlobalStatementSyntax>() )
-            {
-                var statement = binder.BindStatement( globalStatement.Statement );
-                statements.Add( statement );
-            }
-
+            var statements = syntaxTrees
+                .SelectMany( x => x.Root.Members )
+                .OfType<GlobalStatementSyntax>()
+                .Select( x => binder.BindStatement( x.Statement ) )
+                .ToImmutableArray();
             var functions = binder.Scope!.GetDeclaredFunctions();
             var variables = binder.Scope!.GetDeclaredVariables();
             var diagnostics = binder.Diagnostics.ToImmutableArray();
@@ -53,7 +50,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( previous != null )
                 diagnostics = diagnostics.InsertRange( 0 , previous.Diagnostics );
 
-            return new BoundGlobalScope( previous , diagnostics , functions , variables , statements.ToImmutable() );
+            return new BoundGlobalScope( previous , diagnostics , functions , variables , statements );
         }
 
         public static BoundProgram BindProgram( BoundGlobalScope globalScope )
@@ -171,7 +168,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case SyntaxKind.ContinueStatement:   return this.BindContinueStatement( (ContinueStatementSyntax)syntax );
                 case SyntaxKind.ReturnStatement:     return this.BindReturnStatement( (ReturnStatementSyntax)syntax );
                 case SyntaxKind.ExpressionStatement: return this.BindExpressionStatement( (ExpressionStatementSyntax)syntax );
-                default:                             throw new Exception( $"Unexpected syntax {syntax.Kind}" );
+
+                default:
+                    throw new Exception( $"Unexpected syntax {syntax.Kind}" );
             }
         }
 
@@ -221,10 +220,11 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( syntax == null )
                 return null;
 
-            var type = this.LookupType( syntax.TypeName.Identifier!.Text! );
+            var identifier = syntax.TypeName.Identifier!;
+            var type = this.LookupType( identifier.Text! );
 
             if( type == null )
-                this.DiagBag.ReportUndefinedType( syntax.TypeName.Identifier!.Location , syntax.TypeName.Identifier!.Text! );
+                this.DiagBag.ReportUndefinedType( identifier.Location , identifier.Text! );
 
             return type;
         }
@@ -350,7 +350,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindExpression( ExpressionSyntax syntax , bool canBeVoid = false )
         {
-            var result = this.BindExpressionpublic( syntax );
+            var result = this.BindExpression( syntax );
 
             if( !canBeVoid && result.Type == TypeSymbol.Void )
             {
@@ -362,7 +362,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             return result;
         }
 
-        private BoundExpression BindExpressionpublic( ExpressionSyntax syntax )
+        private BoundExpression BindExpression( ExpressionSyntax syntax )
         {
             switch( syntax.Kind )
             {
@@ -373,7 +373,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case SyntaxKind.UnaryExpression:         return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
                 case SyntaxKind.BinaryExpression:        return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
                 case SyntaxKind.CallExpression:          return this.BindCallExpression( (CallExpressionSyntax)syntax );
-                default: throw new Exception( $"Unexpected syntax {syntax.Kind}" );
+
+                default:
+                    throw new Exception( $"Unexpected syntax {syntax.Kind}" );
             }
         }
 
@@ -476,22 +478,93 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindBinaryExpression( BinaryExpressionSyntax syntax )
         {
-            var boundLeft  = this.BindExpression( syntax.Left );
-            var boundRight = this.BindExpression( syntax.Right );
+            if( syntax.OperatorToken.TkType == TokenType.Identifier )
+                return this.BindInfixCallExpression( syntax );
 
-            if( boundLeft.Type == TypeSymbol.Error ||
-                boundRight.Type == TypeSymbol.Error )
+            var boundLhs = this.BindExpression( syntax.Lhs );
+            var boundRhs = this.BindExpression( syntax.Rhs );
+
+            if( boundLhs.Type == TypeSymbol.Error ||
+                boundRhs.Type == TypeSymbol.Error )
                 return new BoundErrorExpression();
 
-            var boundOperator = BoundBinaryOperator.Bind( syntax.OperatorToken.TkType , boundLeft.Type , boundRight.Type );
+            var boundOperator = BoundBinaryOperator.Bind( syntax.OperatorToken.TkType , boundLhs.Type , boundRhs.Type );
 
             if( boundOperator == null )
             {
-                this.DiagBag.ReportUndefinedBinaryOperator( syntax.OperatorToken.Location , syntax.OperatorToken.Text! , boundLeft.Type , boundRight.Type );
+                this.DiagBag.ReportUndefinedBinaryOperator( syntax.OperatorToken.Location , syntax.OperatorToken.Text! , boundLhs.Type , boundRhs.Type );
+
                 return new BoundErrorExpression();
             }
 
-            return new BoundBinaryExpression( boundLeft , boundOperator , boundRight );
+            return new BoundBinaryExpression( boundLhs , boundOperator , boundRhs );
+        }
+
+        private BoundExpression BindInfixCallExpression( BinaryExpressionSyntax syntax )
+        {
+            var symbol = this.Scope!.TryLookupSymbol( syntax.OperatorToken.Text! );
+
+            if( symbol == null )
+            {
+                this.DiagBag.ReportUndefinedInfixFunction( syntax.OperatorToken.Location , syntax.OperatorToken.Text! );
+
+                return new BoundErrorExpression();
+            }
+
+            var function = symbol as FunctionSymbol;
+
+            if( function == null )
+            {
+                this.DiagBag.ReportInfixIsNotAnInfixFunction( syntax.OperatorToken.Location , symbol );
+
+                return new BoundErrorExpression();
+            }
+
+            if( function.Parameters.Length != 2 )
+            {
+                this.DiagBag.ReportInfixFunctionParameterCount( syntax.OperatorToken.Location , function );
+
+                return new BoundErrorExpression();
+            }
+
+            var boundLhs = this.BindExpression( syntax.Lhs );
+            var boundRhs = this.BindExpression( syntax.Rhs );
+
+            if( boundLhs.Type == TypeSymbol.Error ||
+                boundRhs.Type == TypeSymbol.Error )
+                return new BoundErrorExpression();
+
+            // TODO: check for @infix attribute
+
+            var hasErrors = false;
+
+            { // Lhs
+                var arg = function.Parameters[ 0 ];
+
+                if( boundLhs.Type != arg.Type )
+                {
+                    if( boundLhs.Type != TypeSymbol.Error )
+                        this.DiagBag.ReportWrongArgumentTypeInfix( syntax.Lhs.Location , function , arg.Name , arg.Type , boundLhs.Type );
+
+                    hasErrors = true;
+                }
+            }
+            { // Rhs
+                var arg = function.Parameters[ 1 ];
+
+                if( boundRhs.Type != arg.Type )
+                {
+                    if( boundRhs.Type != TypeSymbol.Error )
+                        this.DiagBag.ReportWrongArgumentTypeInfix( syntax.Rhs.Location , function , arg.Name , arg.Type , boundRhs.Type );
+
+                    hasErrors = true;
+                }
+            }
+
+            if( hasErrors )
+                return new BoundErrorExpression();
+
+            return new BoundCallExpression( function , ImmutableArray.Create( boundLhs , boundRhs ) );
         }
 
         private BoundExpression BindCallExpression( CallExpressionSyntax syntax )
@@ -537,7 +610,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     else
                         firstExceedingNode = syntax.Arguments[ 0 ];
 
-                    var lastExceedingArgument = syntax.Arguments[ ^1 ];
+                    var lastExceedingArgument = syntax.Arguments.Last();
 
                     span = TextSpan.FromBounds( firstExceedingNode.Span.Start , lastExceedingArgument.Span.End );
                 }

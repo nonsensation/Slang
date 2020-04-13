@@ -8,15 +8,13 @@ namespace NonConTroll.CodeAnalysis.Binding
         Division,
         LogicalAnd,
         LogicalOr,
-        BitwiseAnd,
-        BitwiseOr,
-        BitwiseXor,
         Equals,
         NotEquals,
         Less,
         LessOrEquals,
         Greater,
         GreaterOrEquals,
+        Infix,
     }
 
 }

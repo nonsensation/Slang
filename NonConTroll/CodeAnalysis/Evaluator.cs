@@ -91,7 +91,8 @@ namespace NonConTroll.CodeAnalysis
                     {
                         var rs = (BoundReturnStatement)s;
 
-                        this.LastValue = rs.Expression == null ? null : this.EvaluateExpression( rs.Expression );
+                        if( rs.Expression != null )
+                            this.LastValue = this.EvaluateExpression( rs.Expression );
 
                         return this.LastValue;
                     }
@@ -154,25 +155,25 @@ namespace NonConTroll.CodeAnalysis
             }
         }
 
-        private object? EvaluateAssignmentExpression( BoundAssignmentExpression a )
+        private object EvaluateAssignmentExpression( BoundAssignmentExpression a )
         {
-            var value = this.EvaluateExpression(a.Expression)!;
+            var value = this.EvaluateExpression( a.Expression )!;
 
 			this.Assign( a.Variable , value );
 
             return value;
         }
 
-        private object? EvaluateUnaryExpression( BoundUnaryExpression u )
+        private object EvaluateUnaryExpression( BoundUnaryExpression u )
         {
-            var operand = this.EvaluateExpression(u.Operand)!;
+            var operand = this.EvaluateExpression( u.Operand )!;
 
             switch( u.Op.Kind )
             {
-                case BoundUnaryOperatorKind.Identity:        return (int)operand;
+                case BoundUnaryOperatorKind.Identity:        return  (int)operand;
                 case BoundUnaryOperatorKind.Negation:        return -(int)operand;
                 case BoundUnaryOperatorKind.LogicalNegation: return !(bool)operand;
-                // case BoundUnaryOperatorKind.OnesComplement:  return ~(int)operand;
+
                 default:
                     throw new Exception( $"Unexpected unary operator {u.Op}" );
             }
@@ -191,7 +192,6 @@ namespace NonConTroll.CodeAnalysis
                     else
                         return ((string)lhs).Replace( "\"" , "" )
                              + ((string)rhs).Replace( "\"" , "" );
-
 
                 case BoundBinaryOperatorKind.Equals:          return  Equals( lhs , rhs );
                 case BoundBinaryOperatorKind.NotEquals:       return !Equals( lhs , rhs );
@@ -234,9 +234,9 @@ namespace NonConTroll.CodeAnalysis
             {
                 var locals = new Dictionary<VariableSymbol, object>();
 
-                 for( var i = 0 ; i < node.Arguments.Length ; i++ )
+                for( var i = 0 ; i < node.Arguments.Length ; i++ )
                 {
-                    var parameter = node.Function.Parameters[i];
+                    var parameter = node.Function.Parameters[ i ];
                     var value = this.EvaluateExpression( node.Arguments[ i ] )!;
 
                     locals.Add( parameter , value );
@@ -253,7 +253,7 @@ namespace NonConTroll.CodeAnalysis
             }
         }
 
-        private object? EvaluateConversionExpression( BoundConversionExpression node )
+        private object EvaluateConversionExpression( BoundConversionExpression node )
         {
             var value = this.EvaluateExpression( node.Expression );
 

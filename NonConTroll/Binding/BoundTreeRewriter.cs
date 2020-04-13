@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
@@ -83,8 +84,8 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             var condition = this.RewriteExpression( node.Condition );
             var body = this.RewriteStatement( node.Body );
-            if( condition == node.Condition &&
-                body == node.Body )
+
+            if( condition == node.Condition && body == node.Body )
                 return node;
 
             return new BoundWhileStatement( condition , body , node.BreakLabel , node.ContinueLabel );
@@ -138,7 +139,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         protected virtual BoundStatement RewriteReturnStatement( BoundReturnStatement node )
         {
-            var expression = node.Expression == null ? null : this.RewriteExpression(node.Expression);
+            var expression = node.Expression == null ? null : this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
                 return node;
@@ -213,8 +214,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var lhs = this.RewriteExpression( node.Lhs );
             var rhs = this.RewriteExpression( node.Rhs );
 
-            if( lhs == node.Lhs &&
-                rhs == node.Rhs )
+            if( lhs == node.Lhs && rhs == node.Rhs )
                 return node;
 
             return new BoundBinaryExpression( lhs , node.Operator , rhs );

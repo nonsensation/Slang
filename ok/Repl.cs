@@ -18,10 +18,10 @@ namespace NonConTroll
 
         protected Repl()
         {
-            this.InitMetaCOmmands();
+            this.InitMetaCommands();
         }
 
-        private void InitMetaCOmmands()
+        private void InitMetaCommands()
         {
             var flags = BindingFlags.NonPublic |
                         BindingFlags.Public |
@@ -394,7 +394,9 @@ namespace NonConTroll
                 return;
             }
 
-            _ = cmd.MethodInfo.Invoke( this , args.ToArray() );
+            var instance = cmd.MethodInfo.IsStatic ? null : this;
+
+            _ = cmd.MethodInfo.Invoke( instance , args.ToArray() );
         }
 
         protected abstract bool IsCompleteSubmission( string text );
@@ -406,7 +408,7 @@ namespace NonConTroll
         {
             private readonly Action<string> LineRenderer;
             private readonly ObservableCollection<string> SubmissionDocument;
-            private readonly int CursorTop;
+            private int CursorTop;
             private int RenderedLineCount;
             private int currentLine;
             private int currentCharacter;
@@ -434,9 +436,19 @@ namespace NonConTroll
 
                 foreach( var line in this.SubmissionDocument )
                 {
+                    if( this.CursorTop + lineCount >= Console.WindowHeight )
+                    {
+                        Console.SetCursorPosition( 0 , Console.WindowHeight - 1 );
+                        Console.WriteLine();
+
+                        if( this.CursorTop > 0 )
+                            this.CursorTop--;
+                    }
+
                     Console.SetCursorPosition( 0 , this.CursorTop + lineCount );
                     Console.ForegroundColor = ConsoleColor.Green;
 
+                    // already printing 2 chars to the console
                     if( lineCount == 0 )
                         Console.Write( "» " );
                     else
@@ -446,7 +458,7 @@ namespace NonConTroll
 
                     this.LineRenderer( line );
 
-                    Console.WriteLine( new string( ' ' , Console.WindowWidth - line.Length ) );
+                    Console.Write( new string( ' ' , Console.WindowWidth - line.Length - 2 ) );
 
                     lineCount++;
                 }
@@ -538,10 +550,35 @@ namespace NonConTroll
 
             foreach( var metaCmd in this.MetaCommands.OrderBy( x => x.Name ) )
             {
-                var paddedName = metaCmd.Name.PadRight( maxNameLength );
+                var metaParams = metaCmd.MethodInfo.GetParameters();
 
-                Console.Out.WritePunctuation( "#" );
-                Console.Out.WriteIdentifier( paddedName );
+                if( !metaParams.Any() )
+                {
+                    var paddedName = metaCmd.Name.PadRight( maxNameLength );
+
+                    Console.Out.WritePunctuation( "#" );
+                    Console.Out.WriteIdentifier( paddedName );
+                }
+                else
+                {
+                    Console.Out.WritePunctuation( "#" );
+                    Console.Out.WriteIdentifier( metaCmd.Name );
+
+                    foreach( var paramInfo in metaParams )
+                    {
+                        Console.Out.WriteSpace();
+                        Console.Out.WritePunctuation( "<" );
+                        Console.Out.WriteIdentifier( paramInfo.Name! );
+                        Console.Out.WritePunctuation( ">" );
+                    }
+
+                    Console.Out.WriteLine();
+                    Console.Out.WriteSpace();
+
+                    for( var _ = 0 ; _ < maxNameLength ; _++ )
+                        Console.Out.WriteSpace();
+                }
+
                 Console.Out.WriteSpace();
                 Console.Out.WritePunctuation( metaCmd.Description );
                 Console.Out.WriteLine();

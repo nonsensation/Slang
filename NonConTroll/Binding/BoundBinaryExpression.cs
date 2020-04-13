@@ -4,10 +4,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundBinaryExpression : BoundExpression
     {
-        public BoundBinaryExpression( BoundExpression lhs , BoundBinaryOperator @operator , BoundExpression rhs )
+        public BoundBinaryExpression( BoundExpression lhs , BoundBinaryOperator op , BoundExpression rhs )
         {
             this.Lhs = lhs;
-            this.Operator = @operator;
+            this.Operator = op;
             this.Rhs = rhs;
         }
 

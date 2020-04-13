@@ -7,7 +7,7 @@ using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Lowering
 {
-    internal sealed class Lowerer : BoundTreeRewriter
+    internal class Lowerer : BoundTreeRewriter
     {
         private int LabelCount;
 
@@ -160,7 +160,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
             var gotoTrue = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
             var breakLabelStatement = new BoundLabelStatement( node.BreakLabel );
-            var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
+            var result = new BoundBlockStatement( ImmutableArray.Create(
                 bodyLabelStatement ,
                 node.Body ,
                 continueLabelStatement ,

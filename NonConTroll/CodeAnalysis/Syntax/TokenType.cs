@@ -193,8 +193,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public static class TokenExtensions
     {
-        private static IReadOnlyDictionary<TokenType , TokenKind>? TokenTypeKindCacheInstance;
-        private static IReadOnlyDictionary<TokenType , string>? TokenTypeNameCacheInstance;
+        private static IReadOnlyDictionary<TokenType , TokenKind>? TokenTypeKindCacheInstance = null;
+        private static IReadOnlyDictionary<TokenType , string>? TokenTypeNameCacheInstance = null;
 
         private static IReadOnlyDictionary<TokenType , TokenKind> TokenTypeKindCache {
             get {
@@ -210,7 +210,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             get {
                 if( TokenTypeNameCacheInstance == null )
                     TokenTypeNameCacheInstance = Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
-                        .Where( tt => tt.IsTokenKind( TokenKind.Keyword | TokenKind.Punctuation ) )
+                        .Where( tt => tt.IsTokenKind( TokenKind.Keyword ) || tt.IsTokenKind( TokenKind.Punctuation ) )
                         .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Name ?? FixKeywordNames( tt ) );
 
                 return TokenTypeNameCacheInstance;
@@ -258,8 +258,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case TokenType.Plus:
                 case TokenType.Minus:
                 case TokenType.Exm:
-                case TokenType.Tilde:
-                    return 6;
+                    return 7;
                 default:
                     return 0;
             }
@@ -271,23 +270,22 @@ namespace NonConTroll.CodeAnalysis.Syntax
             {
                 case TokenType.Star:
                 case TokenType.Slash:
-                    return 5;
+                    return 6;
                 case TokenType.Plus:
                 case TokenType.Minus:
-                    return 4;
+                    return 5;
                 case TokenType.EqEq:
                 case TokenType.ExmEq:
                 case TokenType.Lt:
                 case TokenType.LtEq:
                 case TokenType.Gt:
                 case TokenType.GtEq:
-                    return 3;
-                case TokenType.And:
+                    return 4;
                 case TokenType.AndAnd:
-                    return 2;
-                case TokenType.Pipe:
+                    return 3;
                 case TokenType.PipePipe:
-                case TokenType.Caret:
+                    return 2;
+                case TokenType.Identifier:
                     return 1;
                 default:
                     return 0;

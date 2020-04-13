@@ -11,21 +11,11 @@ namespace NonConTroll.CodeAnalysis.Symbols
         {
             switch( symbol.Kind )
             {
-                case SymbolKind.Function:
-                    WriteFunctionTo( (FunctionSymbol)symbol , writer );
-                    break;
-                case SymbolKind.GlobalVariable:
-                    WriteGlobalVariableTo( (GlobalVariableSymbol)symbol , writer );
-                    break;
-                case SymbolKind.LocalVariable:
-                    WriteLocalVariableTo( (LocalVariableSymbol)symbol , writer );
-                    break;
-                case SymbolKind.Parameter:
-                    WriteParameterTo( (ParameterSymbol)symbol , writer );
-                    break;
-                case SymbolKind.Type:
-                    WriteTypeTo( (TypeSymbol)symbol , writer );
-                    break;
+                case SymbolKind.Function:       WriteFunctionTo(       (FunctionSymbol)symbol ,       writer ); break;
+                case SymbolKind.GlobalVariable: WriteGlobalVariableTo( (GlobalVariableSymbol)symbol , writer ); break;
+                case SymbolKind.LocalVariable:  WriteLocalVariableTo(  (LocalVariableSymbol)symbol ,  writer ); break;
+                case SymbolKind.Parameter:      WriteParameterTo(      (ParameterSymbol)symbol ,      writer ); break;
+                case SymbolKind.Type:           WriteTypeTo(           (TypeSymbol)symbol ,           writer ); break;
                 default:
                     throw new Exception( $"Unexpected symbol: {symbol.Kind}" );
             }
@@ -41,17 +31,17 @@ namespace NonConTroll.CodeAnalysis.Symbols
             for( var i = 0 ; i < symbol.Parameters.Length ; i++ )
             {
                 if( i > 0 )
-                {
                     writer.WritePunctuation( TokenType.Comma );
-                    writer.WriteSpace();
-                }
 
+                writer.WriteSpace();
                 symbol.Parameters[ i ].WriteTo( writer );
+                writer.WriteSpace();
             }
 
             writer.WritePunctuation( TokenType.CloseParen );
+            writer.WriteSpace();
             writer.WritePunctuation( TokenType.Colon );
-
+            writer.WriteSpace();
             symbol.ReturnType.WriteTo( writer );
         }
 

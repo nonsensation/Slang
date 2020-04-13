@@ -91,22 +91,35 @@ namespace NonConTroll.CodeAnalysis
         public void ReportMissingReturnExpression( TextLocation location , TypeSymbol returnType )
             => this.Report( location , $"An expression of type '{returnType}' is expected." );
 
-        internal void ReportExpressionInvalidLiteral( TextLocation location )
+        public void ReportExpressionInvalidLiteral( TextLocation location )
             => this.Report( location , "Invalid literal." );
 
-        internal void ReportExpressionInvalidNumericLiteral( TextLocation location , string literalText )
+        public void ReportExpressionInvalidNumericLiteral( TextLocation location , string literalText )
             => this.Report( location , $"The numeric literal '{literalText}' is not a valid number." );
 
-        internal void ReportUndefinedVariable( TextLocation location , string name )
+        public void ReportUndefinedVariable( TextLocation location , string name )
             => this.Report( location , $"Variable '{name}' doesn't exist." );
 
-        internal void ReportNotAVariable( TextLocation location , string name )
+        public void ReportNotAVariable( TextLocation location , string name )
             => this.Report( location , $"'{name}' is not a variable." );
 
-        internal void ReportNotAFunction( TextLocation location , string name )
+        public void ReportNotAFunction( TextLocation location , string name )
             => this.Report( location , $"'{name}' is not a function." );
 
-    #endregion
+        public void ReportUndefinedInfixFunction( TextLocation location , string funcName )
+            => this.Report( location , $"Infix function '{funcName}' is not declared." );
+
+        public void ReportInfixIsNotAnInfixFunction( TextLocation location , Symbol symbol )
+            => this.Report( location , $"Infix function '{symbol.Name}' was declared as '{symbol}'." );
+
+        public void ReportInfixFunctionParameterCount( TextLocation location , FunctionSymbol function )
+            => this.Report( location , $"Infix function '{function}' cannot be used as an infix function (exactly 2 parameters required)." );
+
+        public void ReportWrongArgumentTypeInfix( TextLocation location , FunctionSymbol function , string name , TypeSymbol expectedType , TypeSymbol actualType )
+            => this.Report( location , $"Parameter '{name}' requires a value of type '{expectedType}' but was given a value of type '{actualType}' for infix function '{function}'." );
+
+
+        #endregion
 
     }
 }

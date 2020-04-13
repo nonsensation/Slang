@@ -17,6 +17,8 @@ namespace NonConTroll
         private bool LoadingSubmissions;
         private readonly Dictionary<VariableSymbol, object> Variables = new Dictionary<VariableSymbol, object>();
 
+        private static readonly Compilation EmptyCompilation = new Compilation();
+
         public NonConTrollRepl()
         {
             this.LoadSubmissions();
@@ -90,17 +92,14 @@ namespace NonConTroll
         [MetaCommand( "symbols" , "Lists all symbols" )]
         protected void Evaluate_Symbols()
         {
-            var submission = this.Previous;
+            var compilation = this.Previous ?? EmptyCompilation;
+            var symbols = compilation.GetSymbols().OrderBy( x => x.Kind ).ThenBy( x => x.Name );
 
-            while( submission != null )
+            foreach( var symbol in symbols )
             {
-                foreach( var symbol in submission.GetSymbols().OrderBy( x => x.Name ) )
-                {
-                    symbol.WriteTo( Console.Out );
-                    Console.WriteLine();
-                }
+                symbol.WriteTo( Console.Out );
 
-                submission = submission.Previous;
+                Console.WriteLine();
             }
         }
 

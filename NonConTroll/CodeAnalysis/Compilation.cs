@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
@@ -34,7 +35,7 @@ namespace NonConTroll.CodeAnalysis
             get {
                 if( this.globalScope == null )
                 {
-                    var globalScope = Binder.BindGlobalScope( this.Previous?.GlobalScope , this.SyntaxTrees );
+                    var globalScope = Binding.Binder.BindGlobalScope( this.Previous?.GlobalScope , this.SyntaxTrees );
 
                     _ = Interlocked.CompareExchange( ref this.globalScope! , globalScope , null );
                 }
@@ -50,6 +51,21 @@ namespace NonConTroll.CodeAnalysis
 
             while( submission != null )
             {
+                var bindingFlags =
+                    BindingFlags.Static |
+                    BindingFlags.Public |
+                    BindingFlags.NonPublic;
+                var builtinFunctions = typeof( BuiltinFunctions )
+                    .GetFields( bindingFlags )
+                    .Where( x => x.FieldType == typeof( FunctionSymbol ) )
+                    .Select( x => (FunctionSymbol)x.GetValue( obj: null )! )
+                    .Where( x => x != null )
+                    .ToList();
+
+                foreach( var builtin in builtinFunctions )
+                    if( seenSymbolNames.Add( builtin.Name ) )
+                        yield return builtin;
+
                 foreach( var function in submission.Functions )
                     if( seenSymbolNames.Add( function.Name ) )
                         yield return function;
@@ -77,7 +93,7 @@ namespace NonConTroll.CodeAnalysis
             if( diagnostics.Any() )
                 return new EvaluationResult( diagnostics , null );
 
-            var program      = Binder.BindProgram( this.GlobalScope );
+            var program      = Binding.Binder.BindProgram( this.GlobalScope );
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
             var appDirectory = Path.GetDirectoryName( appPath )!;
             var cfgPath      = Path.Combine( appDirectory , "cfg.dot" );
@@ -101,7 +117,7 @@ namespace NonConTroll.CodeAnalysis
 
         public void EmitTree( TextWriter writer )
         {
-            var program = Binder.BindProgram(this.GlobalScope);
+            var program = Binding.Binder.BindProgram( this.GlobalScope );
 
             if( program.Statement.Statements.Any() )
             {
@@ -118,6 +134,19 @@ namespace NonConTroll.CodeAnalysis
                     functionBody.Value.WriteTo( writer );
                 }
             }
+        }
+
+        public void EmitTree( FunctionSymbol symbol , TextWriter writer )
+        {
+            var program = Binding.Binder.BindProgram( this.GlobalScope );
+
+            symbol.WriteTo( writer );
+            writer.WriteLine();
+
+            if( !program.Functions.TryGetValue( symbol , out var body ) )
+                return;
+
+            body.WriteTo( writer );
         }
     }
 }

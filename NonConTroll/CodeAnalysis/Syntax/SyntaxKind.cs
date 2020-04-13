@@ -26,6 +26,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         NameExpression,
         CallExpression,
+        InfixCallExpression,
         UnaryExpression,
         BinaryExpression,
         AssignmentExpression,
@@ -44,6 +45,5 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         QualifiedName,
         IdentifierName,
-
     }
 }

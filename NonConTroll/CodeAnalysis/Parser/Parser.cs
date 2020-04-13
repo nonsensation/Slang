@@ -46,14 +46,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             => this.Position += count;
 
         private SyntaxToken Peek( int offset )
-        {
-            var idx = this.Position + offset;
-
-            if( idx >= this.Tokens.Length )
-                return this.Tokens.Last();
-
-            return this.Tokens.ElementAt( idx );
-        }
+            => this.Tokens.ElementAt( Math.Clamp( this.Position + offset , 0 , this.Tokens.Length - 1 ) );
 
         private SyntaxToken MatchToken( TokenType tokenType )
         {
@@ -131,30 +124,42 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
 
         private SeparatedSyntaxList<ParameterSyntax> ParseParameterList()
+            => ParseSeparatedList( this.ParseParameter );
+
+        private SeparatedSyntaxList<T> ParseSeparatedList<T>(
+                Func<T> parseParamFunc ,
+                TokenType openListToken = TokenType.OpenParen ,
+                TokenType seperatorToken = TokenType.Comma ,
+                TokenType closeListToken = TokenType.CloseParen )
+                where T : SyntaxNode
         {
+            //Debug.Assert( this.Current.TkType == openListToken );
+
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
             var parseNextParameter = true;
 
             while( parseNextParameter &&
-                   this.Current.TkType != TokenType.CloseParen &&
+                   this.Current.TkType != closeListToken &&
                    this.Current.TkType != TokenType.EndOfFile )
             {
-                var parameter = this.ParseParameter();
+                var parameter = parseParamFunc();
 
                 nodesAndSeparators.Add( parameter );
 
-                if( this.Current.TkType == TokenType.Comma )
-                    nodesAndSeparators.Add( this.MatchToken( TokenType.Comma ) );
+                if( this.Current.TkType == seperatorToken )
+                    nodesAndSeparators.Add( this.MatchToken( seperatorToken ) );
                 else
                     parseNextParameter = false;
             }
 
-            return new SeparatedSyntaxList<ParameterSyntax>( nodesAndSeparators.ToImmutable() );
+            //Debug.Assert( this.Current.TkType == closeListToken );
+
+            return new SeparatedSyntaxList<T>( nodesAndSeparators.ToImmutable() );
         }
 
         private ParameterSyntax ParseParameter()
         {
-            var identifier = this.MatchToken(TokenType.Identifier);
+            var identifier = this.MatchToken( TokenType.Identifier );
             var type = this.ParseTypeClause();
 
             return new ParameterSyntax( this.SyntaxTree , identifier , type );
