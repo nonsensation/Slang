@@ -68,9 +68,9 @@ namespace NonConTroll.CodeAnalysis.Lowering
                 // <then>
                 // end:
                 var endLabel = this.GenerateLabel();
-                var gotoFalse = new BoundConditionalGotoStatement( endLabel , node.Condition , false );
+                var gotoFalse         = new BoundConditionalGotoStatement( endLabel , node.Condition , false );
                 var endLabelStatement = new BoundLabelStatement( endLabel );
-                var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>( gotoFalse , node.ThenStatement , endLabelStatement ) );
+                var result = new BoundBlockStatement( ImmutableArray.Create( gotoFalse , node.ThenStatement , endLabelStatement ) );
 
                 return this.RewriteStatement( result );
             }
@@ -92,17 +92,12 @@ namespace NonConTroll.CodeAnalysis.Lowering
 
                 var elseLabel = this.GenerateLabel();
                 var endLabel = this.GenerateLabel();
-                var gotoFalse = new BoundConditionalGotoStatement( elseLabel , node.Condition , false );
-                var gotoEndStatement = new BoundGotoStatement( endLabel );
+                var gotoFalse          = new BoundConditionalGotoStatement( elseLabel , node.Condition , false );
+                var gotoEndStatement   = new BoundGotoStatement( endLabel );
                 var elseLabelStatement = new BoundLabelStatement( elseLabel );
-                var endLabelStatement = new BoundLabelStatement( endLabel );
-                var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
-                    gotoFalse ,
-                    node.ThenStatement ,
-                    gotoEndStatement ,
-                    elseLabelStatement ,
-                    node.ElseStatement ,
-                    endLabelStatement
+                var endLabelStatement  = new BoundLabelStatement( endLabel );
+                var result = new BoundBlockStatement( ImmutableArray.Create(
+                    gotoFalse , node.ThenStatement , gotoEndStatement , elseLabelStatement , node.ElseStatement , endLabelStatement
                 ) );
 
                 return this.RewriteStatement( result );
@@ -124,18 +119,13 @@ namespace NonConTroll.CodeAnalysis.Lowering
             // break:
 
             var bodyLabel = this.GenerateLabel();
-            var gotoContinue = new BoundGotoStatement( node.ContinueLabel );
-            var bodyLabelStatement = new BoundLabelStatement( bodyLabel );
+            var gotoContinue           = new BoundGotoStatement( node.ContinueLabel );
+            var bodyLabelStatement     = new BoundLabelStatement( bodyLabel );
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
-            var gotoTrue = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
-            var breakLabelStatement = new BoundLabelStatement( node.BreakLabel );
-            var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
-                gotoContinue ,
-                bodyLabelStatement ,
-                node.Body ,
-                continueLabelStatement ,
-                gotoTrue ,
-                breakLabelStatement
+            var gotoTrue               = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
+            var breakLabelStatement    = new BoundLabelStatement( node.BreakLabel );
+            var result = new BoundBlockStatement( ImmutableArray.Create(
+                gotoContinue , bodyLabelStatement , node.Body , continueLabelStatement , gotoTrue , breakLabelStatement
             ) );
 
             return this.RewriteStatement( result );
@@ -156,16 +146,12 @@ namespace NonConTroll.CodeAnalysis.Lowering
             // break:
 
             var bodyLabel = this.GenerateLabel();
-            var bodyLabelStatement = new BoundLabelStatement( bodyLabel );
+            var bodyLabelStatement     = new BoundLabelStatement( bodyLabel );
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
-            var gotoTrue = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
-            var breakLabelStatement = new BoundLabelStatement( node.BreakLabel );
+            var gotoTrue               = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
+            var breakLabelStatement    = new BoundLabelStatement( node.BreakLabel );
             var result = new BoundBlockStatement( ImmutableArray.Create(
-                bodyLabelStatement ,
-                node.Body ,
-                continueLabelStatement ,
-                gotoTrue ,
-                breakLabelStatement
+                bodyLabelStatement , node.Body , continueLabelStatement , gotoTrue , breakLabelStatement
             ) );
 
             return this.RewriteStatement( result );
@@ -189,36 +175,26 @@ namespace NonConTroll.CodeAnalysis.Lowering
             //      }
             // }
 
-            var variableDeclaration = new BoundVariableDeclaration( node.Variable , node.LowerBound );
-            var variableExpression = new BoundVariableExpression( node.Variable );
-            var upperBoundSymbol = new LocalVariableSymbol( "upperBound" , true , TypeSymbol.Int );
+            var variableDeclaration   = new BoundVariableDeclaration( node.Variable , node.LowerBound );
+            var variableExpression    = new BoundVariableExpression( node.Variable );
+            var upperBoundSymbol      = new LocalVariableSymbol( "upperBound" , true , TypeSymbol.Int );
             var upperBoundDeclaration = new BoundVariableDeclaration( upperBoundSymbol , node.UpperBound );
             var condition = new BoundBinaryExpression(
-                variableExpression ,
-                BoundBinaryOperator.Bind( TokenType.LtEq , TypeSymbol.Int , TypeSymbol.Int )! ,
+                variableExpression , BoundBinaryOperator.Bind( TokenType.LtEq , TypeSymbol.Int , TypeSymbol.Int )! ,
                 new BoundVariableExpression( upperBoundSymbol )
             );
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
             var increment = new BoundExpressionStatement(
-                new BoundAssignmentExpression(
-                    node.Variable ,
-                    new BoundBinaryExpression(
-                        variableExpression ,
-                        BoundBinaryOperator.Bind( TokenType.Plus , TypeSymbol.Int , TypeSymbol.Int )! ,
-                        new BoundLiteralExpression( 1 )
-                    )
+                new BoundAssignmentExpression( node.Variable ,
+                    new BoundBinaryExpression( variableExpression ,
+                                               BoundBinaryOperator.Bind( TokenType.Plus , TypeSymbol.Int , TypeSymbol.Int )! ,
+                                               new BoundLiteralExpression( 1 ) )
                 )
             );
-            var whileBody = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
-                    node.Body ,
-                    continueLabelStatement ,
-                    increment )
-            );
+            var whileBody      = new BoundBlockStatement( ImmutableArray.Create( node.Body , continueLabelStatement , increment ) );
             var whileStatement = new BoundWhileStatement( condition , whileBody , node.BreakLabel , this.GenerateLabel() );
             var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
-                variableDeclaration ,
-                upperBoundDeclaration ,
-                whileStatement
+                variableDeclaration , upperBoundDeclaration , whileStatement
             ) );
 
             return this.RewriteStatement( result );

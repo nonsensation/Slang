@@ -5,38 +5,70 @@ using System.Collections.Immutable;
 
 namespace NonConTroll.CodeAnalysis.Syntax
 {
-    public abstract class SeparatedSyntaxList
+    public interface ISyntaxList
     {
-        public abstract ImmutableArray<SyntaxNode> GetWithSeparators();
+        ImmutableArray<SyntaxNode> GetNodes();
+    }
+
+    public class SyntaxList<T>
+        : ISyntaxList , IEnumerable<T>
+        where T : SyntaxNode
+    {
+
+        public SyntaxList( ImmutableArray<SyntaxNode> nodes )
+        {
+            this.Nodes = nodes;
+        }
+
+        protected readonly ImmutableArray<SyntaxNode> Nodes;
+
+        public ImmutableArray<SyntaxNode> GetNodes()
+            => this.Nodes;
+
+        public int Count => this.Nodes.Length;
+
+        public T this[ int idx ] => (T)this.Nodes[ idx ];
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for( var i = 0 ; i < this.Count ; i++ )
+                yield return this[ i ];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => this.GetEnumerator();
+    }
+
+    public interface ISeparatedSyntaxList : ISyntaxList
+    {
+        ImmutableArray<SyntaxNode> GetNodesWithSeparators();
     }
 
     public class SeparatedSyntaxList<T>
-        : SeparatedSyntaxList, IEnumerable<T>
+        : SyntaxList<T> , IEnumerable<T> , ISeparatedSyntaxList
         where T : SyntaxNode
     {
-        private readonly ImmutableArray<SyntaxNode> NodesAndSeparators;
-
-        public SeparatedSyntaxList( ImmutableArray<SyntaxNode> nodesAndSeparators )
+        public SeparatedSyntaxList( ImmutableArray<SyntaxNode> nodes )
+            : base( nodes )
         {
-            this.NodesAndSeparators = nodesAndSeparators;
         }
 
-        public int Count => (this.NodesAndSeparators.Length + 1) / 2;
+        public new int Count => (this.Nodes.Length + 1) / 2;
 
-        public T this[ int idx ] => (T)this.NodesAndSeparators[ idx * 2 ];
+        public new T this[ int idx ] => (T)this.Nodes[ idx * 2 ];
 
         public SyntaxToken? GetSeparator( int idx )
         {
             if( idx == this.Count - 1 )
                 return null;
 
-            return (SyntaxToken)this.NodesAndSeparators[ idx * 2 + 1 ];
+            return (SyntaxToken)this.Nodes[ idx * 2 + 1 ];
         }
 
-        public override ImmutableArray<SyntaxNode> GetWithSeparators()
-            => this.NodesAndSeparators;
+        public ImmutableArray<SyntaxNode> GetNodesWithSeparators()
+            => this.Nodes;
 
-        public IEnumerator<T> GetEnumerator()
+        public new IEnumerator<T> GetEnumerator()
         {
             for( var i = 0 ; i < this.Count ; i++ )
                 yield return this[ i ];

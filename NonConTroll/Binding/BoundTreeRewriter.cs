@@ -26,6 +26,16 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
         }
 
+        public virtual BoundExpression TODO_RewriteExpression( BoundExpression node )
+        {
+            switch( node.Kind )
+            {
+                case BoundNodeKind.BinaryExpression: return this.RewriteBinaryExpression( (BoundBinaryExpression)node );
+                default:
+                    throw new Exception( $"Unexpected node: {node.Kind}" );
+            }
+        }
+
         protected virtual BoundStatement RewriteBlockStatement( BoundBlockStatement node )
         {
             var builder = default( ImmutableArray<BoundStatement>.Builder );

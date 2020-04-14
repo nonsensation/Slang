@@ -44,13 +44,23 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     if( child != null )
                         yield return child;
                 }
-                else if( typeof( SeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
+                else if( typeof( ISyntaxList ).IsAssignableFrom( property.PropertyType ) )
                 {
-                    var separatedSyntaxList = (SeparatedSyntaxList?)property.GetValue( this );
+                    var separatedSyntaxList = (ISyntaxList?)property.GetValue( this );
 
                     if( separatedSyntaxList != null )
                     {
-                        foreach( var child in separatedSyntaxList.GetWithSeparators() )
+                        foreach( var child in separatedSyntaxList.GetNodes() )
+                            yield return child;
+                    }
+                }
+                else if( typeof( ISeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
+                {
+                    var separatedSyntaxList = (ISeparatedSyntaxList?)property.GetValue( this );
+
+                    if( separatedSyntaxList != null )
+                    {
+                        foreach( var child in separatedSyntaxList.GetNodesWithSeparators() )
                             yield return child;
                     }
                 }

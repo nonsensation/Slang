@@ -79,9 +79,10 @@ namespace NonConTroll.CodeAnalysis
         }
 
         public Compilation ContinueWith( SyntaxTree syntaxTree )
-        {
-            return new Compilation( this , syntaxTree );
-        }
+            => new Compilation( this , syntaxTree );
+
+        private BoundProgram GetProgram()
+            => Binding.Binder.BindProgram( this.Previous?.GetProgram() , this.GlobalScope );
 
         public EvaluationResult Evaluate( Dictionary<VariableSymbol , object> variables )
         {
@@ -93,7 +94,7 @@ namespace NonConTroll.CodeAnalysis
             if( diagnostics.Any() )
                 return new EvaluationResult( diagnostics , null );
 
-            var program      = Binding.Binder.BindProgram( this.GlobalScope );
+            var program      = this.GetProgram();
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
             var appDirectory = Path.GetDirectoryName( appPath )!;
             var cfgPath      = Path.Combine( appDirectory , "cfg.dot" );
@@ -117,7 +118,7 @@ namespace NonConTroll.CodeAnalysis
 
         public void EmitTree( TextWriter writer )
         {
-            var program = Binding.Binder.BindProgram( this.GlobalScope );
+            var program = this.GetProgram();
 
             if( program.Statement.Statements.Any() )
             {
@@ -138,7 +139,7 @@ namespace NonConTroll.CodeAnalysis
 
         public void EmitTree( FunctionSymbol symbol , TextWriter writer )
         {
-            var program = Binding.Binder.BindProgram( this.GlobalScope );
+            var program = this.GetProgram();
 
             symbol.WriteTo( writer );
             writer.WriteLine();

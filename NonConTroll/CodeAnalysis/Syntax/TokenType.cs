@@ -258,7 +258,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case TokenType.Plus:
                 case TokenType.Minus:
                 case TokenType.Exm:
-                    return 7;
+                    return 8;
+                // case TokenType.Identifier: // unary infix function calls
+                //     return 7;
                 default:
                     return 0;
             }
@@ -285,8 +287,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     return 3;
                 case TokenType.PipePipe:
                     return 2;
-                case TokenType.Identifier:
-                    return 1;
+                // case TokenType.Identifier: // binary infix function calls
+                //     return 1;
                 default:
                     return 0;
             }

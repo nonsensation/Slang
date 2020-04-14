@@ -10,6 +10,7 @@ namespace NonConTroll.CodeAnalysis
     {
         private readonly BoundProgram Program;
         private readonly Dictionary<VariableSymbol, object> Globals;
+        private readonly Dictionary<FunctionSymbol, BoundBlockStatement> Functions = new Dictionary<FunctionSymbol, BoundBlockStatement>();
         private readonly Stack<Dictionary<VariableSymbol, object>> Locals = new Stack<Dictionary<VariableSymbol, object>>();
 
         private Random? Random;
@@ -20,6 +21,16 @@ namespace NonConTroll.CodeAnalysis
             this.Program = program;
             this.Globals = variables;
             this.Locals.Push( new Dictionary<VariableSymbol , object>() );
+
+            var c = this.Program;
+
+            while( c != null )
+            {
+                foreach( var f in c.Functions )
+                    this.Functions.Add( f.Key , f.Value );
+
+                c = c.Previous;
+            }
         }
 
         public object? Evaluate()
@@ -244,7 +255,7 @@ namespace NonConTroll.CodeAnalysis
 
 				this.Locals.Push( locals );
 
-                var statement = this.Program.Functions[ node.Function ];
+                var statement = this.Functions[ node.Function ];
                 var result = this.EvaluateStatement( statement );
 
                 _ = this.Locals.Pop();

@@ -50,16 +50,11 @@ namespace NonConTroll.CodeAnalysis.Text
             return result.ToImmutable();
         }
 
-        private static void AddLine( ImmutableArray<TextLine>.Builder result ,
-                                     SourceText sourceText ,
-                                     int position ,
-                                     int lineStart ,
-                                     int lineBreakWidth )
+        private static void AddLine( ImmutableArray<TextLine>.Builder result , SourceText sourceText , int position , int lineStart , int lineBreakWidth )
         {
             var lineLength = position - lineStart;
             var lineLengthIncludingLineBreak = lineLength + lineBreakWidth;
-            var line = new TextLine( sourceText , lineStart , lineLength ,
-                                     lineLengthIncludingLineBreak );
+            var line = new TextLine( sourceText , lineStart , lineLength , lineLengthIncludingLineBreak );
 
             result.Add( line );
         }

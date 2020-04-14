@@ -214,7 +214,7 @@ namespace NonConTroll
             Directory.CreateDirectory( submissionsDir );
 
             var count = Directory.GetFiles( submissionsDir ).Length;
-            var name = $"Submission{count:0000}";
+            var name = $"Submission{count:0000}.txt";
             var fileName = Path.Combine( submissionsDir , name );
 
             File.WriteAllText( fileName , text );

@@ -53,35 +53,28 @@ namespace NonConTroll.CodeAnalysis.Binding
             return new BoundGlobalScope( previous , diagnostics , functions , variables , statements );
         }
 
-        public static BoundProgram BindProgram( BoundGlobalScope globalScope )
+        public static BoundProgram BindProgram( BoundProgram? previous , BoundGlobalScope globalScope )
         {
             var parentScope    = CreateParentScope( globalScope );
             var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
             var diagnostics    = ImmutableArray.CreateBuilder<Diagnostic>();
 
-            BoundGlobalScope? scope = globalScope;
-
-            while( scope != null )
+            foreach( var function in globalScope.Functions )
             {
-                foreach( var function in scope.Functions )
-                {
-                    var binder      = new Binder( parentScope , function );
-                    var body        = binder.BindStatement( function.Declaration!.Body );
-                    var loweredBody = Lowerer.Lower( body );
+                var binder      = new Binder( parentScope , function );
+                var body        = binder.BindStatement( function.Declaration!.Body );
+                var loweredBody = Lowerer.Lower( body );
 
-                    if( function.ReturnType != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn( loweredBody ) )
-                        binder.DiagBag.ReportAllPathsMustReturn( function.Declaration.Identifier.Location );
+                if( function.ReturnType != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn( loweredBody ) )
+                    binder.DiagBag.ReportAllPathsMustReturn( function.Declaration.Identifier.Location );
 
-                    functionBodies.Add( function , loweredBody );
-                    diagnostics.AddRange( binder.Diagnostics );
-                }
-
-                scope = scope.Previous;
+                functionBodies.Add( function , loweredBody );
+                diagnostics.AddRange( binder.Diagnostics );
             }
 
             var statement = Lowerer.Lower( new BoundBlockStatement( globalScope.Statements ) );
 
-            return new BoundProgram( diagnostics.ToImmutable() , functionBodies.ToImmutable() , statement );
+            return new BoundProgram( previous , diagnostics.ToImmutable() , functionBodies.ToImmutable() , statement );
         }
 
         private void BindFunctionDeclaration( FunctionDeclarationSyntax syntax )
@@ -372,7 +365,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case SyntaxKind.AssignmentExpression:    return this.BindAssignmentExpression( (AssignmentExpressionSyntax)syntax );
                 case SyntaxKind.UnaryExpression:         return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
                 case SyntaxKind.BinaryExpression:        return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
-                case SyntaxKind.CallExpression:          return this.BindCallExpression( (CallExpressionSyntax)syntax );
+                case SyntaxKind.CallExpression:          return this.BindInvokationExpression( (CallExpressionSyntax)syntax );
 
                 default:
                     throw new Exception( $"Unexpected syntax {syntax.Kind}" );
@@ -459,7 +452,15 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindUnaryExpression( UnaryExpressionSyntax syntax )
         {
-            var boundOperand = this.BindExpression( syntax.Operand );
+            // TODO
+            // if( syntax.OperatorToken.TkType == TokenType.Identifier )
+            // {
+            //     var infixSyntax = new InfixUnaryExpressionSyntax( syntax.SyntaxTree , syntax.OperatorToken , syntax.Expression );
+            //
+            //     return this.BindInvokationExpression( infixSyntax );
+            // }
+
+            var boundOperand = this.BindExpression( syntax.Expression );
 
             if( boundOperand.Type == TypeSymbol.Error )
                 return new BoundErrorExpression();
@@ -479,7 +480,11 @@ namespace NonConTroll.CodeAnalysis.Binding
         private BoundExpression BindBinaryExpression( BinaryExpressionSyntax syntax )
         {
             if( syntax.OperatorToken.TkType == TokenType.Identifier )
-                return this.BindInfixCallExpression( syntax );
+            {
+                var infixSyntax = new InfixBinaryExpressionSyntax( syntax.SyntaxTree , syntax.Lhs , syntax.OperatorToken , syntax.Rhs );
+
+                return this.BindInvokationExpression( infixSyntax );
+            }
 
             var boundLhs = this.BindExpression( syntax.Lhs );
             var boundRhs = this.BindExpression( syntax.Rhs );
@@ -500,79 +505,14 @@ namespace NonConTroll.CodeAnalysis.Binding
             return new BoundBinaryExpression( boundLhs , boundOperator , boundRhs );
         }
 
-        private BoundExpression BindInfixCallExpression( BinaryExpressionSyntax syntax )
-        {
-            var symbol = this.Scope!.TryLookupSymbol( syntax.OperatorToken.Text! );
-
-            if( symbol == null )
-            {
-                this.DiagBag.ReportUndefinedInfixFunction( syntax.OperatorToken.Location , syntax.OperatorToken.Text! );
-
-                return new BoundErrorExpression();
-            }
-
-            var function = symbol as FunctionSymbol;
-
-            if( function == null )
-            {
-                this.DiagBag.ReportInfixIsNotAnInfixFunction( syntax.OperatorToken.Location , symbol );
-
-                return new BoundErrorExpression();
-            }
-
-            if( function.Parameters.Length != 2 )
-            {
-                this.DiagBag.ReportInfixFunctionParameterCount( syntax.OperatorToken.Location , function );
-
-                return new BoundErrorExpression();
-            }
-
-            var boundLhs = this.BindExpression( syntax.Lhs );
-            var boundRhs = this.BindExpression( syntax.Rhs );
-
-            if( boundLhs.Type == TypeSymbol.Error ||
-                boundRhs.Type == TypeSymbol.Error )
-                return new BoundErrorExpression();
-
-            // TODO: check for @infix attribute
-
-            var hasErrors = false;
-
-            { // Lhs
-                var arg = function.Parameters[ 0 ];
-
-                if( boundLhs.Type != arg.Type )
-                {
-                    if( boundLhs.Type != TypeSymbol.Error )
-                        this.DiagBag.ReportWrongArgumentTypeInfix( syntax.Lhs.Location , function , arg.Name , arg.Type , boundLhs.Type );
-
-                    hasErrors = true;
-                }
-            }
-            { // Rhs
-                var arg = function.Parameters[ 1 ];
-
-                if( boundRhs.Type != arg.Type )
-                {
-                    if( boundRhs.Type != TypeSymbol.Error )
-                        this.DiagBag.ReportWrongArgumentTypeInfix( syntax.Rhs.Location , function , arg.Name , arg.Type , boundRhs.Type );
-
-                    hasErrors = true;
-                }
-            }
-
-            if( hasErrors )
-                return new BoundErrorExpression();
-
-            return new BoundCallExpression( function , ImmutableArray.Create( boundLhs , boundRhs ) );
-        }
-
-        private BoundExpression BindCallExpression( CallExpressionSyntax syntax )
+        private BoundExpression BindInvokationExpression( InvokationExpressionSyntax syntax )
         {
             var identifierText = syntax.Identifier.Text!;
 
-            if( syntax.Arguments.Count == 1 && this.LookupType( identifierText ) is TypeSymbol type )
-                return this.BindConversion( syntax.Arguments[ 0 ] , type , allowExplicit: true );
+            // TODO: cast
+            // right now: casting MyType( 1 )
+            if( syntax.Arguments.Count() == 1 && this.LookupType( identifierText ) is TypeSymbol type )
+                return this.BindConversion( syntax.Arguments.First() , type , allowExplicit: true );
 
             var boundArguments = ImmutableArray.CreateBuilder<BoundExpression>();
 
@@ -597,33 +537,68 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }
 
-            if( syntax.Arguments.Count != function!.Parameters.Length )
+            if( syntax is CallExpressionSyntax callSyntax )
             {
-                var span = default( TextSpan );
+                var args =  callSyntax.Arguments;
 
-                if( syntax.Arguments.Count > function.Parameters.Length )
+                if( args.Count != function.Parameters.Length )
                 {
-                    var firstExceedingNode = default( SyntaxNode );
+                    var span = default( TextSpan );
 
-                    if( function.Parameters.Length > 0 )
-                        firstExceedingNode = syntax.Arguments.GetSeparator( function.Parameters.Length - 1 )!;
+                    if( args.Count > function.Parameters.Length )
+                    {
+                        var firstExceedingNode = default( SyntaxNode );
+
+                        if( function.Parameters.Any() )
+                            firstExceedingNode = args.GetSeparator( function.Parameters.Length - 1 )!;
+                        else
+                            firstExceedingNode = args.First();
+
+                        var lastExceedingArgument = syntax.Arguments.Last();
+
+                        span = TextSpan.FromBounds( firstExceedingNode.Span.Start , lastExceedingArgument.Span.End );
+                    }
                     else
-                        firstExceedingNode = syntax.Arguments[ 0 ];
+                    {
+                        span = callSyntax.CloseParenthesisToken.Span;
+                    }
 
-                    var lastExceedingArgument = syntax.Arguments.Last();
+                    var location = new TextLocation( syntax.SyntaxTree.Text , span );
 
-                    span = TextSpan.FromBounds( firstExceedingNode.Span.Start , lastExceedingArgument.Span.End );
+                    this.DiagBag.ReportWrongArgumentCount( location , function.Name , function.Parameters.Length , syntax.Arguments.Count );
+
+                    return new BoundErrorExpression();
                 }
-                else
+            }
+            else if( syntax is InfixBinaryExpressionSyntax infixBinarySyntax )
+            {
+                var args =  infixBinarySyntax.Arguments;
+
+                // TODO: check only 2 arguments allowed for now
+                // TODO: maybe infix for unary operators too?
+                // var x = not 1;
+
+                if( args.Count != function.Parameters.Length )
                 {
-                    span = syntax.CloseParenthesisToken.Span;
+                    var location = new TextLocation( syntax.SyntaxTree.Text , syntax.Span );
+
+                    this.DiagBag.ReportWrongArgumentCount( location , function.Name , function.Parameters.Length , syntax.Arguments.Count );
+
+                    return new BoundErrorExpression();
                 }
+            }
+            else if( syntax is InfixUnaryExpressionSyntax infixUnarySyntax )
+            {
+                var args =  infixUnarySyntax.Arguments;
 
-                var location = new TextLocation( syntax.SyntaxTree.Text , span );
+                if( args.Count != function.Parameters.Length )
+                {
+                    var location = new TextLocation( syntax.SyntaxTree.Text , syntax.Span );
 
-                this.DiagBag.ReportWrongArgumentCount( location , function.Name , function.Parameters.Length , syntax.Arguments.Count );
+                    this.DiagBag.ReportWrongArgumentCount( location , function.Name , function.Parameters.Length , syntax.Arguments.Count );
 
-                return new BoundErrorExpression();
+                    return new BoundErrorExpression();
+                }
             }
 
             var hasErrors = false;
@@ -636,7 +611,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 if( argument.Type != parameter.Type )
                 {
                     if( argument.Type != TypeSymbol.Error )
-                        this.DiagBag.ReportWrongArgumentType( syntax.Arguments[ i ].Location , parameter.Name , parameter.Type , argument.Type );
+                        this.DiagBag.ReportWrongArgumentType( syntax.Arguments[ i ].Location , function , parameter.Name , parameter.Type , argument.Type );
 
                     hasErrors = true;
                 }
@@ -684,8 +659,8 @@ namespace NonConTroll.CodeAnalysis.Binding
             var name     = identifier.Text ?? "?";
             var declare  = !identifier.IsMissing;
             var variable = this.Function == null
-                ? (VariableSymbol) new GlobalVariableSymbol( name , isReadOnly , type )
-                : new LocalVariableSymbol( name , isReadOnly , type );
+                ? (VariableSymbol)new GlobalVariableSymbol( name , isReadOnly , type )
+                : (VariableSymbol)new LocalVariableSymbol( name , isReadOnly , type );
 
             if( declare && !this.Scope!.TryDeclareVariable( variable ) )
                 this.DiagBag.ReportSymbolAlreadyDeclared( identifier.Location , name );

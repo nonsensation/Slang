@@ -46,9 +46,6 @@ namespace NonConTroll.CodeAnalysis
         public void ReportParameterAlreadyDeclared( TextLocation location , string parameterName )
             => this.Report( location , $"A parameter with the name '{parameterName}' already exists." );
 
-        public void ReportUndefinedName( TextLocation location , string name )
-            => this.Report( location , $"Variable '{name}' doesn't exist." );
-
         public void ReportUndefinedType( TextLocation location , string name )
             => this.Report( location , $"Type '{name}' doesn't exist." );
 
@@ -70,8 +67,8 @@ namespace NonConTroll.CodeAnalysis
         public void ReportWrongArgumentCount( TextLocation location , string name , int expectedCount , int actualCount )
             => this.Report( location , $"Function '{name}' requires {expectedCount} arguments but was given {actualCount}." );
 
-        public void ReportWrongArgumentType( TextLocation location , string name , TypeSymbol expectedType , TypeSymbol actualType )
-            => this.Report( location , $"Parameter '{name}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
+        public void ReportWrongArgumentType( TextLocation location , FunctionSymbol function , string name , TypeSymbol expectedType , TypeSymbol actualType )
+            => this.Report( location , $"Parameter '{name}' for funnction '{function}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
 
         public void ReportExpressionMustHaveValue( TextLocation location )
             => this.Report( location , "Expression must have a value." );
@@ -105,18 +102,6 @@ namespace NonConTroll.CodeAnalysis
 
         public void ReportNotAFunction( TextLocation location , string name )
             => this.Report( location , $"'{name}' is not a function." );
-
-        public void ReportUndefinedInfixFunction( TextLocation location , string funcName )
-            => this.Report( location , $"Infix function '{funcName}' is not declared." );
-
-        public void ReportInfixIsNotAnInfixFunction( TextLocation location , Symbol symbol )
-            => this.Report( location , $"Infix function '{symbol.Name}' was declared as '{symbol}'." );
-
-        public void ReportInfixFunctionParameterCount( TextLocation location , FunctionSymbol function )
-            => this.Report( location , $"Infix function '{function}' cannot be used as an infix function (exactly 2 parameters required)." );
-
-        public void ReportWrongArgumentTypeInfix( TextLocation location , FunctionSymbol function , string name , TypeSymbol expectedType , TypeSymbol actualType )
-            => this.Report( location , $"Parameter '{name}' requires a value of type '{expectedType}' but was given a value of type '{actualType}' for infix function '{function}'." );
 
 
         #endregion

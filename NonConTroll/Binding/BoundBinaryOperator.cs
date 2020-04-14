@@ -51,11 +51,13 @@ namespace NonConTroll.CodeAnalysis.Binding
             new BoundBinaryOperator( TokenType.ExmEq    , BoundBinaryOperatorKind.NotEquals       , TypeSymbol.String , TypeSymbol.Bool ) ,
         };
 
-        public static BoundBinaryOperator? Bind( TokenType tokenType , TypeSymbol leftType , TypeSymbol rightType )
+        public static BoundBinaryOperator? Bind( TokenType tokenType , TypeSymbol lhsType , TypeSymbol rhsType )
         {
             foreach( var op in Operators )
             {
-                if( op.TkType == tokenType && op.LeftType == leftType && op.RightType == rightType )
+                if( op.TkType == tokenType &&
+                    op.LeftType == lhsType &&
+                    op.RightType == rhsType )
                     return op;
             }
 
