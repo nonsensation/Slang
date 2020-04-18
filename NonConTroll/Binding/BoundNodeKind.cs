@@ -6,7 +6,6 @@ namespace NonConTroll.CodeAnalysis.Binding
         TypeDeclaration,
 
         #region Statements
-
         BlockStatement,
         IfStatement,
         WhileStatement,
@@ -17,11 +16,10 @@ namespace NonConTroll.CodeAnalysis.Binding
         ConditionalGotoStatement,
         ReturnStatement,
         ExpressionStatement,
-
+        DeferStatement,
         #endregion
 
         #region Expressions
-
         ErrorExpression,
         LiteralExpression,
         VariableExpression,
@@ -30,7 +28,6 @@ namespace NonConTroll.CodeAnalysis.Binding
         BinaryExpression,
         CallExpression,
         ConversionExpression,
-
         #endregion
     }
 }

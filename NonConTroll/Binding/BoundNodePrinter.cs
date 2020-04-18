@@ -49,6 +49,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundNodeKind.ConditionalGotoStatement:
                     WriteConditionalGotoStatement( (BoundConditionalGotoStatement)node , writer );
                     break;
+                case BoundNodeKind.DeferStatement:
+                    WriteDeferStatement( (BoundDeferStatement)node , writer );
+                    break;
                 case BoundNodeKind.ReturnStatement:
                     WriteReturnStatement( (BoundReturnStatement)node , writer );
                     break;
@@ -233,14 +236,24 @@ namespace NonConTroll.CodeAnalysis.Binding
             writer.WriteLine();
         }
 
+        private static void WriteDeferStatement( BoundDeferStatement node , IndentedTextWriter writer )
+        {
+            writer.Write( TokenType.Defer );
+            writer.WriteSpace();
+            node.Expression.WriteTo( writer );
+            writer.WriteLine();
+        }
+
         private static void WriteReturnStatement( BoundReturnStatement node , IndentedTextWriter writer )
         {
             writer.Write( TokenType.Return );
+
             if( node.Expression != null )
             {
                 writer.WriteSpace();
                 node.Expression.WriteTo( writer );
             }
+
             writer.WriteLine();
         }
 

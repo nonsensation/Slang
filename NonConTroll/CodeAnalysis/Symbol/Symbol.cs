@@ -10,6 +10,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
         }
 
         public abstract SymbolKind Kind { get; }
+        public bool IsResolved { get; set; } = false;
         public string Name { get; }
 
         public void WriteTo( TextWriter writer )

@@ -60,6 +60,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         [TokenInfo( TokenKind.Keyword )] Switch,
         [TokenInfo( TokenKind.Keyword )] Case,
         [TokenInfo( TokenKind.Keyword )] Default,
+        [TokenInfo( TokenKind.Keyword )] Defer,
         [TokenInfo( TokenKind.Keyword )] Delete,
         [TokenInfo( TokenKind.Keyword )] Except,
         [TokenInfo( TokenKind.Keyword )] Try,

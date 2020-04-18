@@ -1,0 +1,20 @@
+
+Things to do in the near future:
+- defer statement
+- yield & generators
+- infix function notation (unary & binary)
+- attributes
+- emit IL
+- main function & entry point
+- symbol resolving
+- scopes
+- types as values
+- expose slang types in sl
+- lowering & ast rewriting
+- separate binding
+
+Things to do in the far future:
+- emulation & VM
+- byte code emitting
+- LLVM
+- C-interop

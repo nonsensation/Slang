@@ -98,6 +98,14 @@ namespace NonConTroll.CodeAnalysis
                     }
                     break;
 
+                    case BoundNodeKind.DeferStatement:
+                    {
+                        this.EvaluateExpression( ((BoundDeferStatement)s).Expression );
+
+                        index++;
+                    }
+                    break;
+
                     case BoundNodeKind.ReturnStatement:
                     {
                         var rs = (BoundReturnStatement)s;

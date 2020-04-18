@@ -161,10 +161,18 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case SyntaxKind.ContinueStatement:   return this.BindContinueStatement( (ContinueStatementSyntax)syntax );
                 case SyntaxKind.ReturnStatement:     return this.BindReturnStatement( (ReturnStatementSyntax)syntax );
                 case SyntaxKind.ExpressionStatement: return this.BindExpressionStatement( (ExpressionStatementSyntax)syntax );
+                case SyntaxKind.DeferStatement:      return this.BindDeferStatement( (DeferStatementSyntax)syntax );
 
                 default:
                     throw new Exception( $"Unexpected syntax {syntax.Kind}" );
             }
+        }
+
+        private BoundStatement BindDeferStatement( DeferStatementSyntax syntax )
+        {
+            var expr = this.BindExpression( syntax.Expression , TypeSymbol.Void );
+
+            return new BoundDeferStatement( expr );
         }
 
         private BoundStatement BindBlockStatement( BlockStatementSyntax syntax )

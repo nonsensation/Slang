@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
@@ -20,17 +22,8 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundNodeKind.GotoStatement:            return this.RewriteGotoStatement( (BoundGotoStatement)node );
                 case BoundNodeKind.ConditionalGotoStatement: return this.RewriteConditionalGotoStatement( (BoundConditionalGotoStatement)node );
                 case BoundNodeKind.ReturnStatement:          return this.RewriteReturnStatement( (BoundReturnStatement)node );
+                case BoundNodeKind.DeferStatement:           return this.RewriteDeferStatement( (BoundDeferStatement)node );
                 case BoundNodeKind.ExpressionStatement:      return this.RewriteExpressionStatement( (BoundExpressionStatement)node );
-                default:
-                    throw new Exception( $"Unexpected node: {node.Kind}" );
-            }
-        }
-
-        public virtual BoundExpression TODO_RewriteExpression( BoundExpression node )
-        {
-            switch( node.Kind )
-            {
-                case BoundNodeKind.BinaryExpression: return this.RewriteBinaryExpression( (BoundBinaryExpression)node );
                 default:
                     throw new Exception( $"Unexpected node: {node.Kind}" );
             }
@@ -38,30 +31,20 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         protected virtual BoundStatement RewriteBlockStatement( BoundBlockStatement node )
         {
-            var builder = default( ImmutableArray<BoundStatement>.Builder );
+            var builder = ImmutableArray.CreateBuilder<BoundStatement>( node.Statements.Length );
+            var deferStmts = new List<BoundDeferStatement>();
 
-            for( var i = 0 ; i < node.Statements.Length ; i++ )
+            foreach( var stmt in node.Statements )
             {
-                var oldStatement = node.Statements[ i ];
-                var newStatement = this.RewriteStatement( oldStatement );
+                var statement = this.RewriteStatement( stmt );
 
-                if( newStatement != oldStatement )
-                {
-                    if( builder == null )
-                    {
-                        builder = ImmutableArray.CreateBuilder<BoundStatement>( node.Statements.Length );
-
-                        for( var j = 0 ; j < i ; j++ )
-                            builder.Add( node.Statements[ j ] );
-                    }
-                }
-
-                if( builder != null )
-                    builder.Add( newStatement );
+                if( statement.Kind == BoundNodeKind.DeferStatement )
+                    deferStmts.Add( (BoundDeferStatement)statement );
+                else
+                    builder.Add( statement );
             }
 
-            if( builder == null )
-                return node;
+            builder.AddRange( deferStmts.AsEnumerable().Reverse() );
 
             return new BoundBlockStatement( builder.MoveToImmutable() );
         }
@@ -106,8 +89,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var body = this.RewriteStatement( node.Body );
             var condition = this.RewriteExpression( node.Condition );
 
-            if( body == node.Body &&
-                condition == node.Condition )
+            if( body == node.Body && condition == node.Condition )
                 return node;
 
             return new BoundDoWhileStatement( body , condition , node.BreakLabel , node.ContinueLabel );
@@ -155,6 +137,16 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
 
             return new BoundReturnStatement( expression );
+        }
+
+        protected virtual BoundStatement RewriteDeferStatement( BoundDeferStatement node )
+        {
+            var expression = this.RewriteExpression( node.Expression );
+
+            if( expression == node.Expression )
+                return node;
+
+            return new BoundDeferStatement( expression );
         }
 
         protected virtual BoundStatement RewriteExpressionStatement( BoundExpressionStatement node )
@@ -232,32 +224,9 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         protected virtual BoundExpression RewriteCallExpression( BoundCallExpression node )
         {
-            var builder = default( ImmutableArray<BoundExpression>.Builder );
+            var args = this.RewriteNodes( node.Arguments, this.RewriteExpression );
 
-            for( var i = 0 ; i < node.Arguments.Length ; i++ )
-            {
-                var oldArgument = node.Arguments[ i ];
-                var newArgument = this.RewriteExpression( oldArgument );
-
-                if( newArgument != oldArgument )
-                {
-                    if( builder == null )
-                    {
-                        builder = ImmutableArray.CreateBuilder<BoundExpression>( node.Arguments.Length );
-
-                        for( var j = 0 ; j < i ; j++ )
-                            builder.Add( node.Arguments[ j ] );
-                    }
-                }
-
-                if( builder != null )
-                    builder.Add( newArgument );
-            }
-
-            if( builder == null )
-                return node;
-
-            return new BoundCallExpression( node.Function , builder.MoveToImmutable() );
+            return new BoundCallExpression( node.Function , args.ToImmutableArray() );
         }
 
         protected virtual BoundExpression RewriteConversionExpression( BoundConversionExpression node )
@@ -268,6 +237,35 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
 
             return new BoundConversionExpression( node.Type , expression );
+        }
+
+        protected IEnumerable<T> RewriteNodes<T>( IEnumerable<T> nodes , Func<T,T> func )
+            where T : BoundNode
+        {
+            var builder = default( ImmutableArray<T>.Builder );
+
+            for( var i = 0 ; i < nodes.Count() ; i++ )
+            {
+                var oldStatement = nodes.ElementAt( i );
+                var newStatement = func( oldStatement );
+
+                if( newStatement != oldStatement )
+                {
+                    if( builder == null )
+                    {
+                        builder = ImmutableArray.CreateBuilder<T>( nodes.Count() );
+                        builder.AddRange( nodes.Take( i ) );
+                    }
+                }
+
+                if( builder != null )
+                    builder.Add( newStatement );
+            }
+
+            if( builder == null )
+                return nodes;
+
+            return builder.MoveToImmutable();
         }
     }
 }

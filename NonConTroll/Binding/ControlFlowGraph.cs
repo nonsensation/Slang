@@ -105,6 +105,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                             break;
                         case BoundNodeKind.VariableDeclaration:
                         case BoundNodeKind.ExpressionStatement:
+                        case BoundNodeKind.DeferStatement:
                             this.Statements.Add( statement );
                             break;
                         default:
@@ -124,7 +125,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             private void EndBlock()
             {
-                if( this.Statements.Count > 0 )
+                if( this.Statements.Any() )
                 {
                     var block = new BasicBlock();
 
@@ -202,6 +203,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                             case BoundNodeKind.VariableDeclaration:
                             case BoundNodeKind.LabelStatement:
                             case BoundNodeKind.ExpressionStatement:
+                            case BoundNodeKind.DeferStatement:
                             {
                                 if( isLastStatementInBlock )
                                     this.Connect( current , next );

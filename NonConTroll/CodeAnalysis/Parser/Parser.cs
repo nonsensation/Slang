@@ -124,7 +124,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
 
         private SeparatedSyntaxList<ParameterSyntax> ParseParameterList()
-            => ParseSeparatedList( this.ParseParameter );
+            => this.ParseSeparatedList( this.ParseParameter );
 
         private SeparatedSyntaxList<T> ParseSeparatedList<T>(
                 Func<T> parseParamFunc ,
@@ -186,6 +186,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case TokenType.Break:     return this.ParseBreakStatement();
                 case TokenType.Continue:  return this.ParseContinueStatement();
                 case TokenType.Return:    return this.ParseReturnStatement();
+                case TokenType.Defer:     return this.ParseDeferStatement();
                 default:                  return this.ParseExpressionStatement();
             }
         }
@@ -381,6 +382,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var expression  = sameLine ? this.ParseExpression() : null;
 
             return new ReturnStatementSyntax( this.SyntaxTree , keyword , expression );
+        }
+
+        private StatementSyntax ParseDeferStatement()
+        {
+            var keyword     = this.MatchToken( TokenType.Defer );
+            var expression  = this.ParseExpression();
+
+            return new DeferStatementSyntax( this.SyntaxTree , keyword , expression );
         }
 
         private ExpressionStatementSyntax ParseExpressionStatement()

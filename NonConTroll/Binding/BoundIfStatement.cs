@@ -14,5 +14,4 @@ namespace NonConTroll.CodeAnalysis.Binding
         public BoundStatement ThenStatement { get; }
         public BoundStatement? ElseStatement { get; }
     }
-
 }
