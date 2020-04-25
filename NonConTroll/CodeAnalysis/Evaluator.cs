@@ -27,7 +27,9 @@ namespace NonConTroll.CodeAnalysis
             while( c != null )
             {
                 foreach( var f in c.Functions )
+                {
                     this.Functions.Add( f.Key , f.Value );
+                }
 
                 c = c.Previous;
             }
@@ -45,7 +47,9 @@ namespace NonConTroll.CodeAnalysis
             for( var i = 0 ; i < body.Statements.Length ; i++ )
             {
                 if( body.Statements[ i ] is BoundLabelStatement l )
+                {
                     labelToIndex.Add( l.Label , i + 1 );
+                }
             }
 
             var index = 0;
@@ -86,9 +90,13 @@ namespace NonConTroll.CodeAnalysis
                         var condition = (bool)this.EvaluateExpression( cgs.Condition )!;
 
                         if( condition == cgs.JumpIfTrue )
+                        {
                             index = labelToIndex[ cgs.Label ];
+                        }
                         else
+                        {
                             index++;
+                        }
                     }
                     break;
 
@@ -111,7 +119,9 @@ namespace NonConTroll.CodeAnalysis
                         var rs = (BoundReturnStatement)s;
 
                         if( rs.Expression != null )
+                        {
                             this.LastValue = this.EvaluateExpression( rs.Expression );
+                        }
 
                         return this.LastValue;
                     }
@@ -207,10 +217,14 @@ namespace NonConTroll.CodeAnalysis
             {
                 case BoundBinaryOperatorKind.Addition:
                     if( binExpr.Type == TypeSymbol.Int )
+                    {
                         return (int)lhs + (int)rhs;
+                    }
                     else
+                    {
                         return ((string)lhs).Replace( "\"" , "" )
                              + ((string)rhs).Replace( "\"" , "" );
+                    }
 
                 case BoundBinaryOperatorKind.Equals:          return  Equals( lhs , rhs );
                 case BoundBinaryOperatorKind.NotEquals:       return !Equals( lhs , rhs );
@@ -245,7 +259,9 @@ namespace NonConTroll.CodeAnalysis
                 var max = (int)this.EvaluateExpression( node.Arguments[ 0 ] )!;
 
                 if( this.Random == null )
-					this.Random = new Random();
+                {
+                    this.Random = new Random();
+                }
 
                 return this.Random.Next( max );
             }
@@ -277,13 +293,21 @@ namespace NonConTroll.CodeAnalysis
             var value = this.EvaluateExpression( node.Expression );
 
             if( node.Type == TypeSymbol.Bool )
+            {
                 return Convert.ToBoolean( value );
+            }
             else if( node.Type == TypeSymbol.Int )
+            {
                 return Convert.ToInt32( value );
+            }
             else if( node.Type == TypeSymbol.String )
+            {
                 return Convert.ToString( value )!;
+            }
             else
+            {
                 throw new Exception( $"Unexpected type {node.Type}" );
+            }
         }
 
         private void Assign( VariableSymbol variable , object value )

@@ -34,7 +34,9 @@ namespace NonConTroll
                 var attribute = method.GetCustomAttribute<MetaCommandAttribute>();
 
                 if( attribute == null )
+                {
                     continue;
+                }
 
                 this.MetaCommands.Add( new MetaCommand( attribute.Name , attribute.Description , method ) );
             }
@@ -47,12 +49,18 @@ namespace NonConTroll
                 var text = this.EditSubmission();
 
                 if( string.IsNullOrEmpty( text ) )
+                {
                     return;
+                }
 
                 if( !text.Contains( Environment.NewLine ) && text.StartsWith( "#" ) )
+                {
                     this.EvaluateMetaCommand( text );
+                }
                 else
+                {
                     this.EvaluateSubmission( text );
+                }
 
                 this.SubmissionHistory.Add( text );
                 this.SubmissionHistoryIndex = 0;
@@ -160,7 +168,9 @@ namespace NonConTroll
         private void HandleLeftArrow( ObservableCollection<string> document , SubmissionView view )
         {
             if( view.CurrentCharacter > 0 )
+            {
                 view.CurrentCharacter--;
+            }
         }
 
         private void HandleRightArrow( ObservableCollection<string> document , SubmissionView view )
@@ -168,19 +178,25 @@ namespace NonConTroll
             var line = document[view.CurrentLine];
 
             if( view.CurrentCharacter <= line.Length - 1 )
+            {
                 view.CurrentCharacter++;
+            }
         }
 
         private void HandleUpArrow( ObservableCollection<string> document , SubmissionView view )
         {
             if( view.CurrentLine > 0 )
+            {
                 view.CurrentLine--;
+            }
         }
 
         private void HandleDownArrow( ObservableCollection<string> document , SubmissionView view )
         {
             if( view.CurrentLine < document.Count - 1 )
+            {
                 view.CurrentLine++;
+            }
         }
 
         private void HandleBackspace( ObservableCollection<string> document , SubmissionView view )
@@ -190,7 +206,9 @@ namespace NonConTroll
             if( start == 0 )
             {
                 if( view.CurrentLine == 0 )
+                {
                     return;
+                }
 
                 var currentLine = document[view.CurrentLine];
                 var previousLine = document[view.CurrentLine - 1];
@@ -222,7 +240,9 @@ namespace NonConTroll
             if( start >= line.Length )
             {
                 if( view.CurrentLine == document.Count - 1 )
+                {
                     return;
+                }
 
                 var nextLine = document[view.CurrentLine + 1];
                 document[ view.CurrentLine ] += nextLine;
@@ -264,7 +284,9 @@ namespace NonConTroll
             this.SubmissionHistoryIndex--;
 
             if( this.SubmissionHistoryIndex < 0 )
+            {
                 this.SubmissionHistoryIndex = this.SubmissionHistory.Count - 1;
+            }
 
             this.UpdateDocumentFromHistory( document , view );
         }
@@ -274,7 +296,9 @@ namespace NonConTroll
             this.SubmissionHistoryIndex++;
 
             if( this.SubmissionHistoryIndex > this.SubmissionHistory.Count -1 )
+            {
                 this.SubmissionHistoryIndex = 0;
+            }
 
             this.UpdateDocumentFromHistory( document , view );
         }
@@ -282,14 +306,18 @@ namespace NonConTroll
         private void UpdateDocumentFromHistory( ObservableCollection<string> document , SubmissionView view )
         {
             if( !this.SubmissionHistory.Any() )
+            {
                 return;
+            }
 
             document.Clear();
 
             var historyItem = this.SubmissionHistory[ this.SubmissionHistoryIndex ];
 
             foreach( var line in historyItem.Split( Environment.NewLine ) )
+            {
                 document.Add( line );
+            }
 
             view.CurrentLine = document.Count - 1;
             view.CurrentCharacter = document[ view.CurrentLine ].Length;
@@ -328,21 +356,29 @@ namespace NonConTroll
                 if( char.IsWhiteSpace( currentChar ) )
                 {
                     if( !quotes )
+                    {
                         CommitPendingArgument();
+                    }
                     else
+                    {
                         sb.Append( currentChar );
+                    }
                 }
                 else if( currentChar == '\"' )
                 {
                     if( !quotes )
+                    {
                         quotes = true;
+                    }
                     else if( lookaheadChar == '\"' )
                     {
                         sb.Append( currentChar );
                         pos++;
                     }
                     else
+                    {
                         quotes = false;
+                    }
                 }
                 else
                 {
@@ -359,7 +395,9 @@ namespace NonConTroll
                 var arg = sb.ToString();
 
                 if( !string.IsNullOrWhiteSpace( arg ) )
+                {
                     args.Add( arg );
+                }
 
                 sb.Clear();
             }
@@ -367,7 +405,9 @@ namespace NonConTroll
             var cmdName = args.FirstOrDefault();
 
             if( args.Count > 0 )
+            {
                 args.RemoveAt( 0 );
+            }
 
             var cmd =  this.MetaCommands.SingleOrDefault( x => x.Name == cmdName );
 
@@ -442,7 +482,9 @@ namespace NonConTroll
                         Console.WriteLine();
 
                         if( this.CursorTop > 0 )
+                        {
                             this.CursorTop--;
+                        }
                     }
 
                     Console.SetCursorPosition( 0 , this.CursorTop + lineCount );
@@ -450,9 +492,13 @@ namespace NonConTroll
 
                     // already printing 2 chars to the console
                     if( lineCount == 0 )
+                    {
                         Console.Write( "» " );
+                    }
                     else
+                    {
                         Console.Write( "· " );
+                    }
 
                     Console.ResetColor();
 
@@ -576,7 +622,9 @@ namespace NonConTroll
                     Console.Out.WriteSpace();
 
                     for( var _ = 0 ; _ < maxNameLength ; _++ )
+                    {
                         Console.Out.WriteSpace();
+                    }
                 }
 
                 Console.Out.WriteSpace();

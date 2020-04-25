@@ -13,19 +13,24 @@ namespace NonConTroll.CodeAnalysis
 {
     public class Compilation
     {
+        private Compilation( bool isScript , Compilation? previous , params SyntaxTree[]? syntaxTrees )
+        {
+            this.IsScript    = isScript;
+            this.Previous    = previous;
+            this.SyntaxTrees = syntaxTrees == null ?
+                ImmutableArray<SyntaxTree>.Empty :
+                syntaxTrees.ToImmutableArray();
+        }
+
+        public static Compilation Create( params SyntaxTree[]? syntaxTrees )
+            => new Compilation( isScript: false , null , syntaxTrees );
+
+        public static Compilation CreateScript( Compilation? previous , params SyntaxTree[]? syntaxTrees )
+            => new Compilation( isScript: true , previous , syntaxTrees );
+
         private BoundGlobalScope? globalScope;
 
-        public Compilation( params SyntaxTree[] syntaxTrees )
-            : this( null , syntaxTrees )
-        {
-        }
-
-        private Compilation( Compilation? previous , params SyntaxTree[] syntaxTrees )
-        {
-            this.Previous    = previous;
-            this.SyntaxTrees = syntaxTrees.ToImmutableArray();
-        }
-
+        public bool IsScript { get; }
         public Compilation? Previous { get; }
         public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
         public ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
@@ -35,7 +40,7 @@ namespace NonConTroll.CodeAnalysis
             get {
                 if( this.globalScope == null )
                 {
-                    var globalScope = Binding.Binder.BindGlobalScope( this.Previous?.GlobalScope , this.SyntaxTrees );
+                    var globalScope = Binding.Binder.BindGlobalScope( this.IsScript , this.Previous?.GlobalScope , this.SyntaxTrees );
 
                     _ = Interlocked.CompareExchange( ref this.globalScope! , globalScope , null );
                 }
@@ -63,26 +68,35 @@ namespace NonConTroll.CodeAnalysis
                     .ToList();
 
                 foreach( var builtin in builtinFunctions )
+                {
                     if( seenSymbolNames.Add( builtin.Name ) )
+                    {
                         yield return builtin;
+                    }
+                }
 
                 foreach( var function in submission.Functions )
+                {
                     if( seenSymbolNames.Add( function.Name ) )
+                    {
                         yield return function;
+                    }
+                }
 
                 foreach( var variable in submission.Variables )
+                {
                     if( seenSymbolNames.Add( variable.Name ) )
+                    {
                         yield return variable;
+                    }
+                }
 
                 submission = submission.Previous;
             }
         }
 
-        public Compilation ContinueWith( SyntaxTree syntaxTree )
-            => new Compilation( this , syntaxTree );
-
         private BoundProgram GetProgram()
-            => Binding.Binder.BindProgram( this.Previous?.GetProgram() , this.GlobalScope );
+            => Binding.Binder.BindProgram( this.IsScript , this.Previous?.GetProgram() , this.GlobalScope );
 
         public EvaluationResult Evaluate( Dictionary<VariableSymbol , object> variables )
         {
@@ -92,7 +106,9 @@ namespace NonConTroll.CodeAnalysis
                 .ToImmutableArray();
 
             if( diagnostics.Any() )
+            {
                 return new EvaluationResult( diagnostics , null );
+            }
 
             var program      = this.GetProgram();
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
@@ -103,12 +119,14 @@ namespace NonConTroll.CodeAnalysis
                              : program.Statement;
             var cfg = ControlFlowGraph.Create( cfgStatement );
 
-            using( var streamWriter = new StreamWriter( cfgPath ) )
+            using var streamWriter = new StreamWriter( cfgPath );
 
             cfg.WriteTo( streamWriter );
 
             if( program.Diagnostics.Any() )
+            {
                 return new EvaluationResult( program.Diagnostics.ToImmutableArray() , null );
+            }
 
             var evaluator = new Evaluator( program , variables );
             var value = evaluator.Evaluate();
@@ -129,7 +147,9 @@ namespace NonConTroll.CodeAnalysis
                 foreach( var functionBody in program.Functions )
                 {
                     if( !this.GlobalScope.Functions.Contains( functionBody.Key ) )
+                    {
                         continue;
+                    }
 
                     functionBody.Key.WriteTo( writer );
                     functionBody.Value.WriteTo( writer );
@@ -145,7 +165,9 @@ namespace NonConTroll.CodeAnalysis
             writer.WriteLine();
 
             if( !program.Functions.TryGetValue( symbol , out var body ) )
+            {
                 return;
+            }
 
             body.WriteTo( writer );
         }

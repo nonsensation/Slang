@@ -7,13 +7,27 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/non.sln"
+                "${workspaceFolder}/non.sln",
+                "--no-restore",
+                "/property:GenerateFullPaths=true"
             ],
             "problemMatcher": "$msCompile",
             "group": {
                 "kind": "build",
                 "isDefault": true
               }
+        },
+        {
+            "label": "rebuild",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/non.sln",
+                "/property:GenerateFullPaths=true"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
         },
         {
             "label": "kk",

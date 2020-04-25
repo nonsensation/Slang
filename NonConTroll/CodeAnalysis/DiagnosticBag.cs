@@ -103,6 +103,8 @@ namespace NonConTroll.CodeAnalysis
         public void ReportNotAFunction( TextLocation location , string name )
             => this.Report( location , $"'{name}' is not a function." );
 
+        internal void ReportInvalidExpressionStatement( TextLocation location )
+            => this.Report( location , "Only assignment, call, (TODO: increment, decrement, await, and new object) expressions can be used as a statement." );
 
         #endregion
 

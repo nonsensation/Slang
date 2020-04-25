@@ -42,7 +42,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     var child = (SyntaxNode?)property.GetValue( this );
 
                     if( child != null )
+                    {
                         yield return child;
+                    }
                 }
                 else if( typeof( ISyntaxList ).IsAssignableFrom( property.PropertyType ) )
                 {
@@ -51,7 +53,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     if( separatedSyntaxList != null )
                     {
                         foreach( var child in separatedSyntaxList.GetNodes() )
+                        {
                             yield return child;
+                        }
                     }
                 }
                 else if( typeof( ISeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
@@ -61,7 +65,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     if( separatedSyntaxList != null )
                     {
                         foreach( var child in separatedSyntaxList.GetNodesWithSeparators() )
+                        {
                             yield return child;
+                        }
                     }
                 }
                 else if( typeof( IEnumerable<SyntaxNode> ).IsAssignableFrom( property.PropertyType ) )
@@ -73,7 +79,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                         foreach( var child in children )
                         {
                             if( child != null )
+                            {
                                 yield return child;
+                            }
                         }
                     }
                 }
@@ -83,7 +91,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public SyntaxToken GetLastToken()
         {
             if( this is SyntaxToken token )
+            {
                 return token;
+            }
 
             // A syntax node should always contain at least 1 token.
             return this.GetChildren().Last().GetLastToken();
@@ -100,21 +110,31 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var marker = isLast ? "└──" : "├──";
 
             if( isToConsole )
+            {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
 
             writer.Write( indent );
             writer.Write( marker );
 
             if( isToConsole )
+            {
                 Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.DarkCyan : ConsoleColor.Cyan;
+            }
 
             if( node is SyntaxToken token )
+            {
                 writer.Write( token.TkType );
+            }
             else
+            {
                 writer.Write( node.Kind );
+            }
 
             if( isToConsole )
+            {
                 Console.ResetColor();
+            }
 
             writer.WriteLine();
 
@@ -123,7 +143,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var lastChild = node.GetChildren().LastOrDefault();
 
             foreach( var child in node.GetChildren() )
+            {
                 PrettyPrint( writer , child , indent , child == lastChild );
+            }
         }
 
         public override string ToString()

@@ -45,7 +45,9 @@ namespace NonConTroll.CodeAnalysis.Text
             }
 
             if( position >= lineStart )
+            {
                 AddLine( result , sourceText , position , lineStart , 0 );
+            }
 
             return result.ToImmutable();
         }
@@ -65,10 +67,14 @@ namespace NonConTroll.CodeAnalysis.Text
             var l = position + 1 >= text.Length ? '\0' : text[ position + 1 ];
 
             if( c == '\r' && l == '\n' )
+            {
                 return 2;
+            }
 
             if( c == '\r' || c == '\n' )
+            {
                 return 1;
+            }
 
             return 0;
         }
@@ -90,12 +96,18 @@ namespace NonConTroll.CodeAnalysis.Text
                 var start = this.Lines[ index ].Start;
 
                 if( position == start )
+                {
                     return index;
+                }
 
                 if( start > position )
+                {
                     upper = index - 1;
+                }
                 else
+                {
                     lower = index + 1;
+                }
             }
 
             return lower - 1;

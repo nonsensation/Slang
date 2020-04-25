@@ -17,7 +17,7 @@ namespace NonConTroll
         private bool LoadingSubmissions;
         private readonly Dictionary<VariableSymbol, object> Variables = new Dictionary<VariableSymbol, object>();
 
-        private static readonly Compilation EmptyCompilation = new Compilation();
+        private static readonly Compilation EmptyCompilation = Compilation.Create( null );
 
         public NonConTrollRepl()
         {
@@ -30,12 +30,12 @@ namespace NonConTroll
 
             foreach( var token in tokens )
             {
-                if(      token.TkType.IsTokenKind( TokenKind.Keyword ) )     Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                else if( token.TkType.IsTokenKind( TokenKind.Punctuation ) ) Console.ForegroundColor = ConsoleColor.DarkGray;
-                else if( token.TkType.IsTokenKind( TokenKind.Identifier ) )  Console.ForegroundColor = ConsoleColor.DarkCyan;
-                else if( token.TkType == TokenType.NumericLiteral )          Console.ForegroundColor = ConsoleColor.DarkGreen;
-                else if( token.TkType == TokenType.StringLiteral )           Console.ForegroundColor = ConsoleColor.DarkYellow;
-                else                                                         Console.ForegroundColor = ConsoleColor.DarkGray;
+                if(      token.TkType.IsTokenKind( TokenKind.Keyword ) )     { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
+                else if( token.TkType.IsTokenKind( TokenKind.Punctuation ) ) { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+                else if( token.TkType.IsTokenKind( TokenKind.Identifier ) )  { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
+                else if( token.TkType == TokenType.NumericLiteral )          { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
+                else if( token.TkType == TokenType.StringLiteral )           { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
+                else                                                         { Console.ForegroundColor = ConsoleColor.DarkGray;    }
 
                 Console.Write( token.Text );
                 Console.ResetColor();
@@ -106,7 +106,9 @@ namespace NonConTroll
         protected override bool IsCompleteSubmission( string text )
         {
             if( string.IsNullOrEmpty( text ) )
+            {
                 return true;
+            }
 
             var lastTwoLinesAreBlank = text
                 .Split( Environment.NewLine )
@@ -116,31 +118,36 @@ namespace NonConTroll
                 .Count() == 2;
 
             if( lastTwoLinesAreBlank )
+            {
                 return true;
+            }
 
             var syntaxTree = SyntaxTree.Parse( text );
 
             // Use Members because we need to exclude the EndOfFileToken.
             if( !syntaxTree.Root.Members.Any() ||
                 syntaxTree.Root.Members.Last().GetLastToken().IsMissing )
+            {
                 return false;
-
+            }
 
             return true;
         }
 
         protected override void EvaluateSubmission( string text )
         {
-            var syntaxTree = SyntaxTree.Parse( text );
-            var compilation = this.Previous == null
-                ? new Compilation( syntaxTree )
-                : this.Previous.ContinueWith( syntaxTree );
+            var syntaxTree  = SyntaxTree.Parse( text );
+            var compilation = Compilation.CreateScript( this.Previous , syntaxTree );
 
             if( this.ShowTree )
+            {
                 syntaxTree.Root.WriteTo( Console.Out );
+            }
 
             if( this.ShowProgram )
+            {
                 compilation.EmitTree( Console.Out );
+            }
 
             var result = compilation.Evaluate( this.Variables );
 
@@ -175,12 +182,16 @@ namespace NonConTroll
             var submissionsDir = this.GetSubmissionDirectory();
 
             if( !Directory.Exists( submissionsDir ) )
+            {
                 return;
+            }
 
             var files = Directory.GetFiles( submissionsDir ).OrderBy( x => x ).ToArray();
 
             if( !files.Any() )
+            {
                 return;
+            }
 
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine( $"Loaded {files.Length} submissions" );
@@ -201,13 +212,20 @@ namespace NonConTroll
 
         private void ClearSubmissions()
         {
-            Directory.Delete( this.GetSubmissionDirectory() , recursive: true );
+            var dir = this.GetSubmissionDirectory();
+
+            if( Directory.Exists( dir ) )
+            {
+                Directory.Delete( dir , recursive: true );
+            }
         }
 
         private void SaveSubmission( string text )
         {
             if( this.LoadingSubmissions )
+            {
                 return;
+            }
 
             var submissionsDir = this.GetSubmissionDirectory();
 

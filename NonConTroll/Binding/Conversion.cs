@@ -24,18 +24,24 @@ namespace NonConTroll.CodeAnalysis.Binding
         public static Conversion Classify( TypeSymbol from , TypeSymbol to )
         {
             if( from == to )
+            {
                 return Conversion.Identity;
+            }
 
             if( from == TypeSymbol.Bool || from == TypeSymbol.Int )
             {
                 if( to == TypeSymbol.String )
+                {
                     return Conversion.Explicit;
+                }
             }
 
             if( from == TypeSymbol.String )
             {
                 if( to == TypeSymbol.Bool || to == TypeSymbol.Int )
+                {
                     return Conversion.Explicit;
+                }
             }
 
             return Conversion.None;

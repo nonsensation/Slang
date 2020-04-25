@@ -41,9 +41,11 @@ namespace NonConTroll
             }
 
             if( hasErrors )
+            {
                 return 1;
+            }
 
-            var compilation = new Compilation( syntaxTrees.ToArray() );
+            var compilation = Compilation.Create( syntaxTrees.ToArray() );
             var result = compilation.Evaluate( new Dictionary<VariableSymbol,object>() );
 
             if( result.Diagnostics.Any() )
@@ -54,7 +56,9 @@ namespace NonConTroll
             }
 
             if( result.Value != null )
+            {
                 Console.WriteLine( result.Value );
+            }
 
             return 0;
         }

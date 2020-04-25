@@ -14,10 +14,14 @@ namespace NonConTroll.CodeAnalysis.IO
         private static bool IsConsole( this TextWriter writer )
         {
             if( writer == Console.Out )
+            {
                 return !Console.IsOutputRedirected;
+            }
 
             if( writer is IndentedTextWriter iw && iw.InnerWriter.IsConsole() )
+            {
                 return true;
+            }
 
             return false;
         }
@@ -25,13 +29,17 @@ namespace NonConTroll.CodeAnalysis.IO
         private static void SetForeground( this TextWriter writer , ConsoleColor color )
         {
             if( writer.IsConsole() )
+            {
                 Console.ForegroundColor = color;
+            }
         }
 
         private static void ResetColor( this TextWriter writer )
         {
             if( writer.IsConsole() )
+            {
                 Console.ResetColor();
+            }
         }
 
         public static void WriteKeyword( this TextWriter writer , TokenType tokenType )

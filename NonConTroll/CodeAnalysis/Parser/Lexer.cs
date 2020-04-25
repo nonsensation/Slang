@@ -29,7 +29,9 @@ namespace NonConTroll.CodeAnalysis
             var index = this.Position + offset;
 
             if( index >= this.Text.Length )
+            {
                 return '\0';
+            }
 
             return this.Text[ index ];
         }
@@ -388,7 +390,9 @@ namespace NonConTroll.CodeAnalysis
             var text = this.TkType.GetName();
 
             if( text == null )
+            {
                 text = this.Text.ToString( this.StartPos , length );
+            }
 
             return new SyntaxToken( this.SyntaxTree , this.TkType , this.StartPos , text );
         }
@@ -439,8 +443,9 @@ namespace NonConTroll.CodeAnalysis
         private void ScanWhiteSpace()
         {
             while( char.IsWhiteSpace( this.Current ) )
+            {
                 this.Advance( 1 );
-
+            }
 
             this.TkType = TokenType.WhiteSpace;
 
@@ -449,7 +454,9 @@ namespace NonConTroll.CodeAnalysis
         private void ScanNumber()
         {
             while( char.IsDigit( this.Current ) )
+            {
                 this.Advance();
+            }
 
             // var length = this.Position - this.StartPos;
             // var text = this.Text.ToString( this.StartPos , length );
@@ -460,7 +467,9 @@ namespace NonConTroll.CodeAnalysis
         private void ScanIdentifierOrKeyword()
         {
             while( char.IsLetter( this.Current ) )
+            {
                 this.Advance();
+            }
 
             var length = this.Position - this.StartPos;
             var text = this.Text.ToString( this.StartPos , length );

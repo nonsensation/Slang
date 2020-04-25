@@ -31,7 +31,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 if( !token.TkType.IsTokenKind( TokenKind.WhiteSpace ) &&
                     !token.TkType.IsTokenKind( TokenKind.Documentation ) &&
                     token.TkType != TokenType.None )
+                {
                     tokens.Add( token );
+                }
             }
             while( token.TkType != TokenType.EndOfFile );
 
@@ -51,7 +53,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private SyntaxToken MatchToken( TokenType tokenType )
         {
             if( this.Current.TkType == tokenType )
+            {
                 return this.NextToken();
+            }
 
             this.Diagnostics.ReportUnexpectedToken( this.Current.Location , this.Current.TkType , tokenType );
 
@@ -95,7 +99,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 // already tried to parse an expression statement
                 // and reported one.
                 if( this.Current == startToken )
+                {
                     _ = this.NextToken();
+                }
             }
 
             return members.ToImmutable();
@@ -104,7 +110,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private MemberSyntax ParseMember()
         {
             if( this.Current.TkType == TokenType.Func )
+            {
                 return this.ParseFunctionDeclaration();
+            }
 
             return this.ParseGlobalStatement();
         }
@@ -147,9 +155,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 nodesAndSeparators.Add( parameter );
 
                 if( this.Current.TkType == seperatorToken )
+                {
                     nodesAndSeparators.Add( this.MatchToken( seperatorToken ) );
+                }
                 else
+                {
                     parseNextParameter = false;
+                }
             }
 
             //Debug.Assert( this.Current.TkType == closeListToken );
@@ -211,7 +223,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 // already tried to parse an expression statement
                 // and reported one.
                 if( this.Current == startToken )
+                {
                     _ = this.NextToken();
+                }
             }
 
             var closeBraceToken = this.MatchToken( TokenType.CloseBrace );
@@ -233,7 +247,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private TypeClauseSyntax? ParseOptionalTypeClause()
         {
             if( this.Current.TkType != TokenType.Colon )
+            {
                 return null;
+            }
 
             return this.ParseTypeClause();
         }
@@ -318,7 +334,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private ElseClauseSyntax? ParseElseClause()
         {
             if( this.Current.TkType != TokenType.Else )
+            {
                 return null;
+            }
 
             var keyword   = this.NextToken();
             var statement = this.ParseStatement();
@@ -441,7 +459,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 var precedence = this.Current.TkType.GetBinaryOperatorPrecedence();
 
                 if( precedence == 0 || precedence <= parentPrecedence )
+                {
                     break;
+                }
 
                 var operatorToken = this.NextToken();
                 var right         = this.ParseBinaryExpression( precedence );
@@ -527,9 +547,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 nodesAndSeparators.Add( this.ParseExpression() );
 
                 if( this.Current.TkType == TokenType.Comma )
+                {
                     nodesAndSeparators.Add( this.MatchToken( TokenType.Comma ) );
+                }
                 else
+                {
                     parseNextArgument = false;
+                }
             }
 
             return new SeparatedSyntaxList<ExpressionSyntax>( nodesAndSeparators.ToImmutable() );

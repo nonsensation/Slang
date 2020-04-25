@@ -32,7 +32,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public IEnumerator<T> GetEnumerator()
         {
             for( var i = 0 ; i < this.Count ; i++ )
+            {
                 yield return this[ i ];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -60,7 +62,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public SyntaxToken? GetSeparator( int idx )
         {
             if( idx == this.Count - 1 )
+            {
                 return null;
+            }
 
             return (SyntaxToken)this.Nodes[ idx * 2 + 1 ];
         }
@@ -71,7 +75,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public new IEnumerator<T> GetEnumerator()
         {
             for( var i = 0 ; i < this.Count ; i++ )
+            {
                 yield return this[ i ];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

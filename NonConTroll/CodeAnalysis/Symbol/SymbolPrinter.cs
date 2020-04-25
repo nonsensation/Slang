@@ -31,7 +31,9 @@ namespace NonConTroll.CodeAnalysis.Symbols
             for( var i = 0 ; i < symbol.Parameters.Length ; i++ )
             {
                 if( i > 0 )
+                {
                     writer.WritePunctuation( TokenType.Comma );
+                }
 
                 writer.WriteSpace();
                 symbol.Parameters[ i ].WriteTo( writer );

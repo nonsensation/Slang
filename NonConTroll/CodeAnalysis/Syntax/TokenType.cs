@@ -200,8 +200,10 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private static IReadOnlyDictionary<TokenType , TokenKind> TokenTypeKindCache {
             get {
                 if( TokenTypeKindCacheInstance == null )
+                {
                     TokenTypeKindCacheInstance = Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
                         .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Kind ?? TokenKind.None );
+                }
 
                 return TokenTypeKindCacheInstance;
             }
@@ -210,9 +212,11 @@ namespace NonConTroll.CodeAnalysis.Syntax
         private static IReadOnlyDictionary<TokenType , string> TokenTypeNameCache {
             get {
                 if( TokenTypeNameCacheInstance == null )
+                {
                     TokenTypeNameCacheInstance = Enum.GetValues( typeof( TokenType ) ).Cast<TokenType>()
                         .Where( tt => tt.IsTokenKind( TokenKind.Keyword ) || tt.IsTokenKind( TokenKind.Punctuation ) )
                         .ToDictionary( tt => tt , tt => tt.GetTokenInfoAttribute()?.Name ?? FixKeywordNames( tt ) );
+                }
 
                 return TokenTypeNameCacheInstance;
             }

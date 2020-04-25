@@ -45,16 +45,22 @@ namespace NonConTroll.CodeAnalysis.Binding
             public override string ToString()
             {
                 if( this.IsStart )
+                {
                     return "<Start>";
+                }
 
                 if( this.IsEnd )
+                {
                     return "<End>";
+                }
 
                 using var writer = new StringWriter();
                 using var indentedWriter = new IndentedTextWriter( writer );
 
                 foreach( var statement in this.Statements )
+                {
                     statement.WriteTo( indentedWriter );
+                }
 
                 return writer.ToString();
             }
@@ -76,7 +82,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             public override string ToString()
             {
                 if( this.Condition == null )
+                {
                     return string.Empty;
+                }
 
                 return this.Condition.ToString();
             }
@@ -148,9 +156,13 @@ namespace NonConTroll.CodeAnalysis.Binding
             public ControlFlowGraph Build( List<BasicBlock> blocks )
             {
                 if( !blocks.Any() )
+                {
                     this.Connect( this.Start , this.End );
+                }
                 else
+                {
                     this.Connect( this.Start , blocks.First() );
+                }
 
                 foreach( var block in blocks )
                 {
@@ -159,7 +171,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                         this.BlockFromStatement.Add( statement , block );
 
                         if( statement is BoundLabelStatement labelStatement )
+                        {
                             this.BlockFromLabel.Add( labelStatement.Label , block );
+                        }
                     }
                 }
 
@@ -242,9 +256,13 @@ namespace NonConTroll.CodeAnalysis.Binding
                     var value = (bool)l.Value;
 
                     if( value )
+                    {
                         condition = null;
+                    }
                     else
+                    {
                         return;
+                    }
                 }
 
                 var branch = new BasicBlockBranch(from, to, condition);
@@ -342,11 +360,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                 if( lastStatement == null ||
                     lastStatement.Kind != BoundNodeKind.ReturnStatement )
+                {
                     return false;
+                }
             }
 
             return true;
         }
     }
-
 }

@@ -44,7 +44,9 @@ namespace NonConTroll.CodeAnalysis.Lowering
                 if( current is BoundBlockStatement block )
                 {
                     foreach( var s in block.Statements.Reverse() )
+                    {
                         stack.Push( s );
+                    }
                 }
                 else
                 {
