@@ -113,6 +113,13 @@ namespace NonConTroll.CodeAnalysis
                     this.Advance();
                     break;
                 }
+                case '_':
+                {
+                    this.TkType = TokenType.Underscore;
+                    this.Advance();
+                    break;
+                }
+
                 #endregion
 
                 #region multi character punctuators
@@ -237,6 +244,11 @@ namespace NonConTroll.CodeAnalysis
                     if( this.Current == '=' )
                     {
                         this.TkType = TokenType.EqEq;
+                        this.Advance();
+                    }
+                    else if( this.Current == '>' )
+                    {
+                        this.TkType = TokenType.EqGtArrow;
                         this.Advance();
                     }
                     else

@@ -46,6 +46,9 @@ namespace NonConTroll.CodeAnalysis
         public void ReportParameterAlreadyDeclared( TextLocation location , string parameterName )
             => this.Report( location , $"A parameter with the name '{parameterName}' already exists." );
 
+        internal void ReportMissingSyntaxNode( TextLocation location , TokenType expectedTokenType )
+            => this.Report( location , $"Missing token, expected <{expectedTokenType}>." );
+
         public void ReportUndefinedType( TextLocation location , string name )
             => this.Report( location , $"Type '{name}' doesn't exist." );
 
@@ -105,6 +108,19 @@ namespace NonConTroll.CodeAnalysis
 
         internal void ReportInvalidExpressionStatement( TextLocation location )
             => this.Report( location , "Only assignment, call, (TODO: increment, decrement, await, and new object) expressions can be used as a statement." );
+
+        internal void ReportMultipleDefaultPattern( TextLocation location )
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void ReportInvalidPattern( TextLocation location )
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void ReportMissingPattern( TextLocation location )
+            => this.Report( location , $"Pattern missing." );
 
         #endregion
 

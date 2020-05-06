@@ -1,3 +1,5 @@
+using NonConTroll.CodeAnalysis.Symbols;
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundExpressionStatement : BoundStatement
@@ -8,7 +10,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.ExpressionStatement;
+
         public BoundExpression Expression { get; }
     }
-
 }

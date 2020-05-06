@@ -178,6 +178,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 if( result is BoundExpressionStatement exprStmt )
                 {
                     var isAllowedExpression =
+                        exprStmt.Expression.Kind == BoundNodeKind.MatchExpression ||
                         exprStmt.Expression.Kind == BoundNodeKind.ErrorExpression ||
                         exprStmt.Expression.Kind == BoundNodeKind.AssignmentExpression ||
                         exprStmt.Expression.Kind == BoundNodeKind.CallExpression;
@@ -370,7 +371,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundStatement BindReturnStatement( ReturnStatementSyntax syntax )
         {
-            var expression = syntax.Expression == null ? null : this.BindExpression(syntax.Expression);
+            var expression = syntax.Expression == null ? null : this.BindExpression( syntax.Expression );
 
             if( this.Function == null )
             {
@@ -429,19 +430,32 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindExpression( ExpressionSyntax syntax )
         {
-            switch( syntax.Kind )
-            {
-                case SyntaxKind.ParenthesizedExpression: return this.BindParenthesizedExpression( (ParenthesizedExpressionSyntax)syntax );
-                case SyntaxKind.LiteralExpression:       return this.BindLiteralExpression( (LiteralExpressionSyntax)syntax );
-                case SyntaxKind.NameExpression:          return this.BindNameExpression( (NameExpressionSyntax)syntax );
-                case SyntaxKind.AssignmentExpression:    return this.BindAssignmentExpression( (AssignmentExpressionSyntax)syntax );
-                case SyntaxKind.UnaryExpression:         return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
-                case SyntaxKind.BinaryExpression:        return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
-                case SyntaxKind.CallExpression:          return this.BindInvokationExpression( (CallExpressionSyntax)syntax );
+            // switch( syntax.Kind )
+            // {
+            //     case SyntaxKind.ParenthesizedExpression: return this.BindParenthesizedExpression( (ParenthesizedExpressionSyntax)syntax );
+            //     case SyntaxKind.LiteralExpression:       return this.BindLiteralExpression( (LiteralExpressionSyntax)syntax );
+            //     case SyntaxKind.NameExpression:          return this.BindNameExpression( (NameExpressionSyntax)syntax );
+            //     case SyntaxKind.AssignmentExpression:    return this.BindAssignmentExpression( (AssignmentExpressionSyntax)syntax );
+            //     case SyntaxKind.UnaryExpression:         return this.BindUnaryExpression( (UnaryExpressionSyntax)syntax );
+            //     case SyntaxKind.BinaryExpression:        return this.BindBinaryExpression( (BinaryExpressionSyntax)syntax );
+            //     case SyntaxKind.CallExpression:          return this.BindInvokationExpression( (CallExpressionSyntax)syntax );
 
-                default:
-                    throw new Exception( $"Unexpected syntax {syntax.Kind}" );
-            }
+            //     default:
+            //         throw new Exception( $"Unexpected syntax {syntax.Kind}" );
+            // }
+
+            return syntax.Kind switch
+            {
+                SyntaxKind.ParenthesizedExpression => BindParenthesizedExpression( (ParenthesizedExpressionSyntax)syntax ) ,
+                SyntaxKind.LiteralExpression       => BindLiteralExpression( (LiteralExpressionSyntax)syntax ) ,
+                SyntaxKind.NameExpression          => BindNameExpression( (NameExpressionSyntax)syntax ) ,
+                SyntaxKind.AssignmentExpression    => BindAssignmentExpression( (AssignmentExpressionSyntax)syntax ) ,
+                SyntaxKind.UnaryExpression         => BindUnaryExpression( (UnaryExpressionSyntax)syntax ) ,
+                SyntaxKind.BinaryExpression        => BindBinaryExpression( (BinaryExpressionSyntax)syntax ) ,
+                SyntaxKind.CallExpression          => BindInvokationExpression( (CallExpressionSyntax)syntax ) ,
+                SyntaxKind.MatchExpression         => BindMatchExpression( (MatchExpressionSyntax)syntax ) ,
+                _ => throw new Exception( $"Unexpected syntax {syntax.Kind}" ) ,
+            };
         }
 
         private BoundExpression BindParenthesizedExpression( ParenthesizedExpressionSyntax syntax )
@@ -459,7 +473,8 @@ namespace NonConTroll.CodeAnalysis.Binding
                 {
                     if( !int.TryParse( syntax.LiteralToken.Text , out var intVal ) )
                     {
-                        this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location , syntax.LiteralToken.Text! );
+                        this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location ,
+                                                                            syntax.LiteralToken.Text! );
 
                         return new BoundErrorExpression();
                     }
@@ -713,6 +728,74 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return new BoundErrorExpression();
 
             return new BoundCallExpression( function , boundArguments.ToImmutable() );
+        }
+
+        private BoundExpression BindMatchExpression( MatchExpressionSyntax syntax )
+        {
+            var expr = this.BindExpression( syntax.Expression );
+
+            if( expr.Type == TypeSymbol.Error )
+            {
+                return new BoundErrorExpression();
+            }
+
+            var boundPatternSections = new List<BoundPatternSection>( syntax.PatternSections.Count() );
+
+            foreach( var patternSectionsSyntax in syntax.PatternSections )
+            {
+                var result = default( BoundNode );
+
+                if( syntax.IsStatement )
+                {
+                    result = this.BindStatement( (StatementSyntax)patternSectionsSyntax.Result );
+                }
+                else
+                {
+                    result = this.BindExpression( (ExpressionSyntax)patternSectionsSyntax.Result , canBeVoid: false );
+                }
+
+                var boundPatternList = new List<BoundPattern>( patternSectionsSyntax.Patterns.Count() );
+
+                foreach( var patternSyntax in patternSectionsSyntax.Patterns )
+                {
+                    switch( patternSyntax.Kind )
+                    {
+                        case SyntaxKind.ConstantPattern:
+                        {
+                            var constantPatternSyntax = (ConstantPatternSyntax)patternSyntax;
+                            var patternExpr = this.BindExpression( constantPatternSyntax.Expression );
+                            var boundPattern = new BoundConstantPattern( patternExpr );
+
+                            boundPatternList.Add( boundPattern );
+                        }
+                        break;
+                        case SyntaxKind.MatchAnyPattern:
+                        {
+                            var boundPattern = new BoundMatchAnyPattern();
+
+                            boundPatternList.Add( boundPattern );
+                        }
+                        break;
+                        // case SyntaxKind.InfixPattern:
+                        // {
+                        //     var infixPatternSyntax = (InfixPatternSyntax)patternSyntax;
+                        //
+                        //     patternList.Add( infixPatternSyntax );
+                        // }
+                        // break;
+                        default:
+                        {
+                            throw new Exception( "" );
+                        }
+                    }
+                }
+
+                var boundPatternSection = new BoundPatternSection( boundPatternList.ToImmutableArray() , result );
+
+                boundPatternSections.Add( boundPatternSection );
+            }
+
+            return new BoundMatchExpression( expr , boundPatternSections.ToImmutableArray() , syntax.IsStatement );
         }
 
         private BoundExpression BindConversion( ExpressionSyntax syntax , TypeSymbol type , bool allowExplicit = false )

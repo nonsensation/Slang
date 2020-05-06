@@ -1,3 +1,5 @@
+using NonConTroll.CodeAnalysis.Symbols;
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundConditionalGotoStatement : BoundStatement
@@ -10,6 +12,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.ConditionalGotoStatement;
+
         public BoundLabel Label { get; }
         public BoundExpression Condition { get; }
         public bool JumpIfTrue { get; }

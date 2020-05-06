@@ -1,3 +1,5 @@
+using NonConTroll.CodeAnalysis.Symbols;
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundDoWhileStatement : BoundLoopStatement
@@ -10,6 +12,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.DoWhileStatement;
+
         public BoundStatement Body { get; }
         public BoundExpression Condition { get; }
     }

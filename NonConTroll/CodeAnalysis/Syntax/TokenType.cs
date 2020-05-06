@@ -148,6 +148,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         [TokenInfo( "´" )] FrontTick,
         [TokenInfo( "@" )] At,
 
+        [TokenInfo( "=>" )] EqGtArrow,
+
         #endregion
 
         #region Trivia

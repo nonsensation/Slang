@@ -1,3 +1,5 @@
+using NonConTroll.CodeAnalysis.Symbols;
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundReturnStatement : BoundStatement
@@ -8,6 +10,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.ReturnStatement;
+
         public BoundExpression? Expression { get; }
     }
 

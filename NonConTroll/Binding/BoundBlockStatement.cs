@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
@@ -12,5 +13,4 @@ namespace NonConTroll.CodeAnalysis.Binding
         public override BoundNodeKind Kind => BoundNodeKind.BlockStatement;
         public ImmutableArray<BoundStatement> Statements { get; }
     }
-
 }

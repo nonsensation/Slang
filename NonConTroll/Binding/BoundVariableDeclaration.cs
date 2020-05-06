@@ -11,6 +11,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.VariableDeclaration;
+
         public VariableSymbol Variable { get; }
         public BoundExpression Initializer { get; }
     }

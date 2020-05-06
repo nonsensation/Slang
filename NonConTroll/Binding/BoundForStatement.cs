@@ -14,6 +14,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.ForStatement;
+
         public VariableSymbol Variable { get; }
         public BoundExpression LowerBound { get; }
         public BoundExpression UpperBound { get; }

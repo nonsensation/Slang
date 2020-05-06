@@ -17,6 +17,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         ReturnStatement,
         ExpressionStatement,
         DeferStatement,
+
         #endregion
 
         #region Expressions
@@ -28,6 +29,14 @@ namespace NonConTroll.CodeAnalysis.Binding
         BinaryExpression,
         CallExpression,
         ConversionExpression,
+        MatchExpression,
+
         #endregion
+
+        PatternSection,
+
+        MatchAnyPattern,
+        ConstantPattern,
+        InfixPattern,
     }
 }

@@ -20,6 +20,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         ContinueStatement,
         ReturnStatement,
         DeferStatement,
+        MatchExpression,
         ExpressionStatement,
         IfStatement,
         ElseClause,
@@ -45,5 +46,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         QualifiedName,
         IdentifierName,
+
+
+        PatternExpression,
+
+        MatchAnyPattern,
+        ConstantPattern,
+        InfixPattern,
     }
 }

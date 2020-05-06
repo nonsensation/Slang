@@ -67,14 +67,6 @@ namespace NonConTroll.CodeAnalysis
                     .Where( x => x != null )
                     .ToList();
 
-                foreach( var builtin in builtinFunctions )
-                {
-                    if( seenSymbolNames.Add( builtin.Name ) )
-                    {
-                        yield return builtin;
-                    }
-                }
-
                 foreach( var function in submission.Functions )
                 {
                     if( seenSymbolNames.Add( function.Name ) )
@@ -88,6 +80,14 @@ namespace NonConTroll.CodeAnalysis
                     if( seenSymbolNames.Add( variable.Name ) )
                     {
                         yield return variable;
+                    }
+                }
+
+                foreach( var builtin in builtinFunctions )
+                {
+                    if( seenSymbolNames.Add( builtin.Name ) )
+                    {
+                        yield return builtin;
                     }
                 }
 

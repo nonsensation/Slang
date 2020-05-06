@@ -15,19 +15,19 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
         }
 
-        private BoundBinaryOperator( TokenType tokenType , BoundBinaryOperatorKind kind , TypeSymbol leftType , TypeSymbol rightType , TypeSymbol resultType )
+        private BoundBinaryOperator( TokenType tokenType , BoundBinaryOperatorKind kind , TypeSymbol lhsType , TypeSymbol rhsType , TypeSymbol resultType )
         {
-            this.TkType    = tokenType;
-            this.Kind      = kind;
-            this.LeftType  = leftType;
-            this.RightType = rightType;
-            this.Type      = resultType;
+            this.TkType  = tokenType;
+            this.Kind    = kind;
+            this.LhsType = lhsType;
+            this.RhsType = rhsType;
+            this.Type    = resultType;
         }
 
         public TokenType TkType { get; }
         public BoundBinaryOperatorKind Kind { get; }
-        public TypeSymbol LeftType { get; }
-        public TypeSymbol RightType { get; }
+        public TypeSymbol LhsType { get; }
+        public TypeSymbol RhsType { get; }
         public TypeSymbol Type { get; }
 
         private static readonly BoundBinaryOperator[] Operators =
@@ -36,17 +36,21 @@ namespace NonConTroll.CodeAnalysis.Binding
             new BoundBinaryOperator( TokenType.Minus    , BoundBinaryOperatorKind.Subtraction     , TypeSymbol.Int                      ) ,
             new BoundBinaryOperator( TokenType.Star     , BoundBinaryOperatorKind.Multiplication  , TypeSymbol.Int                      ) ,
             new BoundBinaryOperator( TokenType.Slash    , BoundBinaryOperatorKind.Division        , TypeSymbol.Int                      ) ,
+
             new BoundBinaryOperator( TokenType.EqEq     , BoundBinaryOperatorKind.Equals          , TypeSymbol.Int    , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.ExmEq    , BoundBinaryOperatorKind.NotEquals       , TypeSymbol.Int    , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.Lt       , BoundBinaryOperatorKind.Less            , TypeSymbol.Int    , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.LtEq     , BoundBinaryOperatorKind.LessOrEquals    , TypeSymbol.Int    , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.Gt       , BoundBinaryOperatorKind.Greater         , TypeSymbol.Int    , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.GtEq     , BoundBinaryOperatorKind.GreaterOrEquals , TypeSymbol.Int    , TypeSymbol.Bool ) ,
+
             new BoundBinaryOperator( TokenType.AndAnd   , BoundBinaryOperatorKind.LogicalAnd      , TypeSymbol.Bool                     ) ,
             new BoundBinaryOperator( TokenType.PipePipe , BoundBinaryOperatorKind.LogicalOr       , TypeSymbol.Bool                     ) ,
             new BoundBinaryOperator( TokenType.EqEq     , BoundBinaryOperatorKind.Equals          , TypeSymbol.Bool                     ) ,
             new BoundBinaryOperator( TokenType.ExmEq    , BoundBinaryOperatorKind.NotEquals       , TypeSymbol.Bool                     ) ,
+
             new BoundBinaryOperator( TokenType.Plus     , BoundBinaryOperatorKind.Addition        , TypeSymbol.String                   ) ,
+
             new BoundBinaryOperator( TokenType.EqEq     , BoundBinaryOperatorKind.Equals          , TypeSymbol.String , TypeSymbol.Bool ) ,
             new BoundBinaryOperator( TokenType.ExmEq    , BoundBinaryOperatorKind.NotEquals       , TypeSymbol.String , TypeSymbol.Bool ) ,
         };
@@ -56,9 +60,11 @@ namespace NonConTroll.CodeAnalysis.Binding
             foreach( var op in Operators )
             {
                 if( op.TkType == tokenType &&
-                    op.LeftType == lhsType &&
-                    op.RightType == rhsType )
+                    op.LhsType == lhsType &&
+                    op.RhsType == rhsType )
+                {
                     return op;
+                }
             }
 
             return null;

@@ -59,8 +59,11 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
             this.Diagnostics.ReportUnexpectedToken( this.Current.Location , this.Current.TkType , tokenType );
 
-            return new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null );
+            return this.CreateMissingToken( tokenType );
         }
+
+        private SyntaxToken CreateMissingToken( TokenType tokenType = TokenType.Identifier )
+            => new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null );
 
         private SyntaxToken NextToken()
         {
@@ -203,6 +206,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
         }
 
+        private ExpressionStatementSyntax ParseExpressionStatement()
+        {
+            var expression = this.ParseExpression( isStatement: true );
+
+            return new ExpressionStatementSyntax( this.SyntaxTree , expression );
+        }
+
         private BlockStatementSyntax ParseBlockStatement()
         {
             var statements = ImmutableArray.CreateBuilder<StatementSyntax>();
@@ -254,7 +264,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return this.ParseTypeClause();
         }
 
-        private TypeNameSyntax /* TypeSyntax */ ParseType()
+        private TypeNameSyntax ParseType()
         {
             if( this.Current.TkType == TokenType.OpenParen )
             {
@@ -410,16 +420,16 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new DeferStatementSyntax( this.SyntaxTree , keyword , expression );
         }
 
-        private ExpressionStatementSyntax ParseExpressionStatement()
-        {
-            var expression = this.ParseExpression();
-
-            return new ExpressionStatementSyntax( this.SyntaxTree , expression );
-        }
-
         private ExpressionSyntax ParseExpression()
+            => this.ParseExpression( isStatement: false );
+
+        private ExpressionSyntax ParseExpression( bool isStatement )
         {
-            return this.ParseAssignmentExpression();
+            switch( this.Current.TkType )
+            {
+                case TokenType.Match: return this.ParseMatchExpression( isStatement );
+                default:              return this.ParseAssignmentExpression();
+            }
         }
 
         private ExpressionSyntax ParseAssignmentExpression()
@@ -481,6 +491,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case TokenType.True:           return this.ParseBooleanLiteral( this.Current.TkType );
                 case TokenType.NumericLiteral: return this.ParseNumberLiteral();
                 case TokenType.StringLiteral:  return this.ParseStringLiteral();
+                case TokenType.Underscore:     return this.ParseUnderscoreLiteral();
+                case TokenType.Match:          return this.ParseMatchExpression( isStatement: false );
                 case TokenType.Identifier:
                 default:                       return this.ParseNameOrCallExpression();
             }
@@ -516,6 +528,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new LiteralExpressionSyntax( this.SyntaxTree , stringToken );
         }
 
+        private ExpressionSyntax ParseUnderscoreLiteral()
+        {
+            var keywordToken = this.MatchToken( TokenType.Underscore );
+
+            return new LiteralExpressionSyntax( this.SyntaxTree , keywordToken );
+        }
+
         private ExpressionSyntax ParseNameOrCallExpression()
         {
             if( this.Peek( 0 ).TkType == TokenType.Identifier &&
@@ -535,7 +554,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new CallExpressionSyntax( this.SyntaxTree , identifier , openParenthesisToken , arguments , closeParenthesisToken );
         }
 
-        private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
+        private ExpressionSyntax ParseNameExpression()
+        {
+            var identifierToken = this.MatchToken( TokenType.Identifier );
+
+            return new NameExpressionSyntax( this.SyntaxTree , identifierToken );
+        }
+
+        private SeparatedSyntaxList<T> ParseSeparatedNodeList<T>( Func<T> parseFunc ) where T : SyntaxNode
         {
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
             var parseNextArgument = true;
@@ -544,7 +570,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
                    this.Current.TkType != TokenType.CloseParen &&
                    this.Current.TkType != TokenType.EndOfFile )
             {
-                nodesAndSeparators.Add( this.ParseExpression() );
+                var node = parseFunc();
+
+                nodesAndSeparators.Add( node );
 
                 if( this.Current.TkType == TokenType.Comma )
                 {
@@ -556,15 +584,113 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 }
             }
 
-            return new SeparatedSyntaxList<ExpressionSyntax>( nodesAndSeparators.ToImmutable() );
+            return new SeparatedSyntaxList<T>( nodesAndSeparators.ToImmutable() );
         }
 
-        private ExpressionSyntax ParseNameExpression()
+        private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
+            => this.ParseSeparatedNodeList( this.ParseExpression );
+
+        private SeparatedSyntaxList<PatternSyntax> ParsePatternList()
+            => this.ParseSeparatedNodeList( this.ParsePattern );
+
+        private MatchExpressionSyntax ParseMatchExpression( bool isStatement )
         {
-            var identifierToken = this.MatchToken( TokenType.Identifier );
+            var matchKeyword = this.MatchToken( TokenType.Match );
+            var variableExpr = this.ParseExpression();
+            var openBraceTok = this.MatchToken( TokenType.OpenBrace );
+            var patterns = new List<PatternSectionSyntax>();
 
-            return new NameExpressionSyntax( this.SyntaxTree , identifierToken );
+            while( true )
+            {
+                if( this.Current.TkType == TokenType.CloseBrace )
+                    break;
+
+                var pattern = this.ParsePatternSection( isStatement );
+
+                patterns.Add( pattern );
+            }
+
+            var closeBraceToken = this.MatchToken( TokenType.CloseBrace );
+
+            return new MatchExpressionSyntax( this.SyntaxTree , matchKeyword , variableExpr , patterns.ToImmutableArray() , isStatement );
         }
+
+        private PatternSectionSyntax ParsePatternSection( bool isStatement )
+        {
+            var patternList = this.ParsePatternList();
+            var arrowToken = this.MatchToken( TokenType.EqGtArrow );
+            var exprOrStmt = default( SyntaxNode );
+
+            if( isStatement )
+            {
+                exprOrStmt = this.ParseExpressionStatement();
+            }
+            else
+            {
+                exprOrStmt = this.ParseExpression();
+            }
+
+            return new PatternSectionSyntax( this.SyntaxTree , patternList , arrowToken , exprOrStmt );
+        }
+
+        private PatternSyntax ParsePattern()
+        {
+            switch( this.Current.TkType )
+            {
+                // handle expected errors
+                // case TokenType.Comma:
+                // case TokenType.Semicolon:
+                // case TokenType.CloseBrace:
+                // case TokenType.CloseParen:
+                // case TokenType.CloseBracket:
+                // case TokenType.EqGt:
+                default: // TODO: check if default or any above case is better
+                {
+                    this.Diagnostics.ReportMissingPattern( this.Current.Location );
+
+                    var missingToken   = this.CreateMissingToken();
+                    var nameExpression = new NameExpressionSyntax( this.SyntaxTree , missingToken );
+                    var pattern        = new ConstantPatternSyntax( this.SyntaxTree , nameExpression );
+
+                    return pattern;
+                }
+
+                case TokenType.StringLiteral:
+                case TokenType.Null:
+                case TokenType.NumericLiteral:
+                case TokenType.Identifier:
+                {
+                    var expr = this.ParsePrimaryExpression();
+
+                    if( expr is UnaryExpressionSyntax unaryExpr )
+                    {
+                        var pattern = new InfixPatternSyntax( this.SyntaxTree , unaryExpr.OperatorToken , unaryExpr.Expression );
+
+                        return pattern;
+                    }
+                    else if( expr is NameExpressionSyntax nameExpr ||
+                             expr is LiteralExpressionSyntax literalExpr )
+                    {
+                        var pattern = new ConstantPatternSyntax( this.SyntaxTree , expr );
+
+                        return pattern;
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
+                }
+
+                case TokenType.Underscore:
+                {
+                    var underscoreToken = this.MatchToken( TokenType.Underscore );
+                    var pattern = new MatchAnyPatternSyntax( this.SyntaxTree , underscoreToken );
+
+                    return pattern;
+                }
+            }
+        }
+
 
         #endregion
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
 
@@ -34,6 +35,22 @@ namespace NonConTroll.CodeAnalysis
                 c = c.Previous;
             }
         }
+
+        private void Assign( VariableSymbol variable , object value )
+        {
+            if( variable.Kind == SymbolKind.GlobalVariable )
+            {
+				this.Globals[ variable ] = value;
+            }
+            else
+            {
+                var locals = this.Locals.Peek();
+
+                locals[ variable ] = value;
+            }
+        }
+
+        #region Evaluate
 
         public object? Evaluate()
         {
@@ -160,6 +177,7 @@ namespace NonConTroll.CodeAnalysis
                 case BoundNodeKind.BinaryExpression:     return this.EvaluateBinaryExpression( (BoundBinaryExpression)node );
                 case BoundNodeKind.CallExpression:       return this.EvaluateCallExpression( (BoundCallExpression)node );
                 case BoundNodeKind.ConversionExpression: return this.EvaluateConversionExpression( (BoundConversionExpression)node );
+                case BoundNodeKind.MatchExpression:      return this.EvaluateMatchExpression( (BoundMatchExpression)node );
                 default:
                     throw new Exception( $"Unexpected node {node.Kind}" );
             }
@@ -310,30 +328,77 @@ namespace NonConTroll.CodeAnalysis
             }
         }
 
-        private void Assign( VariableSymbol variable , object value )
+        private object? EvaluateMatchExpression( BoundMatchExpression node )
         {
-            if( variable.Kind == SymbolKind.GlobalVariable )
-            {
-				this.Globals[ variable ] = value;
-            }
-            else
-            {
-                var locals = this.Locals.Peek();
+            var value = this.EvaluateExpression( node.Expression );
 
-                locals[ variable ] = value;
+            foreach( var patternSection in node.PatternSections )
+            {
+                foreach( var pattern in patternSection.Patterns )
+                {
+                    switch( pattern.Kind )
+                    {
+                        case BoundNodeKind.ConstantPattern:
+                        {
+                            var constantPattern = (BoundConstantPattern)pattern;
+                            var patternValue = this.EvaluateExpression( constantPattern.Expression );
+
+                            if( ( value is int intValue && patternValue is int intPatternValue && intValue == intPatternValue ) ||
+                                ( value is string strValue && patternValue is string strPatternValue && strValue == strPatternValue ) )
+                            {
+                                if( node.IsStatement )
+                                {
+                                    var blockStmt = new BoundBlockStatement( ImmutableArray.Create( (BoundStatement)patternSection.Result ) );
+
+                                    this.EvaluateStatement( blockStmt );
+
+                                    return null;
+                                }
+                                else
+                                {
+                                    var result = this.EvaluateExpression( (BoundExpression)patternSection.Result );
+
+                                    return result;
+                                }
+                            }
+                        }
+                        break;
+
+                        case BoundNodeKind.InfixPattern:
+                        {
+                            throw new NotImplementedException();
+                        }
+                        break;
+
+                        case BoundNodeKind.MatchAnyPattern:
+                        {
+                            if( node.IsStatement )
+                            {
+                                var blockStmt = new BoundBlockStatement( ImmutableArray.Create( (BoundStatement)patternSection.Result ) );
+
+                                this.EvaluateStatement( blockStmt );
+
+                                return null;
+                            }
+                            else
+                            {
+                                var result = this.EvaluateExpression( (BoundExpression)patternSection.Result );
+
+                                return result;
+                            }
+                        }
+
+                        default:
+                        {
+                            throw new Exception();
+                        }
+                    }
+                }
             }
+
+            throw new Exception( "unreachable, match should be exhaustive" );
         }
 
-        public sealed class EvaluationResult
-        {
-            public EvaluationResult( ImmutableArray<Diagnostic> diagnostics , object value )
-            {
-				this.Diagnostics = diagnostics;
-				this.Value = value;
-            }
-
-            public ImmutableArray<Diagnostic> Diagnostics { get; }
-            public object Value { get; }
-        }
+        #endregion
     }
 }

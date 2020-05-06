@@ -24,6 +24,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundNodeKind.ReturnStatement:          return this.RewriteReturnStatement( (BoundReturnStatement)node );
                 case BoundNodeKind.DeferStatement:           return this.RewriteDeferStatement( (BoundDeferStatement)node );
                 case BoundNodeKind.ExpressionStatement:      return this.RewriteExpressionStatement( (BoundExpressionStatement)node );
+
                 default:
                     throw new Exception( $"Unexpected node: {node.Kind}" );
             }
@@ -39,9 +40,13 @@ namespace NonConTroll.CodeAnalysis.Binding
                 var statement = this.RewriteStatement( stmt );
 
                 if( statement.Kind == BoundNodeKind.DeferStatement )
+                {
                     deferStmts.Add( (BoundDeferStatement)statement );
+                }
                 else
+                {
                     builder.Add( statement );
+                }
             }
 
             builder.AddRange( deferStmts.AsEnumerable().Reverse() );
@@ -54,7 +59,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var initializer = this.RewriteExpression( node.Initializer );
 
             if( initializer == node.Initializer )
+            {
                 return node;
+            }
 
             return new BoundVariableDeclaration( node.Variable , initializer );
         }
@@ -68,7 +75,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( condition == node.Condition &&
                 thenStatement == node.ThenStatement &&
                 elseStatement == node.ElseStatement )
+            {
                 return node;
+            }
 
             return new BoundIfStatement( condition , thenStatement , elseStatement );
         }
@@ -79,7 +88,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var body = this.RewriteStatement( node.Body );
 
             if( condition == node.Condition && body == node.Body )
+            {
                 return node;
+            }
 
             return new BoundWhileStatement( condition , body , node.BreakLabel , node.ContinueLabel );
         }
@@ -90,7 +101,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var condition = this.RewriteExpression( node.Condition );
 
             if( body == node.Body && condition == node.Condition )
+            {
                 return node;
+            }
 
             return new BoundDoWhileStatement( body , condition , node.BreakLabel , node.ContinueLabel );
         }
@@ -104,7 +117,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( lowerBound == node.LowerBound &&
                 upperBound == node.UpperBound &&
                 body == node.Body )
+            {
                 return node;
+            }
 
             return new BoundForStatement( node.Variable , lowerBound , upperBound , body , node.BreakLabel , node.ContinueLabel );
         }
@@ -124,7 +139,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var condition = this.RewriteExpression( node.Condition );
 
             if( condition == node.Condition )
+            {
                 return node;
+            }
 
             return new BoundConditionalGotoStatement( node.Label , condition , node.JumpIfTrue );
         }
@@ -134,7 +151,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var expression = node.Expression == null ? null : this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
+            {
                 return node;
+            }
 
             return new BoundReturnStatement( expression );
         }
@@ -144,7 +163,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var expression = this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
+            {
                 return node;
+            }
 
             return new BoundDeferStatement( expression );
         }
@@ -154,7 +175,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var expression = this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
+            {
                 return node;
+            }
 
             return new BoundExpressionStatement( expression );
         }
@@ -171,6 +194,8 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundNodeKind.BinaryExpression:     return this.RewriteBinaryExpression( (BoundBinaryExpression)node );
                 case BoundNodeKind.CallExpression:       return this.RewriteCallExpression( (BoundCallExpression)node );
                 case BoundNodeKind.ConversionExpression: return this.RewriteConversionExpression( (BoundConversionExpression)node );
+                case BoundNodeKind.MatchExpression:      return this.RewriteMatchExpression( (BoundMatchExpression)node );
+
                 default:
                     throw new Exception( $"Unexpected node: {node.Kind}" );
             }
@@ -191,12 +216,19 @@ namespace NonConTroll.CodeAnalysis.Binding
             return node;
         }
 
+        protected virtual BoundExpression RewriteMatchExpression( BoundMatchExpression node )
+        {
+            return node;
+        }
+
         protected virtual BoundExpression RewriteAssignmentExpression( BoundAssignmentExpression node )
         {
             var expression = this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
+            {
                 return node;
+            }
 
             return new BoundAssignmentExpression( node.Variable , expression );
         }
@@ -206,7 +238,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var operand = this.RewriteExpression( node.Operand );
 
             if( operand == node.Operand )
+            {
                 return node;
+            }
 
             return new BoundUnaryExpression( node.Op , operand );
         }
@@ -217,7 +251,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var rhs = this.RewriteExpression( node.Rhs );
 
             if( lhs == node.Lhs && rhs == node.Rhs )
+            {
                 return node;
+            }
 
             return new BoundBinaryExpression( lhs , node.Operator , rhs );
         }
@@ -234,7 +270,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             var expression = this.RewriteExpression( node.Expression );
 
             if( expression == node.Expression )
+            {
                 return node;
+            }
 
             return new BoundConversionExpression( node.Type , expression );
         }
@@ -259,11 +297,15 @@ namespace NonConTroll.CodeAnalysis.Binding
                 }
 
                 if( builder != null )
+                {
                     builder.Add( newStatement );
+                }
             }
 
             if( builder == null )
+            {
                 return nodes;
+            }
 
             return builder.MoveToImmutable();
         }

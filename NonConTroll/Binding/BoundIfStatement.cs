@@ -1,3 +1,5 @@
+using NonConTroll.CodeAnalysis.Symbols;
+
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundIfStatement : BoundStatement
@@ -10,6 +12,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.IfStatement;
+
         public BoundExpression Condition { get; }
         public BoundStatement ThenStatement { get; }
         public BoundStatement? ElseStatement { get; }
