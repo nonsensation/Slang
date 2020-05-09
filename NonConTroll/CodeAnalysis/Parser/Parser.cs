@@ -273,6 +273,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             if( this.Current.Kind == SyntaxKind.OpenParenToken )
             {
+                // TODO
                 //return this.ParseTupleType();
             }
 
@@ -308,8 +309,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             switch( this.Current.Kind )
             {
-                case SyntaxKind.RefKeyword:  return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )   , TypeSpecifierKind.Reference );
-                case SyntaxKind.PtrKeyword:  return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )   , TypeSpecifierKind.Pointer   );
+                case SyntaxKind.RefKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )   , TypeSpecifierKind.Reference );
+                case SyntaxKind.PtrKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )   , TypeSpecifierKind.Pointer   );
                 case SyntaxKind.NullKeywordLiteral: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.NullKeywordLiteral )  , TypeSpecifierKind.Nullable  );
                 //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
                 default:
@@ -686,8 +687,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 }
 
                 case SyntaxKind.StringLiteral:
-                case SyntaxKind.NullKeywordLiteral:
                 case SyntaxKind.NumericLiteral:
+
+                case SyntaxKind.TrueKeywordLiteral:
+                case SyntaxKind.FalseKeywordLiteral:
+                case SyntaxKind.NullKeywordLiteral:
+
                 case SyntaxKind.Identifier:
                 {
                     var expr = this.ParsePrimaryExpression();

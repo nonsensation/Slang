@@ -46,9 +46,6 @@ namespace NonConTroll.CodeAnalysis
         public void ReportParameterAlreadyDeclared( TextLocation location , string parameterName )
             => this.Report( location , $"A parameter with the name '{parameterName}' already exists." );
 
-        internal void ReportMissingSyntaxNode( TextLocation location , SyntaxKind expectedTokenType )
-            => this.Report( location , $"Missing token, expected <{expectedTokenType}>." );
-
         public void ReportUndefinedType( TextLocation location , string name )
             => this.Report( location , $"Type '{name}' doesn't exist." );
 
@@ -112,11 +109,8 @@ namespace NonConTroll.CodeAnalysis
         internal void ReportMissingPattern( TextLocation location )
             => this.Report( location , $"Pattern missing." );
 
-        internal void ReportMatchIsStatementButResultIsExpression( TextLocation location )
-            => this.Report( location , $"This match is used as a statement, but this pattern section result is an expression." );
-
-        internal void ReportMatchIsExpressionButResultIsStatement( TextLocation location )
-            => this.Report( location , $"This match is used as an expression, but this pattern section result is a statement." );
+        internal void ReportMultipleMatchAnyPattern( TextLocation location )
+            => this.Report( location , $"Multiple match-any \"_\" pattern found." );
 
 
         #endregion

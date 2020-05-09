@@ -457,19 +457,26 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 case SyntaxKind.NumericLiteral:
                 {
-                    if( !int.TryParse( syntax.LiteralToken.Text , out var intVal ) )
+                    if( !int.TryParse( syntax.LiteralToken.Text , out var val ) )
                     {
-                        this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location ,
-                                                                            syntax.LiteralToken.Text! );
+                        this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location , syntax.LiteralToken.Text! );
 
                         return new BoundErrorExpression();
                     }
 
-                    value = intVal;
-
+                    value = val;
                 }
                 break;
-
+                case SyntaxKind.TrueKeywordLiteral:
+                {
+                    value = true;
+                }
+                break;
+                case SyntaxKind.FalseKeywordLiteral:
+                {
+                    value = false;
+                }
+                break;
                 case SyntaxKind.StringLiteral:
                 {
                     value = syntax.LiteralToken.Text;
@@ -726,58 +733,79 @@ namespace NonConTroll.CodeAnalysis.Binding
             return new BoundCallExpression( function , boundArguments.ToImmutable() );
         }
 
+        private bool ValidatePattern( ImmutableArray<PatternSyntax> patterns )
+        {
+            var hasErrors = false;
+            var foundMatchAnyCase = false;
+
+            foreach( var pattern in patterns )
+            {
+                switch( pattern )
+                {
+                    case MatchAnyPatternSyntax p:
+                    {
+                        if( foundMatchAnyCase )
+                        {
+                            hasErrors = true;
+
+                            this.DiagBag.ReportMultipleMatchAnyPattern( p.Location );
+                        }
+
+                        foundMatchAnyCase = true;
+                    }
+                    break;
+                }
+            }
+
+            return !hasErrors;
+        }
+
         private BoundExpression BindMatchExpression( MatchExpressionSyntax syntax )
         {
-            // TODO:
-            // - check patterns for duplication
-            // - check result for common type if used as expression
-
             var matchExpr = this.BindExpression( syntax.Expression );
+            var boundPatternSections = this.BindPatternSectionExpressions( syntax.PatternSections );
 
-            if( matchExpr.Type == TypeSymbol.Error )
-            {
-                //this.DiagBag.ReportWrongArgumentType();
-
-                return new BoundErrorExpression();
-            }
-
-            var boundPatternSections = new List<BoundPatternSectionExpression>( syntax.PatternSections.Count() );
-
-            foreach( var patternSectionsSyntax in syntax.PatternSections )
-            {
-                var boundPatternSection = this.BindPatternSectionExpression( patternSectionsSyntax );
-
-                boundPatternSections.Add( boundPatternSection );
-            }
+            _ = ValidatePattern( syntax.PatternSections.SelectMany( x => x.Patterns ).ToImmutableArray() );
 
             return new BoundMatchExpression( matchExpr , boundPatternSections.ToImmutableArray() );
         }
 
         private BoundStatement BindMatchStatement( MatchStatementSyntax syntax )
         {
-            // TODO:
-            // - check patterns for duplication
-            // - check result for common type if used as expression
-
             var matchExpr = this.BindExpression( syntax.Expression );
+            var boundPatternSections = this.BindPatternSectionExpressions( syntax.PatternSections );
 
-            if( matchExpr.Type == TypeSymbol.Error )
-            {
-                //this.DiagBag.ReportWrongArgumentType();
-
-                //return new BoundErrorExpression();
-            }
-
-            var boundPatternSections = new List<BoundPatternSectionStatement>( syntax.PatternSections.Count() );
-
-            foreach( var patternSectionsSyntax in syntax.PatternSections )
-            {
-                var boundPatternSection = this.BindPatternSectionStatement( patternSectionsSyntax );
-
-                boundPatternSections.Add( boundPatternSection );
-            }
+            _ = ValidatePattern( syntax.PatternSections.SelectMany( x => x.Patterns ).ToImmutableArray() );
 
             return new BoundMatchStatement( matchExpr , boundPatternSections.ToImmutableArray() );
+        }
+
+        private ImmutableArray<BoundPatternSectionExpression> BindPatternSectionExpressions( ImmutableArray<PatternSectionExpressionSyntax> sections )
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionExpression>( sections.Count() );
+
+            foreach( var section in sections )
+            {
+                var boundSection = this.BindPatternSectionExpression( section );
+
+                builder.Add( boundSection );
+            }
+
+            return builder.MoveToImmutable();
+        }
+
+        private ImmutableArray<BoundPatternSectionStatement> BindPatternSectionExpressions( ImmutableArray<PatternSectionStatementSyntax> sections )
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionStatement>( sections.Count() );
+
+            foreach( var section in sections )
+            {
+                var boundSection = this.BindPatternSectionStatement( section );
+
+                builder.Add( boundSection );
+            }
+
+            return builder.MoveToImmutable();
         }
 
         private BoundPatternSectionExpression BindPatternSectionExpression( PatternSectionExpressionSyntax syntax )

@@ -46,9 +46,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundBinaryExpression node:         WriteBinaryExpression( node ,         writer ); break;
                 case BoundCallExpression node:           WriteCallExpression( node ,           writer ); break;
                 case BoundConversionExpression node:     WriteConversionExpression( node ,     writer ); break;
-                case BoundMatchStatement node:           WriteMatchStatement( node ,          writer ); break;
+                case BoundMatchStatement node:           WriteMatchStatement( node ,           writer ); break;
                 case BoundMatchExpression node:          WriteMatchExpression( node ,          writer ); break;
-                case BoundPatternSectionStatement node:  WritePatternSectionStatement( node , writer ); break;
+                case BoundPatternSectionStatement node:  WritePatternSectionStatement( node ,  writer ); break;
                 case BoundPatternSectionExpression node: WritePatternSectionExpression( node , writer ); break;
                 case BoundConstantPattern node:          WriteConstantPattern( node ,          writer ); break;
                 case BoundInfixPattern node:             WriteInfixPattern( node ,             writer ); break;

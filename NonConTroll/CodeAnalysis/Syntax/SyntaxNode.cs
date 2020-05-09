@@ -24,8 +24,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public virtual TextSpan Span {
             get {
                 var children = this.GetChildren();
-                var first = children.First();
-                var last = children.Last();
+                var first    = children.First();
+                var last     = children.Last();
 
                 return TextSpan.FromBounds( first.Span.Start , last.Span.End );
             }
@@ -34,8 +34,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public IEnumerable<SyntaxNode> GetChildren()
         {
             var flags = BindingFlags.Public
-                      | BindingFlags.Instance
-                      | BindingFlags.FlattenHierarchy;
+                      | BindingFlags.Instance;
             var properties = this.GetType().GetProperties( flags );
 
             foreach( var property in properties )

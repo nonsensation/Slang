@@ -10,7 +10,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public static SyntaxKind? GetSyntaxKind( string text )
             => text switch {
-                "Func"      => SyntaxKind.FuncKeyword ,
+                "func"      => SyntaxKind.FuncKeyword ,
                 "fn"        => SyntaxKind.FnKeyword ,
                 "return"    => SyntaxKind.ReturnKeyword ,
                 "ret"       => SyntaxKind.RetKeyword ,

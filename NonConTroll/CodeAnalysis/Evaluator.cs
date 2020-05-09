@@ -340,7 +340,9 @@ namespace NonConTroll.CodeAnalysis
                             var patternValue = this.EvaluateExpression( pattern.Expression );
 
                             if( ( value is int intValue    && patternValue is int intPatternValue    && intValue == intPatternValue ) ||
-                                ( value is string strValue && patternValue is string strPatternValue && strValue == strPatternValue ) )
+                                ( value is string strValue && patternValue is string strPatternValue && strValue == strPatternValue ) ||
+                                ( value is bool boolValue  && patternValue is bool boolPatternValue  && boolValue == boolPatternValue ) ||
+                                ( value == null  && patternValue == null ) )
                             {
                                 var result = this.EvaluateExpression( patternSection.Expression );
 
