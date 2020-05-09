@@ -5,22 +5,18 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public abstract class InvokationExpressionSyntax : ExpressionSyntax
     {
-        public InvokationExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , SyntaxList<ExpressionSyntax> arguments )
+        public InvokationExpressionSyntax( SyntaxTree syntaxTree )
 			: base( syntaxTree )
 		{
-            this.Identifier = identifier;
-            this.Arguments  = arguments;
         }
-
-        public SyntaxToken Identifier { get; }
-        public SyntaxList<ExpressionSyntax> Arguments { get; }
     }
 
     public class CallExpressionSyntax : InvokationExpressionSyntax
     {
         public CallExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ExpressionSyntax> arguments , SyntaxToken closeParenthesisToken )
-			: base( syntaxTree , identifier , arguments )
+			: base( syntaxTree )
 		{
+            this.Identifier            = identifier;
             this.OpenParenthesisToken  = openParenthesisToken;
             this.Arguments             = arguments;
             this.CloseParenthesisToken = closeParenthesisToken;
@@ -28,32 +24,40 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public override SyntaxKind Kind => SyntaxKind.CallExpression;
 
+        public SyntaxToken Identifier { get; }
         public SyntaxToken OpenParenthesisToken { get; }
-        public new SeparatedSyntaxList<ExpressionSyntax> Arguments { get; }
+        public SeparatedSyntaxList<ExpressionSyntax> Arguments { get; }
         public SyntaxToken CloseParenthesisToken { get; }
     }
 
     public class InfixBinaryExpressionSyntax : InvokationExpressionSyntax
     {
         public InfixBinaryExpressionSyntax( SyntaxTree syntaxTree , ExpressionSyntax lhsExpression , SyntaxToken identifier , ExpressionSyntax rhsExpression )
-			: base( syntaxTree , identifier , new SyntaxList<ExpressionSyntax>( ImmutableArray.Create<SyntaxNode>( lhsExpression , rhsExpression ) ) )
+			: base( syntaxTree )
 		{
+            this.Lhs        = lhsExpression;
+            this.Identifier = identifier;
+            this.Rhs        = rhsExpression;
         }
 
-        public override SyntaxKind Kind => SyntaxKind.InfixCallExpression;
+        public override SyntaxKind Kind => SyntaxKind.InfixBinaryCallExpression;
 
-        public ExpressionSyntax Lhs => this.Arguments.First();
-        public ExpressionSyntax Rhs => this.Arguments.Last();
+        public ExpressionSyntax Lhs { get; }
+        public SyntaxToken Identifier { get; }
+        public ExpressionSyntax Rhs { get; }
     }
 
     public class InfixUnaryExpressionSyntax : InvokationExpressionSyntax
     {
         public InfixUnaryExpressionSyntax( SyntaxTree syntaxTree ,  SyntaxToken identifier , ExpressionSyntax expression )
-			: base( syntaxTree , identifier , new SyntaxList<ExpressionSyntax>( ImmutableArray.Create<SyntaxNode>( expression ) ) )
+			: base( syntaxTree )
 		{
+            this.Identifier = identifier;
+            this.Expression = expression;
         }
 
-        public override SyntaxKind Kind => SyntaxKind.InfixCallExpression;
-        public ExpressionSyntax Expression => this.Arguments.Single();
+        public override SyntaxKind Kind => SyntaxKind.InfixUnaryCallExpression;
+        public SyntaxToken Identifier { get; }
+        public ExpressionSyntax Expression { get; }
     }
 }

@@ -1,51 +1,83 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Symbols;
-using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class MatchExpressionSyntax : ExpressionSyntax
     {
-        public MatchExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken matchKeyword , ExpressionSyntax expression , ImmutableArray<PatternSectionSyntax> patternSections , bool isStatement )
+        public MatchExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken matchKeyword , ExpressionSyntax expression , ImmutableArray<PatternSectionExpressionSyntax> patternSections )
             : base( syntaxTree )
         {
             this.MatchKeyword    = matchKeyword;
             this.Expression      = expression;
             this.PatternSections = patternSections;
-            this.IsStatement     = isStatement;
         }
 
         public override SyntaxKind Kind => SyntaxKind.MatchExpression;
 
-        public PatternSectionSyntax? DefaultPatternSection => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
+        public PatternSectionExpressionSyntax? DefaultPatternSection => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
 
         public SyntaxToken MatchKeyword { get; }
         public ExpressionSyntax Expression { get; }
-        public ImmutableArray<PatternSectionSyntax> PatternSections { get; }
-        public bool IsStatement { get; }
+        public ImmutableArray<PatternSectionExpressionSyntax> PatternSections { get; }
     }
 
-    public class PatternSectionSyntax : ExpressionSyntax
+    public class MatchStatementSyntax : StatementSyntax
     {
-        public PatternSectionSyntax( SyntaxTree syntaxTree , SeparatedSyntaxList<PatternSyntax> patterns , SyntaxToken arrowToken , SyntaxNode result )
+        public MatchStatementSyntax( SyntaxTree syntaxTree , SyntaxToken matchKeyword , ExpressionSyntax expression , ImmutableArray<PatternSectionStatementSyntax> patternSections )
             : base( syntaxTree )
         {
-            Debug.Assert( result is StatementSyntax || result is ExpressionSyntax );
-
-            this.Patterns   = patterns;
-            this.ArrowToken = arrowToken;
-            this.Result     = result;
+            this.MatchKeyword    = matchKeyword;
+            this.Expression      = expression;
+            this.PatternSections = patternSections;
         }
 
-        public override SyntaxKind Kind => SyntaxKind.PatternExpression;
+        public override SyntaxKind Kind => SyntaxKind.MatchStatement;
+
+        public PatternSectionStatementSyntax? DefaultPatternSection => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
+
+        public SyntaxToken MatchKeyword { get; }
+        public ExpressionSyntax Expression { get; }
+        public ImmutableArray<PatternSectionStatementSyntax> PatternSections { get; }
+    }
+
+    public class PatternSectionExpressionSyntax : ExpressionSyntax
+    {
+        public PatternSectionExpressionSyntax( SyntaxTree syntaxTree , SeparatedSyntaxList<PatternSyntax> patterns , SyntaxToken arrowToken , ExpressionSyntax expression )
+            : base( syntaxTree )
+        {
+            this.Patterns   = patterns;
+            this.ArrowToken = arrowToken;
+            this.Expression = expression;
+        }
+
+        public override SyntaxKind Kind => SyntaxKind.PatternSectionExpression;
 
         public bool HasDefaultPattern => this.Patterns.Any( x => x.Kind == SyntaxKind.MatchAnyPattern );
 
         public SeparatedSyntaxList<PatternSyntax> Patterns { get; }
         public SyntaxToken ArrowToken { get; }
-        public SyntaxNode Result { get; }
+        public ExpressionSyntax Expression { get; }
+    }
+
+    public class PatternSectionStatementSyntax : ExpressionSyntax
+    {
+        public PatternSectionStatementSyntax( SyntaxTree syntaxTree , SeparatedSyntaxList<PatternSyntax> patterns , SyntaxToken arrowToken , StatementSyntax statement )
+            : base( syntaxTree )
+        {
+            this.Patterns   = patterns;
+            this.ArrowToken = arrowToken;
+            this.Statement  = statement;
+        }
+
+        public override SyntaxKind Kind => SyntaxKind.PatternSectionStatement;
+
+        public bool HasDefaultPattern => this.Patterns.Any( x => x.Kind == SyntaxKind.MatchAnyPattern );
+
+        public SeparatedSyntaxList<PatternSyntax> Patterns { get; }
+        public SyntaxToken ArrowToken { get; }
+        public StatementSyntax Statement { get; }
     }
 
     public abstract class PatternSyntax : SyntaxNode
@@ -99,40 +131,68 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     public class BoundMatchExpression : BoundExpression
     {
-        public BoundMatchExpression( BoundExpression expression , ImmutableArray<BoundPatternSection> patternSections , bool isStatement )
+        public BoundMatchExpression( BoundExpression expression , ImmutableArray<BoundPatternSectionExpression> patternSections )
         {
             this.Expression      = expression;
             this.PatternSections = patternSections;
-            this.IsStatement     = isStatement;
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.MatchExpression;
         public override TypeSymbol Type =>
             // TODO: get common type, if this.IsStatement == false
-            ( this.PatternSections.FirstOrDefault()?.Result as BoundExpression )?.Type
+            ( this.PatternSections.FirstOrDefault()?.Expression as BoundExpression )?.Type
             ?? TypeSymbol.Void;
 
-        public BoundPatternSection? DefaultPattern => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
+        public BoundPatternSectionExpression? DefaultPattern => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
 
         public BoundExpression Expression { get; }
-        public ImmutableArray<BoundPatternSection> PatternSections { get; }
-        public bool IsStatement { get; }
+        public ImmutableArray<BoundPatternSectionExpression> PatternSections { get; }
     }
 
-    public class BoundPatternSection : BoundNode
+    public class BoundMatchStatement : BoundStatement
     {
-        public BoundPatternSection( ImmutableArray<BoundPattern> patterns , BoundNode result )
+        public BoundMatchStatement( BoundExpression expression , ImmutableArray<BoundPatternSectionStatement> patternSections )
         {
-            Debug.Assert( result is BoundStatement || result is BoundExpression );
-
-            this.Patterns = patterns;
-            this.Result   = result;
+            this.Expression      = expression;
+            this.PatternSections = patternSections;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.PatternSection;
+        public override BoundNodeKind Kind => BoundNodeKind.MatchExpression;
+
+        public BoundPatternSectionStatement? DefaultPattern => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
+
+        public BoundExpression Expression { get; }
+        public ImmutableArray<BoundPatternSectionStatement> PatternSections { get; }
+    }
+
+    public class BoundPatternSectionExpression : BoundExpression
+    {
+        public BoundPatternSectionExpression( ImmutableArray<BoundPattern> patterns , BoundExpression expression )
+        {
+            this.Patterns   = patterns;
+            this.Expression = expression;
+        }
+
+        public override BoundNodeKind Kind => BoundNodeKind.PatternSectionExpression;
+        public override TypeSymbol Type => this.Expression.Type;
 
         public ImmutableArray<BoundPattern> Patterns { get; }
-        public BoundNode Result { get; }
+        public BoundExpression Expression { get; }
+        public bool HasDefaultPattern => this.Patterns.Any( x => x.Kind == BoundNodeKind.MatchAnyPattern );
+    }
+
+    public class BoundPatternSectionStatement : BoundStatement
+    {
+        public BoundPatternSectionStatement( ImmutableArray<BoundPattern> patterns , BoundStatement statement )
+        {
+            this.Patterns  = patterns;
+            this.Statement = statement;
+        }
+
+        public override BoundNodeKind Kind => BoundNodeKind.PatternSectionStatement;
+
+        public ImmutableArray<BoundPattern> Patterns { get; }
+        public BoundStatement Statement { get; }
         public bool HasDefaultPattern => this.Patterns.Any( x => x.Kind == BoundNodeKind.MatchAnyPattern );
     }
 

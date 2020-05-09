@@ -30,12 +30,12 @@ namespace NonConTroll
 
             foreach( var token in tokens )
             {
-                if(      token.TkType.IsTokenKind( TokenKind.Keyword ) )     { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
-                else if( token.TkType.IsTokenKind( TokenKind.Punctuation ) ) { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-                else if( token.TkType.IsTokenKind( TokenKind.Identifier ) )  { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
-                else if( token.TkType == TokenType.NumericLiteral )          { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
-                else if( token.TkType == TokenType.StringLiteral )           { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
-                else                                                         { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+                if(      token.Kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
+                else if( token.Kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+                else if( token.Kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
+                else if( token.Kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
+                else if( token.Kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
+                else                                                   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
 
                 Console.Write( token.Text );
                 Console.ResetColor();

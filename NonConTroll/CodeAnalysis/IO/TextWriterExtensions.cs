@@ -42,7 +42,7 @@ namespace NonConTroll.CodeAnalysis.IO
             }
         }
 
-        public static void WriteKeyword( this TextWriter writer , TokenType tokenType )
+        public static void WriteKeyword( this TextWriter writer , SyntaxKind tokenType )
         {
             writer.WriteKeyword( tokenType.GetName() );
         }
@@ -80,7 +80,7 @@ namespace NonConTroll.CodeAnalysis.IO
             writer.WritePunctuation( " " );
         }
 
-        public static void WritePunctuation( this TextWriter writer , TokenType tokenType )
+        public static void WritePunctuation( this TextWriter writer , SyntaxKind tokenType )
         {
             writer.WritePunctuation( tokenType.GetName() );
         }

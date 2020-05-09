@@ -186,40 +186,37 @@ namespace NonConTroll.CodeAnalysis.Lowering
             //      }
             // }
 
-            var variableDeclaration   = new BoundVariableDeclaration( node.Variable , node.LowerBound );
-            var variableExpression    = new BoundVariableExpression( node.Variable );
-            var upperBoundSymbol      = new LocalVariableSymbol( "upperBound" , true , TypeSymbol.Int );
-            var upperBoundDeclaration = new BoundVariableDeclaration( upperBoundSymbol , node.UpperBound );
-            var condition = new BoundBinaryExpression(
-                variableExpression , BoundBinaryOperator.Bind( TokenType.LtEq , TypeSymbol.Int , TypeSymbol.Int )! ,
-                new BoundVariableExpression( upperBoundSymbol )
-            );
+            var variableDeclaration = new BoundVariableDeclaration( node.Variable , node.LowerBound );
+            var variableExpression  = new BoundVariableExpression( node.Variable );
+
+            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , TypeSymbol.Int );
+            var boundDecl         = new BoundVariableDeclaration( boundSymbol , node.UpperBound );
+            var boundExpr         = new BoundVariableExpression( boundSymbol );
+            var boundComparisonOp = BoundBinaryOperator.Bind( SyntaxKind.LtEqToken , TypeSymbol.Int , TypeSymbol.Int );
+            var condition         = new BoundBinaryExpression( variableExpression , boundComparisonOp! , boundExpr );
+
+            var incrOp     = BoundBinaryOperator.Bind( SyntaxKind.PlusToken , TypeSymbol.Int , TypeSymbol.Int );
+            var incrByOne  = new BoundBinaryExpression( variableExpression , incrOp! , new BoundLiteralExpression( 1 ) );
+            var incrAssign = new BoundAssignmentExpression( node.Variable , incrByOne );
+            var increment  = new BoundExpressionStatement( incrAssign );
+
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
-            var increment = new BoundExpressionStatement(
-                new BoundAssignmentExpression( node.Variable ,
-                    new BoundBinaryExpression( variableExpression ,
-                                               BoundBinaryOperator.Bind( TokenType.Plus , TypeSymbol.Int , TypeSymbol.Int )! ,
-                                               new BoundLiteralExpression( 1 ) )
-                )
-            );
+
             var whileBody      = new BoundBlockStatement( ImmutableArray.Create( node.Body , continueLabelStatement , increment ) );
             var whileStatement = new BoundWhileStatement( condition , whileBody , node.BreakLabel , this.GenerateLabel() );
-            var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>(
-                variableDeclaration , upperBoundDeclaration , whileStatement
-            ) );
+
+            var result = new BoundBlockStatement( ImmutableArray.Create<BoundStatement>( variableDeclaration , boundDecl , whileStatement ) );
 
             return this.RewriteStatement( result );
         }
 
-        protected override BoundExpression RewriteMatchExpression( BoundMatchExpression node )
+        protected override BoundStatement RewriteMatchStatement( BoundMatchStatement node )
         {
-            return node;
-
             /*
                 match <expr> {
-                    <exprA> => <thenA> ,
-                    <exprB> , <exprC> => <thenBC> ,
-                    _ => <exprD> ,
+                    <exprA> => <stmtA> ,
+                    <exprB> , <exprC> => <stmtBC> ,
+                    _ => <stmtMatchAny> ,
                 }
 
                 ---->
@@ -227,130 +224,105 @@ namespace NonConTroll.CodeAnalysis.Lowering
                 let <var> = <expr>
 
                 if <var> == <exprA>
-                    <thenA>
+                    <stmtA>
                 elif <var> == <exprB> or <var> == <exprC>
-                    <thenBC>
+                    <stmtBC>
+                else
+                    <stmtMatchAny>
             */
-
-            var statements = new List<BoundStatement>();
 
             var exprVariableSymbol = new LocalVariableSymbol( "matchExpression" , isReadOnly: true , node.Expression.Type );
             var exprVariableDecl   = new BoundVariableDeclaration( exprVariableSymbol , node.Expression );
             var exprVariableExpr   = new BoundVariableExpression( exprVariableSymbol );
 
-            var endLabel     = this.GenerateLabel();
-            var endLabelStmt = new BoundLabelStatement( endLabel );
+            var prevStmt = default( BoundStatement );
 
-            foreach( var patternSection in node.PatternSections )
+            if( node.DefaultPattern != null )
             {
-                var resultBlock = default( BoundStatement );
+                if( node.PatternSections.Count() == 1 )
+                {
+                    // match has only 1 section containing the match-any case
+                    // all other scenarios should be a copile error
+                    var matchAnySection = node.PatternSections.Single();
+                    var boundBlockStmt = new BoundBlockStatement( ImmutableArray.Create( exprVariableDecl , matchAnySection.Statement ) );
 
-                if( patternSection.Result is BoundExpression expr )
-                {
-                    resultBlock = new BoundExpressionStatement( (BoundExpression)patternSection.Result );
-                }
-                else if( patternSection.Result is BoundStatement stmt )
-                {
-                    resultBlock = stmt;
-                }
-                else
-                {
-                    throw new Exception();
+                    return this.RewriteStatement( boundBlockStmt );
                 }
 
-                // if( node.IsStatement )
-                // {
-                //     resultBlock = (BoundStatement)patternSection.Result;
-                // }
-                // else
-                // {
-                //     Debug.Assert( patternSection.Result is BoundExpression );
+                prevStmt = this.RewriteStatement( node.DefaultPattern.Statement );
+            }
 
-                //     resultBlock = new BoundExpressionStatement( (BoundExpression)patternSection.Result );
-                // }
-
-                var resultLabelStmt = this.GenerateLabelStatement();
-
-                if( patternSection.Patterns.Count() > 1 )
+            foreach( var patternSection in node.PatternSections.Reverse() )
+            {
+                if( node.DefaultPattern != null && node.DefaultPattern == patternSection )
                 {
-                    foreach( var patternExpr in patternSection.Patterns )
+                    continue;
+                }
+
+                var prevCondition = default( BoundExpression );
+
+                foreach( var pattern in patternSection.Patterns.Reverse() )
+                {
+                    var condition = this.ConvertPatternToExpression( pattern , exprVariableExpr );
+
+                    if( prevCondition != null )
                     {
-                        // TODO: binary || via recursion
+                        var binaryOp = BoundBinaryOperator.Bind( SyntaxKind.PipePipeToken , condition.Type , prevCondition.Type )!;
+
+                        condition = new BoundBinaryExpression( condition , binaryOp , prevCondition );
                     }
 
-                    throw new NotImplementedException();
+                    prevCondition = condition;
                 }
-                else
-                {
-                    var pattern = patternSection.Patterns.Single();
-                    var patternExpr = this.ConvertPatternToExpression( exprVariableExpr , pattern );
-                    var gotoFalse = new BoundConditionalGotoStatement( endLabel , patternExpr , false );
-                    var stmt = new BoundBlockStatement( ImmutableArray.Create( gotoFalse , resultBlock , endLabelStmt ) );
 
-                    statements.Add( stmt );
-                }
+                var ifStmt = new BoundIfStatement( prevCondition! , patternSection.Statement , prevStmt );
+
+                prevStmt = ifStmt;
             }
 
-            statements.Add( endLabelStmt );
+            var blockStmt = new BoundBlockStatement( ImmutableArray.Create( exprVariableDecl , prevStmt! ) );
 
-            var blockStmt = new BoundBlockStatement( statements.ToImmutableArray() );
-            var resultStmt = this.RewriteStatement( blockStmt );
+            return this.RewriteStatement( blockStmt );
+        }
 
-            if( node.IsStatement )
+        private BoundExpression ConvertPatternToExpression( BoundPattern pattern , BoundExpression matchExpr )
+        {
+            var expr = default( BoundExpression );
+
+            switch( pattern )
             {
-
-            }
-
-            return null;
-        }
-
-        private BoundIfStatement GenerateIfStatement( BoundVariableExpression variableExpr )
-        {
-            return null;
-        }
-
-        private BoundBinaryExpression GenerateBinaryExpression( BoundVariableExpression variableExpr )
-        {
-            return null;
-        }
-
-        private BoundExpression ConvertPatternToExpression( BoundExpression lhs , BoundPattern pattern )
-        {
-            switch( pattern.Kind )
-            {
-                case BoundNodeKind.MatchAnyPattern:
+                case BoundMatchAnyPattern b:
                 {
-                    var expr = new BoundLiteralExpression( true );
-
-                    return expr;
+                    expr = new BoundLiteralExpression( true );
                 }
-
-                case BoundNodeKind.ConstantPattern:
+                break;
+                case BoundConstantPattern constantPattern:
                 {
-                    var constantPattern = (BoundConstantPattern)pattern;
-                    var comparison = BoundBinaryOperator.Bind( TokenType.Eq , lhs.Type , constantPattern.Expression.Type )!;
-                    var expr = new BoundBinaryExpression( lhs , comparison , constantPattern.Expression );
+                    var comparison = BoundBinaryOperator.Bind( SyntaxKind.EqEqToken , matchExpr.Type , constantPattern.Expression.Type )!;
 
-                    return expr;
+                    expr = new BoundBinaryExpression( matchExpr , comparison , constantPattern.Expression );
                 }
+                break;
 
                 // TODO: when infix function parsing (binary and unary!) is done
-                // case BoundNodeKind.InfixPattern:
+                // case BoundInfixPattern infixPattern:
                 // {
-                //     var infixPattern = (BoundConstantPattern)pattern;
-                //     var comparison = BoundBinaryOperator.Bind( TokenType.Eq , lhs.Type , infixPattern.Expression.Type )!;
-
-                //     var args = ImmutableArray.Create( lhs , infixPattern.Expression );
+                //     var comparison = BoundBinaryOperator.Bind( TokenType.Eq , matchExpr.Type , infixPattern.Expression.Type )!;
+                //
+                //     var args = ImmutableArray.Create( matchExpr , infixPattern.Expression );
                 //     var expr = new BoundCallExpression( infixFuncSymbol , args );
-
+                //
                 //     return expr;
                 // }
+                // break;
 
                 default:
                 {
                     throw new Exception( "unreachable" );
                 }
             }
+
+            return this.RewriteExpression( expr! );
         }
 
 

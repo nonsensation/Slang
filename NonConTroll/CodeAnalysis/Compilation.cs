@@ -113,7 +113,7 @@ namespace NonConTroll.CodeAnalysis
             var program      = this.GetProgram();
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
             var appDirectory = Path.GetDirectoryName( appPath )!;
-            var cfgPath      = Path.Combine( appDirectory , "cfg.dot" );
+            var cfgPath      = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData ) , "Slang" , "cfg.dot" );//Path.Combine( appDirectory , "cfg.dot" );
             var cfgStatement = !program.Statement.Statements.Any() && program.Functions.Any()
                              ? program.Functions.Last().Value
                              : program.Statement;

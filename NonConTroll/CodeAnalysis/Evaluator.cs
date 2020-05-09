@@ -75,40 +75,37 @@ namespace NonConTroll.CodeAnalysis
             {
                 var s = body.Statements[ index ];
 
-                switch( s.Kind )
+                switch( s )
                 {
-                    case BoundNodeKind.VariableDeclaration:
+                    case BoundVariableDeclaration stmt:
                     {
-                        this.EvaluateVariableDeclaration( (BoundVariableDeclaration)s );
+                        this.EvaluateVariableDeclaration( stmt );
 
                         index++;
                     }
                     break;
 
-                    case BoundNodeKind.ExpressionStatement:
+                    case BoundExpressionStatement stmt:
                     {
-                        this.EvaluateExpressionStatement( (BoundExpressionStatement)s );
+                        this.EvaluateExpressionStatement( stmt );
 
                         index++;
                     }
                     break;
 
-                    case BoundNodeKind.GotoStatement:
+                    case BoundGotoStatement stmt:
                     {
-                        var gs = (BoundGotoStatement)s;
-
-                        index = labelToIndex[ gs.Label ];
+                        index = labelToIndex[ stmt.Label ];
                     }
                     break;
 
-                    case BoundNodeKind.ConditionalGotoStatement:
+                    case BoundConditionalGotoStatement stmt:
                     {
-                        var cgs = (BoundConditionalGotoStatement)s;
-                        var condition = (bool)this.EvaluateExpression( cgs.Condition )!;
+                        var condition = (bool)this.EvaluateExpression( stmt.Condition )!;
 
-                        if( condition == cgs.JumpIfTrue )
+                        if( condition == stmt.JumpIfTrue )
                         {
-                            index = labelToIndex[ cgs.Label ];
+                            index = labelToIndex[ stmt.Label ];
                         }
                         else
                         {
@@ -117,27 +114,26 @@ namespace NonConTroll.CodeAnalysis
                     }
                     break;
 
-                    case BoundNodeKind.LabelStatement:
+                    case BoundLabelStatement stmt:
                     {
                         index++;
                     }
                     break;
 
-                    case BoundNodeKind.DeferStatement:
+                    // TODO: defer-stmt should be lowered..
+                    case BoundDeferStatement stmt:
                     {
-                        this.EvaluateExpression( ((BoundDeferStatement)s).Expression );
+                        this.EvaluateExpression( stmt.Expression );
 
                         index++;
                     }
                     break;
 
-                    case BoundNodeKind.ReturnStatement:
+                    case BoundReturnStatement stmt:
                     {
-                        var rs = (BoundReturnStatement)s;
-
-                        if( rs.Expression != null )
+                        if( stmt.Expression != null )
                         {
-                            this.LastValue = this.EvaluateExpression( rs.Expression );
+                            this.LastValue = this.EvaluateExpression( stmt.Expression );
                         }
 
                         return this.LastValue;
@@ -168,16 +164,16 @@ namespace NonConTroll.CodeAnalysis
 
         private object? EvaluateExpression( BoundExpression node )
         {
-            switch( node.Kind )
+            switch( node )
             {
-                case BoundNodeKind.LiteralExpression:    return this.EvaluateLiteralExpression( (BoundLiteralExpression)node );
-                case BoundNodeKind.VariableExpression:   return this.EvaluateVariableExpression( (BoundVariableExpression)node );
-                case BoundNodeKind.AssignmentExpression: return this.EvaluateAssignmentExpression( (BoundAssignmentExpression)node );
-                case BoundNodeKind.UnaryExpression:      return this.EvaluateUnaryExpression( (BoundUnaryExpression)node );
-                case BoundNodeKind.BinaryExpression:     return this.EvaluateBinaryExpression( (BoundBinaryExpression)node );
-                case BoundNodeKind.CallExpression:       return this.EvaluateCallExpression( (BoundCallExpression)node );
-                case BoundNodeKind.ConversionExpression: return this.EvaluateConversionExpression( (BoundConversionExpression)node );
-                case BoundNodeKind.MatchExpression:      return this.EvaluateMatchExpression( (BoundMatchExpression)node );
+                case BoundLiteralExpression b:    return this.EvaluateLiteralExpression( b );
+                case BoundVariableExpression b:   return this.EvaluateVariableExpression( b );
+                case BoundAssignmentExpression b: return this.EvaluateAssignmentExpression( b );
+                case BoundUnaryExpression b:      return this.EvaluateUnaryExpression( b );
+                case BoundBinaryExpression b:     return this.EvaluateBinaryExpression( b );
+                case BoundCallExpression b:       return this.EvaluateCallExpression( b );
+                case BoundConversionExpression b: return this.EvaluateConversionExpression( b );
+                case BoundMatchExpression b:      return this.EvaluateMatchExpression( b );
                 default:
                     throw new Exception( $"Unexpected node {node.Kind}" );
             }
@@ -246,7 +242,8 @@ namespace NonConTroll.CodeAnalysis
 
                 case BoundBinaryOperatorKind.Equals:          return  Equals( lhs , rhs );
                 case BoundBinaryOperatorKind.NotEquals:       return !Equals( lhs , rhs );
-                case BoundBinaryOperatorKind.Subtraction:     return (bool)lhs && (bool)rhs;
+                case BoundBinaryOperatorKind.Subtraction:     return (int)lhs - (int)rhs;
+                case BoundBinaryOperatorKind.LogicalAnd:      return (bool)lhs && (bool)rhs;
                 case BoundBinaryOperatorKind.LogicalOr:       return (bool)lhs || (bool)rhs;
                 case BoundBinaryOperatorKind.Less:            return (int)lhs  <  (int)rhs;
                 case BoundBinaryOperatorKind.LessOrEquals:    return (int)lhs  <= (int)rhs;
@@ -334,58 +331,35 @@ namespace NonConTroll.CodeAnalysis
 
             foreach( var patternSection in node.PatternSections )
             {
-                foreach( var pattern in patternSection.Patterns )
+                foreach( var boundPattern in patternSection.Patterns )
                 {
-                    switch( pattern.Kind )
+                    switch( boundPattern )
                     {
-                        case BoundNodeKind.ConstantPattern:
+                        case BoundConstantPattern pattern:
                         {
-                            var constantPattern = (BoundConstantPattern)pattern;
-                            var patternValue = this.EvaluateExpression( constantPattern.Expression );
+                            var patternValue = this.EvaluateExpression( pattern.Expression );
 
-                            if( ( value is int intValue && patternValue is int intPatternValue && intValue == intPatternValue ) ||
+                            if( ( value is int intValue    && patternValue is int intPatternValue    && intValue == intPatternValue ) ||
                                 ( value is string strValue && patternValue is string strPatternValue && strValue == strPatternValue ) )
                             {
-                                if( node.IsStatement )
-                                {
-                                    var blockStmt = new BoundBlockStatement( ImmutableArray.Create( (BoundStatement)patternSection.Result ) );
+                                var result = this.EvaluateExpression( patternSection.Expression );
 
-                                    this.EvaluateStatement( blockStmt );
-
-                                    return null;
-                                }
-                                else
-                                {
-                                    var result = this.EvaluateExpression( (BoundExpression)patternSection.Result );
-
-                                    return result;
-                                }
+                                return result;
                             }
                         }
                         break;
 
-                        case BoundNodeKind.InfixPattern:
+                        case BoundInfixPattern pattern:
                         {
                             throw new NotImplementedException();
                         }
                         break;
 
-                        case BoundNodeKind.MatchAnyPattern:
+                        case BoundMatchAnyPattern pattern:
                         {
-                            if( node.IsStatement )
-                            {
-                                var blockStmt = new BoundBlockStatement( ImmutableArray.Create( (BoundStatement)patternSection.Result ) );
+                            var result = this.EvaluateExpression( patternSection.Expression );
 
-                                this.EvaluateStatement( blockStmt );
-
-                                return null;
-                            }
-                            else
-                            {
-                                var result = this.EvaluateExpression( (BoundExpression)patternSection.Result );
-
-                                return result;
-                            }
+                            return result;
                         }
 
                         default:

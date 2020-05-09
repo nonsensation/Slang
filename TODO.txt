@@ -13,6 +13,14 @@ Things to do in the near future:
 - lowering & ast rewriting
 - separate binding
 
+- match syntax
+    - check for multiple cases
+    - lowering
+        - how as expression
+        - reorder case sections, match-any last evaluated
+        - match any only as stand alone
+
+
 Things to do in the far future:
 - emulation & VM
 - byte code emitting

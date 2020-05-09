@@ -80,7 +80,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 {
                     var token = lexer.Lex();
 
-                    if( token.TkType == TokenType.EndOfFile )
+                    if( token.Kind == SyntaxKind.EndOfFile )
                     {
                         root = new CompilationUnitSyntax( syntaxTree , ImmutableArray<MemberSyntax>.Empty , token );
 

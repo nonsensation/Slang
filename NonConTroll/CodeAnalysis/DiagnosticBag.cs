@@ -34,7 +34,7 @@ namespace NonConTroll.CodeAnalysis
         public void ReportUnterminatedString( TextLocation location )
             => this.Report( location , $"Unterminated string literal." );
 
-        public void ReportUnexpectedToken( TextLocation location , TokenType tokenType , TokenType expectedTokenType )
+        public void ReportUnexpectedToken( TextLocation location , SyntaxKind tokenType , SyntaxKind expectedTokenType )
             => this.Report( location , $"Unexpected token <{tokenType}>, expected <{expectedTokenType}>." );
 
         public void ReportUndefinedUnaryOperator( TextLocation location , string operatorText , TypeSymbol operandType )
@@ -46,7 +46,7 @@ namespace NonConTroll.CodeAnalysis
         public void ReportParameterAlreadyDeclared( TextLocation location , string parameterName )
             => this.Report( location , $"A parameter with the name '{parameterName}' already exists." );
 
-        internal void ReportMissingSyntaxNode( TextLocation location , TokenType expectedTokenType )
+        internal void ReportMissingSyntaxNode( TextLocation location , SyntaxKind expectedTokenType )
             => this.Report( location , $"Missing token, expected <{expectedTokenType}>." );
 
         public void ReportUndefinedType( TextLocation location , string name )
@@ -107,20 +107,17 @@ namespace NonConTroll.CodeAnalysis
             => this.Report( location , $"'{name}' is not a function." );
 
         internal void ReportInvalidExpressionStatement( TextLocation location )
-            => this.Report( location , "Only assignment, call, (TODO: increment, decrement, await, and new object) expressions can be used as a statement." );
-
-        internal void ReportMultipleDefaultPattern( TextLocation location )
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void ReportInvalidPattern( TextLocation location )
-        {
-            throw new NotImplementedException();
-        }
+            => this.Report( location , $"Expected a statement, found an expression. (Only assignment, call, increment, decrement, match, await, and new object expressions can be used as a statement.)" );
 
         internal void ReportMissingPattern( TextLocation location )
             => this.Report( location , $"Pattern missing." );
+
+        internal void ReportMatchIsStatementButResultIsExpression( TextLocation location )
+            => this.Report( location , $"This match is used as a statement, but this pattern section result is an expression." );
+
+        internal void ReportMatchIsExpressionButResultIsStatement( TextLocation location )
+            => this.Report( location , $"This match is used as an expression, but this pattern section result is a statement." );
+
 
         #endregion
 

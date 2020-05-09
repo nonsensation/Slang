@@ -17,5 +17,7 @@ namespace NonConTroll.CodeAnalysis.Text
         public int EndLine => this.Text.GetLineIndex( this.Span.End );
         public int StartCharacter => this.Span.Start - this.Text.Lines[ this.StartLine ].Start;
         public int EndCharacter => this.Span.End - this.Text.Lines[ this.StartLine ].Start;
+
+        public override string ToString() => this.Text.Text.Substring( this.Span.Start , this.Span.Length );
     }
 }

@@ -180,7 +180,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 for( var i = 0 ; i < blocks.Count ; i++ )
                 {
                     var current = blocks[ i ];
-                    var next = i == blocks.Count - 1 ? this.End : blocks[ i + 1 ];
+                    var next = i == blocks.Count - 1
+                        ? this.End
+                        : blocks[ i + 1 ];
 
                     foreach( var statement in current.Statements )
                     {
@@ -231,15 +233,25 @@ namespace NonConTroll.CodeAnalysis.Binding
                     }
                 }
 
-            ScanAgain:
-
-                foreach( var block in blocks )
+                while( true )
                 {
-                    if( !block.Incoming.Any() )
-                    {
-                        this.RemoveBlock( blocks , block );
+                    var done = true;
 
-                        goto ScanAgain;
+                    foreach( var block in blocks )
+                    {
+                        if( !block.Incoming.Any() )
+                        {
+                            this.RemoveBlock( blocks , block );
+
+                            done = false;
+
+                            break;
+                        }
+                    }
+
+                    if( done )
+                    {
+                        break;
                     }
                 }
 
@@ -298,7 +310,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     return new BoundLiteralExpression( !value );
                 }
 
-                var op = BoundUnaryOperator.Bind(TokenType.Exm, TypeSymbol.Bool)!;
+                var op = BoundUnaryOperator.Bind(SyntaxKind.ExmToken, TypeSymbol.Bool)!;
 
                 return new BoundUnaryExpression( op , condition );
             }

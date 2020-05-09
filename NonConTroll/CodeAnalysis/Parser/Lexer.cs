@@ -10,7 +10,7 @@ namespace NonConTroll.CodeAnalysis
         private readonly SyntaxTree SyntaxTree;
         private SourceText Text => this.SyntaxTree.Text;
         private int Position;
-        private TokenType TkType;
+        private SyntaxKind Kind;
         public DiagnosticBag Diagnostics = new DiagnosticBag();
         private int StartPos;
 
@@ -39,7 +39,7 @@ namespace NonConTroll.CodeAnalysis
         public SyntaxToken Lex()
         {
             this.StartPos = this.Position;
-            this.TkType = TokenType.None;
+            this.Kind     = SyntaxKind.None;
 
             switch( this.Current )
             {
@@ -54,68 +54,68 @@ namespace NonConTroll.CodeAnalysis
 
                 case '\0':
                 {
-                    this.TkType = TokenType.EndOfFile;
+                    this.Kind = SyntaxKind.EndOfFile;
                     break;
                 }
 
                 #region Single character punctuators
                 case '(':
                 {
-                    this.TkType = TokenType.OpenParen;
+                    this.Kind = SyntaxKind.OpenParenToken;
                     this.Advance();
                     break;
                 }
                 case ')':
                 {
-                    this.TkType = TokenType.CloseParen;
+                    this.Kind = SyntaxKind.CloseParenToken;
                     this.Advance();
                     break;
                 }
                 case '{':
                 {
-                    this.TkType = TokenType.OpenBrace;
+                    this.Kind = SyntaxKind.OpenBraceToken;
                     this.Advance();
                     break;
                 }
                 case '}':
                 {
-                    this.TkType = TokenType.CloseBrace;
+                    this.Kind = SyntaxKind.CloseBraceToken;
                     this.Advance();
                     break;
                 }
                 case '[':
                 {
-                    this.TkType = TokenType.OpenBracket;
+                    this.Kind = SyntaxKind.OpenBracketToken;
                     this.Advance();
                     break;
                 }
                 case ']':
                 {
-                    this.TkType = TokenType.CloseBracket;
+                    this.Kind = SyntaxKind.CloseBracketToken;
                     this.Advance();
                     break;
                 }
                 case ',':
                 {
-                    this.TkType = TokenType.Comma;
+                    this.Kind = SyntaxKind.CommaToken;
                     this.Advance();
                     break;
                 }
                 case ':':
                 {
-                    this.TkType = TokenType.Colon;
+                    this.Kind = SyntaxKind.ColonToken;
                     this.Advance();
                     break;
                 }
                 case ';':
                 {
-                    this.TkType = TokenType.Semicolon;
+                    this.Kind = SyntaxKind.SemicolonToken;
                     this.Advance();
                     break;
                 }
                 case '_':
                 {
-                    this.TkType = TokenType.Underscore;
+                    this.Kind = SyntaxKind.UnderscoreToken;
                     this.Advance();
                     break;
                 }
@@ -133,17 +133,17 @@ namespace NonConTroll.CodeAnalysis
 
                         if( this.Current == '.' )
                         {
-                            this.TkType = TokenType.DotDotDot;
+                            this.Kind = SyntaxKind.DotDotDotToken;
                             this.Advance();
                         }
                         else
                         {
-                            this.TkType = TokenType.DotDot;
+                            this.Kind = SyntaxKind.DotDotToken;
                         }
                     }
                     else
                     {
-                        this.TkType = TokenType.Dot;
+                        this.Kind = SyntaxKind.DotToken;
                     }
                     break;
                 }
@@ -153,12 +153,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.PlusEq;
+                        this.Kind = SyntaxKind.PlusEq;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Plus;
+                        this.Kind = SyntaxKind.PlusToken;
                     }
                     break;
                 }
@@ -168,12 +168,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.MinusEq;
+                        this.Kind = SyntaxKind.MinusEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Minus;
+                        this.Kind = SyntaxKind.MinusToken;
                     }
                     break;
                 }
@@ -183,12 +183,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.StarEq;
+                        this.Kind = SyntaxKind.StarEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Star;
+                        this.Kind = SyntaxKind.StarToken;
                     }
                     break;
                 }
@@ -198,12 +198,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.SlashEq;
+                        this.Kind = SyntaxKind.SlashEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Slash;
+                        this.Kind = SyntaxKind.SlashToken;
                     }
                     break;
                 }
@@ -213,12 +213,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '&' )
                     {
-                        this.TkType = TokenType.AndAnd;
+                        this.Kind = SyntaxKind.AndAndToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.And;
+                        this.Kind = SyntaxKind.AndToken;
                     }
                     break;
                 }
@@ -228,12 +228,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '|' )
                     {
-                        this.TkType = TokenType.PipePipe;
+                        this.Kind = SyntaxKind.PipePipeToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Pipe;
+                        this.Kind = SyntaxKind.PipeToken;
                     }
                     break;
                 }
@@ -243,17 +243,17 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.EqEq;
+                        this.Kind = SyntaxKind.EqEqToken;
                         this.Advance();
                     }
                     else if( this.Current == '>' )
                     {
-                        this.TkType = TokenType.EqGtArrow;
+                        this.Kind = SyntaxKind.EqGtToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Eq;
+                        this.Kind = SyntaxKind.EqToken;
                     }
                     break;
                 }
@@ -263,12 +263,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.ExmEq;
+                        this.Kind = SyntaxKind.ExmEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Exm;
+                        this.Kind = SyntaxKind.ExmToken;
                     }
                     break;
                 }
@@ -278,12 +278,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.GtEq;
+                        this.Kind = SyntaxKind.GtEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Gt;
+                        this.Kind = SyntaxKind.GtToken;
                     }
                     break;
                 }
@@ -293,12 +293,12 @@ namespace NonConTroll.CodeAnalysis
 
                     if( this.Current == '=' )
                     {
-                        this.TkType = TokenType.LtEq;
+                        this.Kind = SyntaxKind.LtEqToken;
                         this.Advance();
                     }
                     else
                     {
-                        this.TkType = TokenType.Lt;
+                        this.Kind = SyntaxKind.LtToken;
                     }
                     break;
                 }
@@ -399,14 +399,14 @@ namespace NonConTroll.CodeAnalysis
             }
 
             var length = this.Position - this.StartPos;
-            var text = this.TkType.GetName();
+            var text = this.Kind.GetName();
 
             if( text == null )
             {
                 text = this.Text.ToString( this.StartPos , length );
             }
 
-            return new SyntaxToken( this.SyntaxTree , this.TkType , this.StartPos , text );
+            return new SyntaxToken( this.SyntaxTree , this.Kind , this.StartPos , text );
         }
 
         private void ScanString()
@@ -449,7 +449,7 @@ namespace NonConTroll.CodeAnalysis
                 }
             }
 
-            this.TkType = TokenType.StringLiteral;
+            this.Kind = SyntaxKind.StringLiteral;
         }
 
         private void ScanWhiteSpace()
@@ -459,8 +459,7 @@ namespace NonConTroll.CodeAnalysis
                 this.Advance( 1 );
             }
 
-            this.TkType = TokenType.WhiteSpace;
-
+            this.Kind = SyntaxKind.WhiteSpaceTrivia;
         }
 
         private void ScanNumber()
@@ -473,7 +472,7 @@ namespace NonConTroll.CodeAnalysis
             // var length = this.Position - this.StartPos;
             // var text = this.Text.ToString( this.StartPos , length );
 
-            this.TkType = TokenType.NumericLiteral;
+            this.Kind = SyntaxKind.NumericLiteral;
         }
 
         private void ScanIdentifierOrKeyword()
@@ -484,9 +483,9 @@ namespace NonConTroll.CodeAnalysis
             }
 
             var length = this.Position - this.StartPos;
-            var text = this.Text.ToString( this.StartPos , length );
+            var text   = this.Text.ToString( this.StartPos , length );
 
-            this.TkType = SyntaxInfo.GetKeywordTokenType( text );
+            this.Kind = SyntaxInfo.GetSyntaxKind( text ) ?? SyntaxKind.Identifier;
         }
     }
 }

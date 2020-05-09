@@ -3,6 +3,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
     public sealed class TypeSymbol : Symbol
     {
         public static readonly TypeSymbol Error = new TypeSymbol( "?" );
+
         public static readonly TypeSymbol Int = new TypeSymbol( "int" );
         public static readonly TypeSymbol String = new TypeSymbol( "string" );
         public static readonly TypeSymbol Void = new TypeSymbol( "void" );
@@ -24,7 +25,6 @@ namespace NonConTroll.CodeAnalysis.Symbols
         public static readonly TypeSymbol Nuint = new TypeSymbol( "nuint" );
         public static readonly TypeSymbol Char = new TypeSymbol( "char" );
         public static readonly TypeSymbol Rune = new TypeSymbol( "rune" );
-
 
         private TypeSymbol( string name )
             : base( name )

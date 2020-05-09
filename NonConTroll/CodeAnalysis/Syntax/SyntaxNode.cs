@@ -33,7 +33,10 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public IEnumerable<SyntaxNode> GetChildren()
         {
-            var properties = this.GetType().GetProperties( BindingFlags.Public | BindingFlags.Instance );
+            var flags = BindingFlags.Public
+                      | BindingFlags.Instance
+                      | BindingFlags.FlattenHierarchy;
+            var properties = this.GetType().GetProperties( flags );
 
             foreach( var property in properties )
             {
@@ -122,14 +125,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.DarkCyan : ConsoleColor.Cyan;
             }
 
-            if( node is SyntaxToken token )
-            {
-                writer.Write( token.TkType );
-            }
-            else
-            {
-                writer.Write( node.Kind );
-            }
+            writer.Write( node.Kind );
 
             if( isToConsole )
             {

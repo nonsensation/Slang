@@ -23,16 +23,16 @@ namespace NonConTroll.CodeAnalysis.Symbols
 
         private static void WriteFunctionTo( FunctionSymbol symbol , TextWriter writer )
         {
-            writer.WriteKeyword( TokenType.Func );
+            writer.WriteKeyword( SyntaxKind.FuncKeyword );
             writer.WriteSpace();
             writer.WriteIdentifier( symbol.Name );
-            writer.WritePunctuation( TokenType.OpenParen );
+            writer.WritePunctuation( SyntaxKind.OpenParenToken );
 
             for( var i = 0 ; i < symbol.Parameters.Length ; i++ )
             {
                 if( i > 0 )
                 {
-                    writer.WritePunctuation( TokenType.Comma );
+                    writer.WritePunctuation( SyntaxKind.CommaToken );
                 }
 
                 writer.WriteSpace();
@@ -40,19 +40,19 @@ namespace NonConTroll.CodeAnalysis.Symbols
                 writer.WriteSpace();
             }
 
-            writer.WritePunctuation( TokenType.CloseParen );
+            writer.WritePunctuation( SyntaxKind.CloseParenToken );
             writer.WriteSpace();
-            writer.WritePunctuation( TokenType.Colon );
+            writer.WritePunctuation( SyntaxKind.ColonToken );
             writer.WriteSpace();
             symbol.ReturnType.WriteTo( writer );
         }
 
         private static void WriteGlobalVariableTo( GlobalVariableSymbol symbol , TextWriter writer )
         {
-            writer.WriteKeyword( symbol.IsReadOnly ? TokenType.Let : TokenType.Var );
+            writer.WriteKeyword( symbol.IsReadOnly ? SyntaxKind.LetKeyword : SyntaxKind.VarKeyword );
             writer.WriteSpace();
             writer.WriteIdentifier( symbol.Name );
-            writer.WritePunctuation( TokenType.Colon );
+            writer.WritePunctuation( SyntaxKind.ColonToken );
             writer.WriteSpace();
 
             symbol.Type.WriteTo( writer );
@@ -60,10 +60,10 @@ namespace NonConTroll.CodeAnalysis.Symbols
 
         private static void WriteLocalVariableTo( LocalVariableSymbol symbol , TextWriter writer )
         {
-            writer.WriteKeyword( symbol.IsReadOnly ? TokenType.Let : TokenType.Var );
+            writer.WriteKeyword( symbol.IsReadOnly ? SyntaxKind.LetKeyword : SyntaxKind.VarKeyword );
             writer.WriteSpace();
             writer.WriteIdentifier( symbol.Name );
-            writer.WritePunctuation( TokenType.Colon );
+            writer.WritePunctuation( SyntaxKind.ColonToken );
             writer.WriteSpace();
 
             symbol.Type.WriteTo( writer );
@@ -72,7 +72,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
         private static void WriteParameterTo( ParameterSymbol symbol , TextWriter writer )
         {
             writer.WriteIdentifier( symbol.Name );
-            writer.WritePunctuation( TokenType.Colon );
+            writer.WritePunctuation( SyntaxKind.ColonToken );
             writer.WriteSpace();
 
             symbol.Type.WriteTo( writer );
