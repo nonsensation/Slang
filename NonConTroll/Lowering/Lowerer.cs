@@ -161,9 +161,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
             var continueLabelStatement = new BoundLabelStatement( node.ContinueLabel );
             var gotoTrue               = new BoundConditionalGotoStatement( bodyLabel , node.Condition );
             var breakLabelStatement    = new BoundLabelStatement( node.BreakLabel );
-            var result = new BoundBlockStatement( ImmutableArray.Create(
-                bodyLabelStatement , node.Body , continueLabelStatement , gotoTrue , breakLabelStatement
-            ) );
+            var result = new BoundBlockStatement( new[] { bodyLabelStatement , node.Body , continueLabelStatement , gotoTrue , breakLabelStatement }.ToImmutableArray() );
 
             return this.RewriteStatement( result );
         }
@@ -323,6 +321,11 @@ namespace NonConTroll.CodeAnalysis.Lowering
             }
 
             return this.RewriteExpression( expr! );
+        }
+
+        private BoundStatement RewriteYieldStatement( YieldStatementSyntax node )
+        {
+
         }
 
 

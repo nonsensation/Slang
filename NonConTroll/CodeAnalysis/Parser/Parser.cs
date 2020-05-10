@@ -496,6 +496,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case SyntaxKind.StringLiteral :       return this.ParseStringLiteral();
                 case SyntaxKind.UnderscoreToken :     return this.ParseUnderscoreLiteral();
                 case SyntaxKind.MatchKeyword :        return this.ParseMatchExpression();
+                case SyntaxKind.YieldKeyword :        return this.ParseYieldExpression();
                 case SyntaxKind.Identifier :          return this.ParseNameOrCallExpression();
 
                 default: return this.ParseNameOrCallExpression();
@@ -569,6 +570,17 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var identifierToken = this.MatchToken( SyntaxKind.Identifier );
 
             return new NameExpressionSyntax( this.SyntaxTree , identifierToken );
+        }
+
+        private YieldStatementSyntax ParseYieldStatement()
+        {
+            var matchKeyword    = this.MatchToken( SyntaxKind.YieldStatement );
+            var variableExpr    = this.ParseExpression();
+            var openBraceTok    = this.MatchToken( SyntaxKind.OpenBraceToken );
+            var patterns        = this.ParsePatternSectionSyntax( this.ParsePatternSectionExpression );
+            var closeBraceToken = this.MatchToken( SyntaxKind.CloseBraceToken );
+
+            return new MatchExpressionSyntax( this.SyntaxTree , matchKeyword , variableExpr , patterns );
         }
 
         private SeparatedSyntaxList<T> ParseSeparatedNodeList<T>( Func<T> parseFunc ) where T : SyntaxNode

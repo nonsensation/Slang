@@ -73,6 +73,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         ContinueKeyword,
         DoKeyword,
         To,
+        YieldKeyword,
 
         TrueKeywordLiteral,
         FalseKeywordLiteral,
@@ -182,6 +183,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         IfStatement,
         ElseClause,
         PatternSectionStatement,
+        YieldStatement,
+
         // expressions
         NameExpression,
         CallExpression,
@@ -194,6 +197,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         LiteralExpression,
         TupleExpression,
         PatternSectionExpression,
+
         // types & names
         Type,
         TupleType,
@@ -208,7 +212,6 @@ namespace NonConTroll.CodeAnalysis.Syntax
         ConstantPattern,
         InfixPattern,
         MatchStatement,
-
 
         #endregion
     }

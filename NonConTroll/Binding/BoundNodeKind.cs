@@ -19,6 +19,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         DeferStatement,
         MatchStatement,
         PatternSectionStatement,
+        YieldStatement,
 
         #endregion
 
