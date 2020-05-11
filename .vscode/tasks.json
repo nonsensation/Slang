@@ -7,58 +7,124 @@
             "type": "process",
             "args": [
                 "build",
+                "-t:Build;Publish",
                 "${workspaceFolder}/src/non.sln",
                 //"--no-restore",
                 "/property:GenerateFullPaths=true"
             ],
-            "problemMatcher": "$msCompile",
             "group": {
                 "kind": "build",
                 "isDefault": true
-              }
+            },
+            "presentation": {
+                "clear": true,
+                "reveal": "silent",
+                "revealProblems": "onProblem"
+            },
+            "problemMatcher": "$msCompile"
         },
         {
-            "label": "rebuild",
+            "label": "clean",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "build",
-                "${workspaceFolder}/src/non.sln",
-                "/property:GenerateFullPaths=true"
+                "clean",
+                "${workspaceFolder}/src/NonConTroll.sln"
             ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "reveal": "silent",
+                "revealProblems": "onProblem"
+            },
+            "problemMatcher": "$msCompile"
         },
         {
-            "label": "NonConTroll.Compiler",
+            "label": "build-msproj",
             "command": "dotnet",
-            "type": "shell",
+            "type": "process",
+            "options": {
+                "cwd": "${workspaceFolder}/samples",
+                "env": {
+                    "NonConTrollToolsPath": "${workspaceFolder}/artifacts/NonConTroll"
+                }
+            },
             "args": [
-                "run",
-                "--project",
-                "${workspaceFolder}/src/NonConTroll.Compiler/NonConTroll.Compiler.csproj",
-                "--",
+                "build",
                 "${fileDirname}"
             ],
             "presentation": {
-                "echo": true,
-                "reveal": "always",
+                "clear": true,
+                "reveal": "silent",
+                "revealProblems": "onProblem"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run-msproj",
+            "command": "dotnet",
+            "type": "process",
+            "options": {
+                "cwd": "${workspaceFolder}/samples",
+                "env": {
+                    "NonConTrollToolsPath": "${workspaceFolder}/artifacts/NonConTroll"
+                }
+            },
+            "args": [
+                "run",
+                "--project",
+                "${fileDirname}"
+            ],
+            "presentation": {
                 "focus": true,
-                "panel": "shared",
-                "showReuseMessage": false,
+                "clear": true,
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "NonConTroll.Compiler",
+            "command": "NonConTroll.Compiler",
+            "type": "process",
+            "options": {
+                "cwd": "${workspaceFolder}/samples",
+                "env": {
+                    "PATH": "%PATH%;${workspaceFolder}/artifacts/NonConTroll"
+                }
+            },
+            "args": [
+                "${file}"
+            ],
+            "presentation": {
+                "focus": true,
                 "clear": true
             },
             "problemMatcher": {
                 "fileLocation": "absolute",
                 "pattern": [
                     {
+                        // "regexp": "^(.+)\\((\\d,\\d,\\d,\\d)\\):\\s+(.+)$",
                         "regexp": "^(.*)\\((\\d+,\\d+,\\d+,\\d+)\\):\\s+(info|warning|error): (.*)$",
                         "file": 1,
                         "location": 2,
-                        "severity": 3,
-                        "message": 4
+                        "message": 3
                     }
                 ]
+            }
+        },
+        {
+            "label": "NonConTroll.Repl",
+            "command": "NonConTroll.Repl",
+            "type": "process",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/samples",
+                "env": {
+                    "PATH": "%PATH%;${workspaceFolder}/artifacts/NonConTroll"
+                }
+            },
+            "presentation": {
+                "clear": true,
+                "focus": true
             }
         }
     ]

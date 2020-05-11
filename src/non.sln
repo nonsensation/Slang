@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonConTroll", "NonConTroll\NonConTroll.csproj", "{B0846AE4-BEC8-4B29-8991-D16C61B21178}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonConTroll", "NonConTroll\NonConTroll.csproj", "{B0846AE4-BEC8-4B29-8991-D16C61B21178}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonConTroll.Compiler", "NonConTroll.Compiler\NonConTroll.Compiler.csproj", "{2D79188C-C398-4AE7-A7FE-7A7EE2AB00EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonConTroll.Compiler", "NonConTroll.Compiler\NonConTroll.Compiler.csproj", "{2D79188C-C398-4AE7-A7FE-7A7EE2AB00EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonConTroll.Generators", "NonConTroll.Generators\NonConTroll.Generators.csproj", "{5AF31284-08E7-4519-A3F5-A04A3F12A9FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonConTroll.Generators", "NonConTroll.Generators\NonConTroll.Generators.csproj", "{5AF31284-08E7-4519-A3F5-A04A3F12A9FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonConTroll.Repl", "NonConTroll.Repl\NonConTroll.Repl.csproj", "{31BA5471-E5B2-4CC1-A251-BE38F4FC147F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonConTroll.Repl", "NonConTroll.Repl\NonConTroll.Repl.csproj", "{31BA5471-E5B2-4CC1-A251-BE38F4FC147F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

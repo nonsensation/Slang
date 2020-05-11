@@ -9,6 +9,7 @@
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Features>strict</Features>
     <Nullable>enable</Nullable>
+    <IsTool>true</IsTool>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

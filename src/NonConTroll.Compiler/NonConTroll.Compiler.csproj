@@ -6,9 +6,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <RootNamespace>NonConTroll</RootNamespace>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Features>strict</Features>
+    <IsTool>true</IsTool>
+    <IsPackable>false</IsPackable>
+    <ProjectName>NonConTroll</ProjectName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
