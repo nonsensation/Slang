@@ -5,7 +5,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public class CompilationUnitSyntax : SyntaxNode
     {
-        public CompilationUnitSyntax( SyntaxTree syntaxTree , ImmutableArray<MemberSyntax> members , SyntaxToken endOfFileToken )
+        public CompilationUnitSyntax( SyntaxTree syntaxTree , ImmutableArray<MemberDeclarationSyntax> members , SyntaxToken endOfFileToken )
 			: base( syntaxTree )
 		{
             this.Members = members;
@@ -13,7 +13,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         }
 
         public override SyntaxKind Kind => SyntaxKind.CompilationUnit;
-        public ImmutableArray<MemberSyntax> Members { get; }
+        public ImmutableArray<MemberDeclarationSyntax> Members { get; }
         public SyntaxToken EndOfFileToken { get; }
     }
 }

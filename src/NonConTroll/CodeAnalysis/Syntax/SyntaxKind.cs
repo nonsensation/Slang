@@ -14,7 +14,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         FnKeyword,
         ReturnKeyword,
         RetKeyword,
-        Class,
+        ClassKeyword,
         Struct,
         Mixin,
         Abstract,
@@ -164,9 +164,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
         TypeClause,
         Discard,
         Annotation,
+
         // declaration
         VariableDeclaration,
         FunctionDeclaration,
+        TypeDeclaration,
+
         // statements
         GlobalStatement,
         BlockStatement,
@@ -182,6 +185,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         IfStatement,
         ElseClause,
         PatternSectionStatement,
+
         // expressions
         NameExpression,
         CallExpression,
@@ -194,6 +198,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         LiteralExpression,
         TupleExpression,
         PatternSectionExpression,
+
         // types & names
         Type,
         TupleType,

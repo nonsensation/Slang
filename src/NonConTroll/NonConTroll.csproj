@@ -5,11 +5,12 @@
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Features>strict</Features>
     <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <DebugSymbols>true</DebugSymbols>
-      <!-- <DebugType>full</DebugType> -->
+      <DebugType>full</DebugType>
       <DebugType>portable</DebugType>
       <Optimize>false</Optimize>
       <OutputPath>bin\Debug\</OutputPath>
@@ -24,7 +25,12 @@
         IDE0060, <!-- Remove unused parameter -->
         IDE0019  <!-- Use pattern macthing -->
       </NoWarn>
-      <WarningsAsErrors></WarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NonConTroll.Generators\NonConTroll.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
 </Project>

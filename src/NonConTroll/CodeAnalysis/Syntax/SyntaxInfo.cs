@@ -7,14 +7,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public static class SyntaxInfo
     {
-
         public static SyntaxKind? GetSyntaxKind( string text )
             => text switch {
                 "func"      => SyntaxKind.FuncKeyword ,
                 "fn"        => SyntaxKind.FnKeyword ,
                 "return"    => SyntaxKind.ReturnKeyword ,
                 "ret"       => SyntaxKind.RetKeyword ,
-                "class"     => SyntaxKind.Class ,
+                "class"     => SyntaxKind.ClassKeyword ,
                 "struct"    => SyntaxKind.Struct ,
                 "mixin"     => SyntaxKind.Mixin ,
                 "abstract"  => SyntaxKind.Abstract ,
@@ -88,7 +87,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 SyntaxKind.FnKeyword       => "fn" ,
                 SyntaxKind.ReturnKeyword   => "return" ,
                 SyntaxKind.RetKeyword      => "ret" ,
-                SyntaxKind.Class           => "class" ,
+                SyntaxKind.ClassKeyword           => "class" ,
                 SyntaxKind.Struct          => "struct" ,
                 SyntaxKind.Mixin           => "mixin" ,
                 SyntaxKind.Abstract        => "abstract" ,

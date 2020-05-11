@@ -20,7 +20,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             else if( value is string str )
             {
                 this.Type = TypeSymbol.String;
-                this.Value = str[ 1 .. ^1 ]; // strip escaped quotes "\"str\"\ -> "str"
+                this.Value = str.Substring( 1 , str.Length - 2 );
             }
             else
             {

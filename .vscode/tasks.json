@@ -7,8 +7,8 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/non.sln",
-                "--no-restore",
+                "${workspaceFolder}/src/non.sln",
+                //"--no-restore",
                 "/property:GenerateFullPaths=true"
             ],
             "problemMatcher": "$msCompile",
@@ -23,20 +23,20 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/non.sln",
+                "${workspaceFolder}/src/non.sln",
                 "/property:GenerateFullPaths=true"
             ],
             "problemMatcher": "$msCompile",
             "group": "build"
         },
         {
-            "label": "kk",
+            "label": "NonConTroll.Compiler",
             "command": "dotnet",
             "type": "shell",
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/kk/kk.csproj",
+                "${workspaceFolder}/src/NonConTroll.Compiler/NonConTroll.Compiler.csproj",
                 "--",
                 "${fileDirname}"
             ],

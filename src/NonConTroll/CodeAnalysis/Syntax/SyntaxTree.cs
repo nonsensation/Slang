@@ -82,7 +82,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
                     if( token.Kind == SyntaxKind.EndOfFile )
                     {
-                        root = new CompilationUnitSyntax( syntaxTree , ImmutableArray<MemberSyntax>.Empty , token );
+                        root = new CompilationUnitSyntax( syntaxTree , ImmutableArray<MemberDeclarationSyntax>.Empty , token );
 
                         break;
                     }

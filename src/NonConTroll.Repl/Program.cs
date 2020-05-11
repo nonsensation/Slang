@@ -1,4 +1,4 @@
-﻿
+﻿using System;
 using NonConTroll.CodeAnalysis;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;

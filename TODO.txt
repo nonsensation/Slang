@@ -1,5 +1,11 @@
 
 Things to do in the near future:
+
+- classes
+- inheritance
+- unnamed records/lists/maps
+- enum
+
 - defer statement
 - yield & generators
 - infix function notation (unary & binary)
@@ -26,3 +32,9 @@ Things to do in the far future:
 - byte code emitting
 - LLVM
 - C-interop
+
+
+- Metaclasses
+    - type MyType : mixin {}
+    - class/struct/union/mixin/enum/interface are default metaclasses
+    -

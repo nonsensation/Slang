@@ -84,9 +84,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new CompilationUnitSyntax( this.SyntaxTree , members , endOfFileToken );
         }
 
-        private ImmutableArray<MemberSyntax> ParseMembers()
+        private ImmutableArray<MemberDeclarationSyntax> ParseMembers()
         {
-            var members = ImmutableArray.CreateBuilder<MemberSyntax>();
+            var members = ImmutableArray.CreateBuilder<MemberDeclarationSyntax>();
 
             while( this.Current.Kind != SyntaxKind.EndOfFile )
             {
@@ -110,7 +110,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return members.ToImmutable();
         }
 
-        private MemberSyntax ParseMember()
+        private MemberDeclarationSyntax ParseMember()
         {
             if( this.Current.Kind == SyntaxKind.FuncKeyword )
             {
@@ -120,7 +120,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return this.ParseGlobalStatement();
         }
 
-        private MemberSyntax ParseFunctionDeclaration()
+        private MemberDeclarationSyntax ParseFunctionDeclaration()
         {
             var functionKeyword = this.MatchToken( SyntaxKind.FuncKeyword );
             var identifier      = this.MatchToken( SyntaxKind.Identifier );
@@ -180,7 +180,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new ParameterSyntax( this.SyntaxTree , identifier , type );
         }
 
-        private MemberSyntax ParseGlobalStatement()
+        private MemberDeclarationSyntax ParseGlobalStatement()
         {
             var statement = this.ParseStatement();
 

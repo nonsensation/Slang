@@ -1,6 +1,6 @@
 namespace NonConTroll.CodeAnalysis.Syntax
 {
-    public class FunctionDeclarationSyntax : MemberSyntax
+    public class FunctionDeclarationSyntax : MemberDeclarationSyntax
     {
         public FunctionDeclarationSyntax( SyntaxTree syntaxTree , SyntaxToken functionKeyword , SyntaxToken identifier , SyntaxToken openParenthesisToken , SeparatedSyntaxList<ParameterSyntax> parameters , SyntaxToken closeParenthesisToken , TypeClauseSyntax? returnType , BlockStatementSyntax body )
 			: base( syntaxTree )

@@ -1,6 +1,6 @@
 namespace NonConTroll.CodeAnalysis.Syntax
 {
-    public class GlobalStatementSyntax : MemberSyntax
+    public class GlobalStatementSyntax : MemberDeclarationSyntax
     {
         public GlobalStatementSyntax( SyntaxTree syntaxTree , StatementSyntax statement )
 			: base( syntaxTree )

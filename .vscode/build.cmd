@@ -1,3 +1,3 @@
 @echo off
 
-dotnet build .\src\ok.sln /nologo
+dotnet build .\src\non.sln /nologo
