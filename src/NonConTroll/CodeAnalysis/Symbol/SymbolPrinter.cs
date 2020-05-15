@@ -11,11 +11,13 @@ namespace NonConTroll.CodeAnalysis.Symbols
         {
             switch( symbol.Kind )
             {
-                case SymbolKind.Function:       WriteFunctionTo(       (FunctionSymbol)symbol ,       writer ); break;
-                case SymbolKind.GlobalVariable: WriteGlobalVariableTo( (GlobalVariableSymbol)symbol , writer ); break;
-                case SymbolKind.LocalVariable:  WriteLocalVariableTo(  (LocalVariableSymbol)symbol ,  writer ); break;
-                case SymbolKind.Parameter:      WriteParameterTo(      (ParameterSymbol)symbol ,      writer ); break;
-                case SymbolKind.Type:           WriteTypeTo(           (TypeSymbol)symbol ,           writer ); break;
+                case SymbolKind.DeclaredFunction: WriteFunctionTo(       (DeclaredFunctionSymbol)symbol  , writer ); break;
+                case SymbolKind.BuiltinFunction:  WriteFunctionTo(       (BuiltinFunctionSymbol)symbol   , writer ); break;
+                case SymbolKind.GlobalVariable:   WriteGlobalVariableTo( (GlobalVariableSymbol)symbol    , writer ); break;
+                case SymbolKind.LocalVariable:    WriteLocalVariableTo(  (LocalVariableSymbol)symbol     , writer ); break;
+                case SymbolKind.Parameter:        WriteParameterTo(      (ParameterSymbol)symbol         , writer ); break;
+                case SymbolKind.DeclaredType:     WriteTypeTo(           (DeclaredTypeSymbol)symbol      , writer ); break;
+                case SymbolKind.BuiltinType:      WriteTypeTo(           (BuiltinTypeSymbol)symbol       , writer ); break;
                 default:
                     throw new Exception( $"Unexpected symbol: {symbol.Kind}" );
             }

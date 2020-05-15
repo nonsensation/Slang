@@ -28,17 +28,33 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return Conversion.Identity;
             }
 
-            if( from == TypeSymbol.Bool || from == TypeSymbol.Int )
+            if( from != BuiltinTypes.Void || from != BuiltinTypes.Error )
             {
-                if( to == TypeSymbol.String )
+                if( to == BuiltinTypes.Any )
+                {
+                    return Conversion.Implicit;
+                }
+            }
+
+            if( from == BuiltinTypes.Any )
+            {
+                if( to != BuiltinTypes.Void )
                 {
                     return Conversion.Explicit;
                 }
             }
 
-            if( from == TypeSymbol.String )
+            if( from == BuiltinTypes.Bool || from == BuiltinTypes.Int )
             {
-                if( to == TypeSymbol.Bool || to == TypeSymbol.Int )
+                if( to == BuiltinTypes.String )
+                {
+                    return Conversion.Explicit;
+                }
+            }
+
+            if( from == BuiltinTypes.String )
+            {
+                if( to == BuiltinTypes.Bool || to == BuiltinTypes.Int )
                 {
                     return Conversion.Explicit;
                 }

@@ -11,5 +11,4 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         public override string ToString() => this.Name;
     }
-
 }

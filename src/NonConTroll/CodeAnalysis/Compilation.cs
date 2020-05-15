@@ -32,6 +32,7 @@ namespace NonConTroll.CodeAnalysis
 
         public bool IsScript { get; }
         public Compilation? Previous { get; }
+        public BuiltinFunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
         public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
         public ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
         public ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;
@@ -62,8 +63,8 @@ namespace NonConTroll.CodeAnalysis
                     BindingFlags.NonPublic;
                 var builtinFunctions = typeof( BuiltinFunctions )
                     .GetFields( bindingFlags )
-                    .Where( x => x.FieldType == typeof( FunctionSymbol ) )
-                    .Select( x => (FunctionSymbol)x.GetValue( obj: null )! )
+                    .Where( x => x.FieldType == typeof( DeclaredFunctionSymbol ) )
+                    .Select( x => (DeclaredFunctionSymbol)x.GetValue( obj: null )! )
                     .Where( x => x != null )
                     .ToList();
 
@@ -100,17 +101,14 @@ namespace NonConTroll.CodeAnalysis
 
         public EvaluationResult Evaluate( Dictionary<VariableSymbol , object> variables )
         {
-            var diagnostics = this.SyntaxTrees
-                .SelectMany( x => x.Diagnostics )
-                .Concat( this.GlobalScope.Diagnostics )
-                .ToImmutableArray();
-
-            if( diagnostics.Any() )
+            if( this.GlobalScope.Diagnostics.Any() )
             {
-                return new EvaluationResult( diagnostics , null );
+                return new EvaluationResult( this.GlobalScope.Diagnostics , null );
             }
 
             var program      = this.GetProgram();
+
+#if false // CFG Graphviz output
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
             var appDirectory = Path.GetDirectoryName( appPath )!;
             var cfgPath      = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData ) , "Slang" , "cfg.dot" );//Path.Combine( appDirectory , "cfg.dot" );
@@ -122,6 +120,7 @@ namespace NonConTroll.CodeAnalysis
             using var streamWriter = new StreamWriter( cfgPath );
 
             cfg.WriteTo( streamWriter );
+#endif
 
             if( program.Diagnostics.Any() )
             {
@@ -138,22 +137,17 @@ namespace NonConTroll.CodeAnalysis
         {
             var program = this.GetProgram();
 
-            if( program.Statement.Statements.Any() )
+            if( this.GlobalScope.MainFunction != null )
             {
-                program.Statement.WriteTo( writer );
+                this.EmitTree( this.GlobalScope.MainFunction , writer );
+            }
+            else if( this.GlobalScope.EvalFunction != null )
+            {
+                this.EmitTree( this.GlobalScope.EvalFunction , writer );
             }
             else
             {
-                foreach( var functionBody in program.Functions )
-                {
-                    if( !this.GlobalScope.Functions.Contains( functionBody.Key ) )
-                    {
-                        continue;
-                    }
-
-                    functionBody.Key.WriteTo( writer );
-                    functionBody.Value.WriteTo( writer );
-                }
+                throw new Exception( "unreachable" );
             }
         }
 

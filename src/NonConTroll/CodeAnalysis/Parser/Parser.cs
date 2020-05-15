@@ -309,9 +309,9 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             switch( this.Current.Kind )
             {
-                case SyntaxKind.RefKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )   , TypeSpecifierKind.Reference );
-                case SyntaxKind.PtrKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )   , TypeSpecifierKind.Pointer   );
-                case SyntaxKind.NullKeywordLiteral: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.NullKeywordLiteral )  , TypeSpecifierKind.Nullable  );
+                case SyntaxKind.RefKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )          , SyntaxKind.ReferenceTypeSpecifier );
+                case SyntaxKind.PtrKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )          , SyntaxKind.PointerTypeSpecifier   );
+                case SyntaxKind.NullKeywordLiteral: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.NullKeywordLiteral )  , SyntaxKind.NullableTypeSpecifier  );
                 //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
                 default:
                     break;

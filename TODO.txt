@@ -1,6 +1,8 @@
 
 Things to do in the near future:
 
+- have a separate class for function-signatures (in syntax/bpound/symbol?)
+
 - classes
 - inheritance
 - unnamed records/lists/maps

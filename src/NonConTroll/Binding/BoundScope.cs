@@ -27,9 +27,13 @@ namespace NonConTroll.CodeAnalysis.Binding
             where TSymbol : Symbol
         {
             if( this.Symbols == null )
+            {
                 this.Symbols = new Dictionary<string , Symbol>();
+            }
             else if( this.Symbols.ContainsKey( symbol.Name ) )
+            {
                 return false;
+            }
 
             this.Symbols.Add( symbol.Name , symbol );
 
@@ -40,7 +44,9 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             if( this.Symbols != null &&
                 this.Symbols.TryGetValue( name , out var symbol ) )
+            {
                 return symbol;
+            }
 
             return this.Parent?.TryLookupSymbol( name );
         }
@@ -55,7 +61,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             where TSymbol : Symbol
         {
             if( this.Symbols == null )
+            {
                 return ImmutableArray<TSymbol>.Empty;
+            }
 
             return this.Symbols.Values.OfType<TSymbol>().ToImmutableArray();
         }

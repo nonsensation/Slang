@@ -2,6 +2,17 @@ using System.IO;
 
 namespace NonConTroll.CodeAnalysis.Symbols
 {
+    public enum SymbolKind
+    {
+        BuiltinFunction,
+        DeclaredFunction,
+        GlobalVariable,
+        LocalVariable,
+        Parameter,
+        DeclaredType,
+        BuiltinType,
+    }
+
     public abstract class Symbol
     {
         private protected Symbol( string name )

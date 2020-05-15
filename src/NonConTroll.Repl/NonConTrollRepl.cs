@@ -6,6 +6,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.IO;
 using System.IO;
+using System.Collections.Immutable;
 
 namespace NonConTroll
 {
@@ -237,5 +238,70 @@ namespace NonConTroll
 
             File.WriteAllText( fileName , text );
         }
+
+
+        public class ClassifiedSpan
+        {
+
+        }
+
+        public class Classifier
+        {
+            // public static ImmutableArray<ClassifiedSpan> Classify( SyntaxTree syntaxTree , TextSpan span )
+            // {
+            //     var result = ImmutableArray.CreateBuilder<ClassifiedSpan>();
+
+            //     Classify( syntaxTree.Root , span , result );
+
+            //     return result.ToImmutable();
+            // }
+
+            // public static void Classify( SyntaxNode node, TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            // {
+            //     if( !node.FullSpan.OverlapsWith( span ) )
+            //         return;
+
+            //     if( node is SyntaxToken token )
+            //     {
+            //         ClassifyToken( token , span , result );
+            //     }
+            // }
+
+            // public static void ClassifyToken( SyntaxNode token , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            // {
+            //     foreach( var trivia in token.LeadingTrivia )
+            //     {
+            //         ClassifyTrivia( trivia , span , result );
+            //     }
+
+            //     foreach( var trivia in token.TrailingTrivia )
+            //     {
+            //         ClassifyTrivia( trivia , span , result );
+            //     }
+            // }
+
+            // public static void ClassifyTrivia( SyntaxTrivia trivia , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            // {
+            //     AddClassification( trivia.Kind , trivia.Span , span , result );
+            // }
+
+            // private static void AddClassification( SyntaxKind elementKind , TextSpan elementSpan , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            // {
+            //     var classification = GetClassification( elementKind );
+            //     var adjustedEnd = Math.Min( elementSpan.End , span.End );
+            //     var adjustedSpan = TextSpan.Create( )
+            // }
+
+            // private static Classification GetClassification( SyntaxKind kind )
+            // {
+            //     if(      kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
+            //     else if( kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+            //     else if( kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
+            //     else if( kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
+            //     else if( kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
+            //     else                                             { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+            // }
+        }
+
     }
 }

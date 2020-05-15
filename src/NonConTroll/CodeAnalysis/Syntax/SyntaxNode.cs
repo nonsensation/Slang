@@ -31,64 +31,17 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
         }
 
-        public IEnumerable<SyntaxNode> GetChildren()
-        {
-            var flags = BindingFlags.Public
-                      | BindingFlags.Instance;
-            var properties = this.GetType().GetProperties( flags );
+        public virtual TextSpan FullSpan {
+            get {
+                var children = this.GetChildren();
+                var first    = children.First();
+                var last     = children.Last();
 
-            foreach( var property in properties )
-            {
-                if( typeof( SyntaxNode ).IsAssignableFrom( property.PropertyType ) )
-                {
-                    var child = (SyntaxNode?)property.GetValue( this );
-
-                    if( child != null )
-                    {
-                        yield return child;
-                    }
-                }
-                else if( typeof( ISyntaxList ).IsAssignableFrom( property.PropertyType ) )
-                {
-                    var separatedSyntaxList = (ISyntaxList?)property.GetValue( this );
-
-                    if( separatedSyntaxList != null )
-                    {
-                        foreach( var child in separatedSyntaxList.GetNodes() )
-                        {
-                            yield return child;
-                        }
-                    }
-                }
-                else if( typeof( ISeparatedSyntaxList ).IsAssignableFrom( property.PropertyType ) )
-                {
-                    var separatedSyntaxList = (ISeparatedSyntaxList?)property.GetValue( this );
-
-                    if( separatedSyntaxList != null )
-                    {
-                        foreach( var child in separatedSyntaxList.GetNodesWithSeparators() )
-                        {
-                            yield return child;
-                        }
-                    }
-                }
-                else if( typeof( IEnumerable<SyntaxNode> ).IsAssignableFrom( property.PropertyType ) )
-                {
-                    var children = (IEnumerable<SyntaxNode>?)property.GetValue( this );
-
-                    if( children != null )
-                    {
-                        foreach( var child in children )
-                        {
-                            if( child != null )
-                            {
-                                yield return child;
-                            }
-                        }
-                    }
-                }
+                return TextSpan.FromBounds( first.Span.Start , last.Span.End );
             }
         }
+
+        public abstract IEnumerable<SyntaxNode> GetChildren();
 
         public SyntaxToken GetLastToken()
         {
@@ -110,11 +63,27 @@ namespace NonConTroll.CodeAnalysis.Syntax
         {
             var isToConsole = writer == Console.Out;
             var marker = isLast ? "└──" : "├──";
+            var token = node as SyntaxToken;
 
             if( isToConsole )
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
+
+            if( token != null )
+            {
+                foreach( var trivia in token.LeadingTrivia )
+                {
+                    var isLastTriva = trivia == token.TrailingTrivia.Last();
+                    var triviaMarker = isLastTriva ? "└──" : "├──";
+
+                    writer.Write( indent );
+                    writer.Write( isLastTriva );
+                    writer.Write( trivia.Kind );
+                }
+            }
+
+            var hasTrailingTrivia = token != null && token.TrailingTrivia.Any();
 
             writer.Write( indent );
             writer.Write( marker );
@@ -132,6 +101,19 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
 
             writer.WriteLine();
+
+            if( token != null )
+            {
+                foreach( var trivia in token.TrailingTrivia )
+                {
+                    var isLastTriva = trivia == token.TrailingTrivia.Last();
+                    var triviaMarker = isLastTriva ? "└──" : "├──";
+
+                    writer.Write( indent );
+                    writer.Write( triviaMarker );
+                    writer.Write( trivia.Kind );
+                }
+            }
 
             indent += isLast ? "   " : "│  ";
 

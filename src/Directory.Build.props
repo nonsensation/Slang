@@ -1,0 +1,72 @@
+<Project>
+
+ <!-- <Target Name="EmitCustomMessage" AfterTargets="Build">
+   <Message Importance="High" Text="The solution has completed the Build target" />
+ </Target> -->
+
+  <PropertyGroup>
+    <Version>0.0.0</Version>
+    <FileVersion>0.0.0</FileVersion>
+    <Product>NonConTroll</Product>
+    <Company>nonsensation</Company>
+    <Copyright>Copyright © nonsensation</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>preview</LangVersion>
+    <Features>strict</Features>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    HACK
+      VS Code currently doesn't support Roslyn generators (VS does, tho). In
+      order to void seeing errors in VS Code and to get IntelliSense, we're
+      doing a trick:
+      1. The generator writes the file to disk, using the *.g.cs naming
+         convention (borrowed from WPF).
+      2. In MSBuild we're excluding those files
+      Since VS Code (or more specifically OmniSharp) doesn't use MSBuild it will
+      still include the file while neither VS nore the CLI/CI build will.
+  -->
+
+  <PropertyGroup>
+    <GeneratedSources>**/*.g.cs</GeneratedSources>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedSources)</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+      <DebugSymbols>true</DebugSymbols>
+      <DebugType>full</DebugType>
+      <DebugType>portable</DebugType>
+      <Optimize>false</Optimize>
+      <OutputPath>bin\Debug\</OutputPath>
+      <DefineConstants>TRACE;DEBUG</DefineConstants>
+      <ErrorReport>prompt</ErrorReport>
+      <WarningLevel>4</WarningLevel>
+      <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+      <WarningsNotAsErrors></WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup >
+      <NoWarn>
+        IDE0066, <!-- Use 'switch' expression -->
+        IDE0057, <!-- Substring can be simplified (to use ranges [2..^2]) -->
+        IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
+        IDE0019  <!-- Use pattern macthing -->
+
+        <!-- these below should only be in debug, but vscode seems to not recognize this -->
+        IDE0051, <!-- Private member 'foo' is unused. -->
+        IDE0060, <!-- Remove unused parameter -->
+      </NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+      <NoWarn>
+        IDE0051, <!-- Private member 'foo' is unused. -->
+        IDE0060, <!-- Remove unused parameter -->
+      </NoWarn>
+  </PropertyGroup>
+
+</Project>

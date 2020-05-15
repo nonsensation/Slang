@@ -310,7 +310,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     return new BoundLiteralExpression( !value );
                 }
 
-                var op = BoundUnaryOperator.Bind(SyntaxKind.ExmToken, TypeSymbol.Bool)!;
+                var op = BoundUnaryOperator.Bind( SyntaxKind.ExmToken , BuiltinTypes.Bool )!;
 
                 return new BoundUnaryExpression( op , condition );
             }

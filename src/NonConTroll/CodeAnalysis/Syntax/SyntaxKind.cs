@@ -203,8 +203,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
         Type,
         TupleType,
         TupleElementType,
-        TypeSpecifier,
+
+        PartialTypeSpecifier,
+        NullableTypeSpecifier,
+        ReferenceTypeSpecifier,
+        PointerTypeSpecifier,
         ArrayTypeSpecifier,
+
         QualifiedName,
         IdentifierName,
 

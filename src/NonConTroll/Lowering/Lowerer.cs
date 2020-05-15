@@ -189,13 +189,13 @@ namespace NonConTroll.CodeAnalysis.Lowering
             var variableDeclaration = new BoundVariableDeclaration( node.Variable , node.LowerBound );
             var variableExpression  = new BoundVariableExpression( node.Variable );
 
-            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , TypeSymbol.Int );
+            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , BuiltinTypes.Int );
             var boundDecl         = new BoundVariableDeclaration( boundSymbol , node.UpperBound );
             var boundExpr         = new BoundVariableExpression( boundSymbol );
-            var boundComparisonOp = BoundBinaryOperator.Bind( SyntaxKind.LtEqToken , TypeSymbol.Int , TypeSymbol.Int );
+            var boundComparisonOp = BoundBinaryOperator.Bind( SyntaxKind.LtEqToken , BuiltinTypes.Int , BuiltinTypes.Int );
             var condition         = new BoundBinaryExpression( variableExpression , boundComparisonOp! , boundExpr );
 
-            var incrOp     = BoundBinaryOperator.Bind( SyntaxKind.PlusToken , TypeSymbol.Int , TypeSymbol.Int );
+            var incrOp     = BoundBinaryOperator.Bind( SyntaxKind.PlusToken , BuiltinTypes.Int , BuiltinTypes.Int );
             var incrByOne  = new BoundBinaryExpression( variableExpression , incrOp! , new BoundLiteralExpression( 1 ) );
             var incrAssign = new BoundAssignmentExpression( node.Variable , incrByOne );
             var increment  = new BoundExpressionStatement( incrAssign );

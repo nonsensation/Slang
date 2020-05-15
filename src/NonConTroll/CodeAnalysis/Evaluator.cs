@@ -54,7 +54,16 @@ namespace NonConTroll.CodeAnalysis
 
         public object? Evaluate()
         {
-            return this.EvaluateStatement( this.Program.Statement );
+            var function = this.Program.MainFunction ?? this.Program.EvalFunction;
+
+            if( function == null )
+            {
+                return null;
+            }
+
+            var body = this.Functions[ (FunctionSymbol)function ];
+
+            return this.EvaluateStatement( body );
         }
 
         private object? EvaluateStatement( BoundBlockStatement body )
@@ -230,7 +239,7 @@ namespace NonConTroll.CodeAnalysis
             switch( binExpr.Operator.Kind )
             {
                 case BoundBinaryOperatorKind.Addition:
-                    if( binExpr.Type == TypeSymbol.Int )
+                    if( binExpr.Type == BuiltinTypes.Int )
                     {
                         return (int)lhs + (int)rhs;
                     }
@@ -257,36 +266,13 @@ namespace NonConTroll.CodeAnalysis
 
         private object? EvaluateCallExpression( BoundCallExpression node )
         {
-            if( node.Function == BuiltinFunctions.Input )
-            {
-                return Console.ReadLine();
-            }
-            else if( node.Function == BuiltinFunctions.Print )
-            {
-                var message = (string)this.EvaluateExpression( node.Arguments[ 0 ] )!;
-
-                Console.WriteLine( message );
-
-                return null;
-            }
-            else if( node.Function == BuiltinFunctions.Rnd )
-            {
-                var max = (int)this.EvaluateExpression( node.Arguments[ 0 ] )!;
-
-                if( this.Random == null )
-                {
-                    this.Random = new Random();
-                }
-
-                return this.Random.Next( max );
-            }
-            else
+            if( node.Function is DeclaredFunctionSymbol declaredFunctionSymbol )
             {
                 var locals = new Dictionary<VariableSymbol, object>();
 
                 for( var i = 0 ; i < node.Arguments.Length ; i++ )
                 {
-                    var parameter = node.Function.Parameters[ i ];
+                    var parameter = declaredFunctionSymbol.Parameters[ i ];
                     var value = this.EvaluateExpression( node.Arguments[ i ] )!;
 
                     locals.Add( parameter , value );
@@ -294,12 +280,46 @@ namespace NonConTroll.CodeAnalysis
 
 				this.Locals.Push( locals );
 
-                var statement = this.Functions[ node.Function ];
+                var statement = this.Functions[ declaredFunctionSymbol ];
                 var result = this.EvaluateStatement( statement );
 
                 _ = this.Locals.Pop();
 
                 return result;
+            }
+            else if( node.Function is BuiltinFunctionSymbol builtinFunctionSymbol )
+            {
+                if( builtinFunctionSymbol == BuiltinFunctions.Input )
+                {
+                    return Console.ReadLine();
+                }
+                else if( builtinFunctionSymbol == BuiltinFunctions.Print )
+                {
+                    var message = (string)this.EvaluateExpression( node.Arguments[ 0 ] )!;
+
+                    Console.WriteLine( message );
+
+                    return null;
+                }
+                else if( builtinFunctionSymbol == BuiltinFunctions.Rnd )
+                {
+                    var max = (int)this.EvaluateExpression( node.Arguments[ 0 ] )!;
+
+                    if( this.Random == null )
+                    {
+                        this.Random = new Random();
+                    }
+
+                    return this.Random.Next( max );
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
+            else
+            {
+                throw new Exception();
             }
         }
 
@@ -307,15 +327,19 @@ namespace NonConTroll.CodeAnalysis
         {
             var value = this.EvaluateExpression( node.Expression );
 
-            if( node.Type == TypeSymbol.Bool )
+            if( node.Type == BuiltinTypes.Any )
+            {
+                return value!; // TODO: remove !
+            }
+            else if( node.Type == BuiltinTypes.Bool )
             {
                 return Convert.ToBoolean( value );
             }
-            else if( node.Type == TypeSymbol.Int )
+            else if( node.Type == BuiltinTypes.Int )
             {
                 return Convert.ToInt32( value );
             }
-            else if( node.Type == TypeSymbol.String )
+            else if( node.Type == BuiltinTypes.String )
             {
                 return Convert.ToString( value )!;
             }
@@ -355,7 +379,7 @@ namespace NonConTroll.CodeAnalysis
                         {
                             throw new NotImplementedException();
                         }
-                        break;
+                        //break;
 
                         case BoundMatchAnyPattern pattern:
                         {
@@ -376,5 +400,17 @@ namespace NonConTroll.CodeAnalysis
         }
 
         #endregion
+    }
+
+   public class EvaluationResult
+    {
+        public EvaluationResult( ImmutableArray<Diagnostic> diagnostics , object? value )
+        {
+            this.Diagnostics = diagnostics;
+            this.Value       = value;
+        }
+
+        public ImmutableArray<Diagnostic> Diagnostics { get; }
+        public object? Value { get; }
     }
 }

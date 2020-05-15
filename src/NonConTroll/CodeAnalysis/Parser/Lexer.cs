@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.Text;
@@ -13,6 +14,7 @@ namespace NonConTroll.CodeAnalysis
         private SyntaxKind Kind;
         public DiagnosticBag Diagnostics = new DiagnosticBag();
         private int StartPos;
+        private ImmutableArray<SyntaxTrivia>.Builder TriviaBuilder = ImmutableArray.CreateBuilder<SyntaxTrivia>();
 
         public Lexer( SyntaxTree syntaxTree )
         {
@@ -38,6 +40,34 @@ namespace NonConTroll.CodeAnalysis
 
         public SyntaxToken Lex()
         {
+            this.ReadTrivia( isLeading: true );
+
+            var leadingTrivia = this.TriviaBuilder.ToImmutable();
+            var tokenStartPos = this.Position;
+
+            this.ReadToken();
+
+            var tokenLength = this.Position - this.StartPos;
+
+
+            this.ReadTrivia( isLeading: false );
+
+            var trailingTrivia = this.TriviaBuilder.ToImmutable();
+
+            var length = this.Position - this.StartPos;
+            var text = this.Kind.GetName();
+
+            if( text == null )
+            {
+                text = this.Text.ToString( tokenStartPos , tokenLength );
+            }
+
+            return new SyntaxToken( this.SyntaxTree , this.Kind , this.StartPos ,
+                                    text /*, leadingTrivia , trailingTrivia*/ );
+        }
+
+        public void ReadToken()
+        {
             this.StartPos = this.Position;
             this.Kind     = SyntaxKind.None;
 
@@ -48,8 +78,7 @@ namespace NonConTroll.CodeAnalysis
                 case '\r':
                 case '\t':
                 {
-                    this.ScanWhiteSpace();
-                    break;
+                    throw new Exception( "should be handled in ReadTrivia()" );
                 }
 
                 case '\0':
@@ -316,7 +345,7 @@ namespace NonConTroll.CodeAnalysis
                 case '8':
                 case '9':
                 {
-                    this.ScanNumber();
+                    this.ReadNumber();
                     break;
                 }
                 #endregion
@@ -375,14 +404,14 @@ namespace NonConTroll.CodeAnalysis
                 case 'Y':
                 case 'Z':
                 {
-                    this.ScanIdentifierOrKeyword();
+                    this.ReadIdentifierOrKeyword();
                     break;
                 }
                 #endregion
 
                 case '"':
                 {
-                    this.ScanString();
+                    this.ReadString();
                     break;
                 }
 
@@ -397,19 +426,9 @@ namespace NonConTroll.CodeAnalysis
                     break;
                 }
             }
-
-            var length = this.Position - this.StartPos;
-            var text = this.Kind.GetName();
-
-            if( text == null )
-            {
-                text = this.Text.ToString( this.StartPos , length );
-            }
-
-            return new SyntaxToken( this.SyntaxTree , this.Kind , this.StartPos , text );
         }
 
-        private void ScanString()
+        private void ReadString()
         {
             this.Advance(); // Skip the current quote
 
@@ -452,7 +471,7 @@ namespace NonConTroll.CodeAnalysis
             this.Kind = SyntaxKind.StringLiteral;
         }
 
-        private void ScanWhiteSpace()
+        private void ReadWhiteSpace()
         {
             while( char.IsWhiteSpace( this.Current ) )
             {
@@ -462,7 +481,7 @@ namespace NonConTroll.CodeAnalysis
             this.Kind = SyntaxKind.WhiteSpaceTrivia;
         }
 
-        private void ScanNumber()
+        private void ReadNumber()
         {
             while( char.IsDigit( this.Current ) )
             {
@@ -475,7 +494,7 @@ namespace NonConTroll.CodeAnalysis
             this.Kind = SyntaxKind.NumericLiteral;
         }
 
-        private void ScanIdentifierOrKeyword()
+        private void ReadIdentifierOrKeyword()
         {
             while( char.IsLetter( this.Current ) )
             {
@@ -486,6 +505,53 @@ namespace NonConTroll.CodeAnalysis
             var text   = this.Text.ToString( this.StartPos , length );
 
             this.Kind = SyntaxInfo.GetSyntaxKind( text ) ?? SyntaxKind.Identifier;
+        }
+
+        private void ReadTrivia( bool isLeading )
+        {
+            this.TriviaBuilder.Clear();
+
+            var done = false;
+
+            while( !done )
+            {
+                this.Kind = SyntaxKind.None;
+                this.StartPos = this.Position;
+
+                switch( this.Current )
+                {
+                    case '\0':
+                    {
+                        done = true;
+                    }
+                    break;
+                    case '#':
+                    {
+                        this.ReadComment();
+                    }
+                    break;
+                    case '\n':
+                    case '\r':
+                    {
+                        this.ReadWhiteSpace();
+
+                        if( !isLeading )
+                        {
+                            done = true;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            var length = this.Position - this.StartPos;
+            var text = this.Text.ToString( this.StartPos , length );
+            var trivia = new SyntaxTrivia( this.SyntaxTree , this.Kind , this.StartPos , text );
+        }
+
+        private void ReadComment()
+        {
+
         }
     }
 }

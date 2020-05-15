@@ -1,0 +1,80 @@
+#see:
+# https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-formatting-conventions
+# https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-naming-conventions
+
+
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{diff,md}]
+trim_trailing_whitespace = false
+
+[*.{cs}]
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# csharp_new_line_before_open_brace = true
+# csharp_new_line_before_else = true
+# csharp_new_line_before_catch = true
+# csharp_new_line_before_finally = true
+# csharp_new_line_before_members_in_object_initializers = true
+# csharp_new_line_before_members_in_anonymous_types = true
+# csharp_new_line_between_query_expression_clauses = true
+#
+# csharp_indent_case_contents = true
+# csharp_indent_switch_labels = true
+# csharp_indent_labels = true
+# csharp_indent_block_contents = true
+# csharp_indent_braces = true
+# csharp_indent_case_contents_when_block = true
+#
+# csharp_space_after_cast = true
+# csharp_space_after_keywords_in_control_flow_statements = true
+# csharp_space_between_parentheses = true
+# csharp_space_before_colon_in_inheritance_clause = true
+# csharp_space_after_colon_in_inheritance_clause = true
+# csharp_space_around_binary_operators = true
+# csharp_space_between_method_declaration_parameter_list_parentheses = true
+# csharp_space_between_method_declaration_empty_parameter_list_parentheses = true
+# csharp_space_between_method_declaration_name_and_open_parenthesis = true
+# csharp_space_between_method_call_parameter_list_parentheses = true
+# csharp_space_between_method_call_empty_parameter_list_parentheses = true
+# csharp_space_between_method_call_name_and_opening_parenthesis = true
+# csharp_space_after_comma = true
+# csharp_space_before_comma = true
+# csharp_space_after_dot = true
+# csharp_space_before_dot = true
+# csharp_space_after_semicolon_in_for_statement = true
+# csharp_space_before_semicolon_in_for_statement = true
+# csharp_space_around_declaration_statements = true
+# csharp_space_before_open_square_brackets = true
+# csharp_space_between_empty_square_brackets = true
+# csharp_space_between_square_brackets = true
+#
+# csharp_preserve_single_line_statements = true
+# csharp_preserve_single_line_blocks = true
+#
+# csharp_using_directive_placement = outside_namespace # inside_namespace
+#
+#
+#
+#
+#
+#
+# dotnet_naming_rule.private_fields_start_with_underscore.style = starts_with_underscore
+# dotnet_naming_rule.private_fields_start_with_underscore.symbols = private_fields
+# dotnet_naming_rule.private_fields_start_with_underscore.severity = warning
+# dotnet_naming_style.starts_with_underscore.capitalization = camel_case
+# dotnet_naming_style.starts_with_underscore.required_prefix = _
+#
+# dotnet_naming_symbols.private_fields.applicable_kinds = field
+# dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+#

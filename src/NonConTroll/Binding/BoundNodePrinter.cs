@@ -355,15 +355,15 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             var value = node.Value.ToString()!;
 
-            if( node.Type == TypeSymbol.Bool )
+            if( node.Type == BuiltinTypes.Bool )
             {
                 writer.Write( (bool)node.Value ? SyntaxKind.TrueKeywordLiteral : SyntaxKind.FalseKeywordLiteral );
             }
-            else if( node.Type == TypeSymbol.Int )
+            else if( node.Type == BuiltinTypes.Int )
             {
                 writer.WriteNumber( value );
             }
-            else if( node.Type == TypeSymbol.String )
+            else if( node.Type == BuiltinTypes.String )
             {
                 value = "\"" + value.Replace( "\"" , "\"\"" ) + "\"";
                 writer.WriteString( value );

@@ -10,29 +10,16 @@
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DebugSymbols>true</DebugSymbols>
-      <DebugType>full</DebugType>
-      <DebugType>portable</DebugType>
-      <Optimize>false</Optimize>
-      <OutputPath>bin\Debug\</OutputPath>
-      <DefineConstants>TRACE;DEBUG</DefineConstants>
-      <ErrorReport>prompt</ErrorReport>
-      <WarningLevel>4</WarningLevel>
-      <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-      <WarningsNotAsErrors></WarningsNotAsErrors>
-      <NoWarn>
-        IDE0066, <!-- Use 'switch' expression -->
-        IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
-        IDE0060, <!-- Remove unused parameter -->
-        IDE0019  <!-- Use pattern macthing -->
-      </NoWarn>
-  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NonConTroll.Generators\NonConTroll.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NonConTroll.Generators\NonConTroll.Generators.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
   </ItemGroup>
+    <PropertyGroup>
+    <GeneratedSources>*.g.cs</GeneratedSources>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedSources)</DefaultItemExcludes>
+  </PropertyGroup>
 
 </Project>

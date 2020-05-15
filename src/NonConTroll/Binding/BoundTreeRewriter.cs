@@ -27,6 +27,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundDeferStatement b:           return this.RewriteDeferStatement( b );
                 case BoundExpressionStatement b:      return this.RewriteExpressionStatement( b );
                 case BoundMatchStatement b:           return this.RewriteMatchStatement( b );
+                case BoundPatternSectionStatement b:  return this.RewritePatternSectionStatement( b );
                 default:
                     throw new Exception( $"Unexpected node: {node.Kind}" );
             }
@@ -184,46 +185,6 @@ namespace NonConTroll.CodeAnalysis.Binding
             return new BoundExpressionStatement( expression );
         }
 
-        protected virtual BoundStatement RewriteMatchStatement( BoundMatchStatement node )
-        {
-            var expr = this.RewriteExpression( node.Expression );
-            var patternSections = this.RewritePatternSectionStatements( node.PatternSections );
-
-            if( expr == node.Expression && patternSections.SequenceEqual( node.PatternSections ) )
-            {
-                return node;
-            }
-
-            return new BoundMatchStatement( expr , patternSections );
-        }
-
-        protected virtual BoundStatement RewritePatternSectionStatement( BoundPatternSectionStatement node )
-        {
-            var expr = this.RewriteStatement( node.Statement );
-            var patterns = this.RewritePatterns( node.Patterns );
-
-            if( expr == node.Statement && patterns.SequenceEqual( node.Patterns ) )
-            {
-                return node;
-            }
-
-            return new BoundPatternSectionStatement( patterns , expr );
-        }
-
-        public ImmutableArray<BoundPatternSectionStatement> RewritePatternSectionStatements( ImmutableArray<BoundPatternSectionStatement> patternSections )
-        {
-            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionStatement>( patternSections.Count() );
-
-            foreach( var patternSection in patternSections )
-            {
-                var newExpr = this.RewriteStatement( patternSection );
-
-                builder.Add( patternSection );
-            }
-
-            return builder.MoveToImmutable();
-        }
-
         #endregion
 
         #region Expressions
@@ -258,101 +219,6 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         protected virtual BoundExpression RewriteVariableExpression( BoundVariableExpression node )
-        {
-            return node;
-        }
-
-        protected virtual BoundExpression RewriteMatchExpression( BoundMatchExpression node )
-        {
-            var expr = this.RewriteExpression( node.Expression );
-            var patternSections = this.RewritePatternSectionExpressions( node.PatternSections );
-
-            if( expr == node.Expression && patternSections.SequenceEqual( node.PatternSections ) )
-            {
-                return node;
-            }
-
-            return new BoundMatchExpression( expr , patternSections );
-        }
-
-        protected virtual BoundExpression RewritePatternSectionExpression( BoundPatternSectionExpression node )
-        {
-            var expr = this.RewriteExpression( node.Expression );
-            var patterns = this.RewritePatterns( node.Patterns );
-
-            if( expr == node.Expression && patterns.SequenceEqual( node.Patterns ) )
-            {
-                return node;
-            }
-
-            return new BoundPatternSectionExpression( patterns , expr );
-        }
-
-        public ImmutableArray<BoundPatternSectionExpression> RewritePatternSectionExpressions( ImmutableArray<BoundPatternSectionExpression> patternSections )
-        {
-            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionExpression>( patternSections.Count() );
-
-            foreach( var patternSection in patternSections )
-            {
-                var newExpr = this.RewriteExpression( patternSection );
-
-                builder.Add( patternSection );
-            }
-
-            return builder.MoveToImmutable();
-        }
-
-        public ImmutableArray<BoundPattern> RewritePatterns( ImmutableArray<BoundPattern> patterns )
-        {
-            var builder = ImmutableArray.CreateBuilder<BoundPattern>( patterns.Count() );
-
-            foreach( var pattern in patterns )
-            {
-                var newExpr = this.RewritePattern( pattern );
-
-                builder.Add( pattern );
-            }
-
-            return builder.MoveToImmutable();
-        }
-
-        protected virtual BoundPattern RewritePattern( BoundPattern node )
-        {
-            switch( node )
-            {
-                case BoundInfixPattern pattern:    return this.RewriteInfixPattern( pattern );
-                case BoundMatchAnyPattern pattern: return this.RewriteMatchAnyPattern( pattern );
-                case BoundConstantPattern pattern: return this.RewriteConstantPattern( pattern );
-                default:
-                    throw new Exception( $"Unexpected node: {node.Kind}" );
-            }
-        }
-
-        private BoundPattern RewriteInfixPattern( BoundInfixPattern node )
-        {
-            var expr = this.RewriteExpression( node.Expression );
-
-            if( expr == node.Expression )
-            {
-                return node;
-            }
-
-            return new BoundInfixPattern( node.InfixFunction , expr );
-        }
-
-        private BoundPattern RewriteConstantPattern( BoundConstantPattern node )
-        {
-            var expr = this.RewriteExpression( node.Expression );
-
-            if( expr == node.Expression )
-            {
-                return node;
-            }
-
-            return new BoundConstantPattern( expr );
-        }
-
-        private BoundPattern RewriteMatchAnyPattern( BoundMatchAnyPattern node )
         {
             return node;
         }
@@ -426,7 +292,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 var newExpr = this.RewriteExpression( expr );
 
-                builder.Add( expr );
+                builder.Add( newExpr );
             }
 
             return builder.MoveToImmutable();
@@ -471,5 +337,145 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         #endif
+
+        #region Match Expression & Stamement
+
+        protected virtual BoundExpression RewriteMatchExpression( BoundMatchExpression node )
+        {
+            var expr = this.RewriteExpression( node.Expression );
+            var patternSections = this.RewritePatternSectionExpressions( node.PatternSections );
+
+            if( expr == node.Expression && patternSections.SequenceEqual( node.PatternSections ) )
+            {
+                return node;
+            }
+
+            return new BoundMatchExpression( expr , patternSections );
+        }
+
+        protected virtual BoundStatement RewriteMatchStatement( BoundMatchStatement node )
+        {
+            var expr = this.RewriteExpression( node.Expression );
+            var patternSections = this.RewritePatternSectionStatements( node.PatternSections );
+
+            if( expr == node.Expression && patternSections.SequenceEqual( node.PatternSections ) )
+            {
+                return node;
+            }
+
+            return new BoundMatchStatement( expr , patternSections );
+        }
+
+        public ImmutableArray<BoundPatternSectionExpression> RewritePatternSectionExpressions( ImmutableArray<BoundPatternSectionExpression> patternSections )
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionExpression>( patternSections.Count() );
+
+            foreach( var patternSection in patternSections )
+            {
+                var node = this.RewriteExpression( patternSection );
+
+                builder.Add( (BoundPatternSectionExpression)node );
+            }
+
+            return builder.MoveToImmutable();
+        }
+
+        public ImmutableArray<BoundPatternSectionStatement> RewritePatternSectionStatements( ImmutableArray<BoundPatternSectionStatement> patternSections )
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundPatternSectionStatement>( patternSections.Count() );
+
+            foreach( var patternSection in patternSections )
+            {
+                var node = this.RewriteStatement( patternSection );
+
+                builder.Add( (BoundPatternSectionStatement)node );
+            }
+
+            return builder.MoveToImmutable();
+        }
+
+        protected virtual BoundExpression RewritePatternSectionExpression( BoundPatternSectionExpression node )
+        {
+            var expr = this.RewriteExpression( node.Expression );
+            var patterns = this.RewritePatterns( node.Patterns );
+
+            if( expr == node.Expression && patterns.SequenceEqual( node.Patterns ) )
+            {
+                return node;
+            }
+
+            return new BoundPatternSectionExpression( patterns , expr );
+        }
+
+        protected virtual BoundStatement RewritePatternSectionStatement( BoundPatternSectionStatement node )
+        {
+            var expr = this.RewriteStatement( node.Statement );
+            var patterns = this.RewritePatterns( node.Patterns );
+
+            if( expr == node.Statement && patterns.SequenceEqual( node.Patterns ) )
+            {
+                return node;
+            }
+
+            return new BoundPatternSectionStatement( patterns , expr );
+        }
+
+        public ImmutableArray<BoundPattern> RewritePatterns( ImmutableArray<BoundPattern> patterns )
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundPattern>( patterns.Count() );
+
+            foreach( var pattern in patterns )
+            {
+                var newExpr = this.RewritePattern( pattern );
+
+                builder.Add( pattern );
+            }
+
+            return builder.MoveToImmutable();
+        }
+
+        protected virtual BoundPattern RewritePattern( BoundPattern node )
+        {
+            switch( node )
+            {
+                case BoundInfixPattern pattern:    return this.RewriteInfixPattern( pattern );
+                case BoundMatchAnyPattern pattern: return this.RewriteMatchAnyPattern( pattern );
+                case BoundConstantPattern pattern: return this.RewriteConstantPattern( pattern );
+                default:
+                    throw new Exception( $"Unexpected node: {node.Kind}" );
+            }
+        }
+
+        private BoundPattern RewriteInfixPattern( BoundInfixPattern node )
+        {
+            var expr = this.RewriteExpression( node.Expression );
+
+            if( expr == node.Expression )
+            {
+                return node;
+            }
+
+            return new BoundInfixPattern( node.InfixFunction , expr );
+        }
+
+        private BoundPattern RewriteConstantPattern( BoundConstantPattern node )
+        {
+            var expr = this.RewriteExpression( node.Expression );
+
+            if( expr == node.Expression )
+            {
+                return node;
+            }
+
+            return new BoundConstantPattern( expr );
+        }
+
+        private BoundPattern RewriteMatchAnyPattern( BoundMatchAnyPattern node )
+        {
+            return node;
+        }
+
+        #endregion // Match Expression & Statement
+
     }
 }
