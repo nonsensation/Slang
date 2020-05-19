@@ -189,7 +189,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
             var variableDeclaration = new BoundVariableDeclaration( node.Variable , node.LowerBound );
             var variableExpression  = new BoundVariableExpression( node.Variable );
 
-            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , BuiltinTypes.Int );
+            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , BuiltinTypes.Int , node.UpperBound.ConstantValue );
             var boundDecl         = new BoundVariableDeclaration( boundSymbol , node.UpperBound );
             var boundExpr         = new BoundVariableExpression( boundSymbol );
             var boundComparisonOp = BoundBinaryOperator.Bind( SyntaxKind.LtEqToken , BuiltinTypes.Int , BuiltinTypes.Int );
@@ -231,7 +231,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
                     <stmtMatchAny>
             */
 
-            var exprVariableSymbol = new LocalVariableSymbol( "matchExpression" , isReadOnly: true , node.Expression.Type );
+            var exprVariableSymbol = new LocalVariableSymbol( "matchExpression" , isReadOnly: true , node.Expression.Type , node.Expression.ConstantValue );
             var exprVariableDecl   = new BoundVariableDeclaration( exprVariableSymbol , node.Expression );
             var exprVariableExpr   = new BoundVariableExpression( exprVariableSymbol );
 
@@ -325,7 +325,25 @@ namespace NonConTroll.CodeAnalysis.Lowering
             return this.RewriteExpression( expr! );
         }
 
+        protected override BoundStatement RewriteConditionalGotoStatement( BoundConditionalGotoStatement node )
+        {
+            if( node.Condition.ConstantValue != null )
+            {
+                var value = (bool)node.Condition.ConstantValue.Value;
+                var condition = node.JumpIfTrue ? value : !value;
 
+                if( condition )
+                {
+                    return new BoundGotoStatement( node.Label );
+                }
+                else
+                {
+                    //return new BoundNop();
+                }
+            }
+
+            return base.RewriteConditionalGotoStatement( node );
+        }
 
     }
 }

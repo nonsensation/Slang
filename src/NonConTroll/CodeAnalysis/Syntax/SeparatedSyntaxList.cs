@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -24,11 +25,11 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public T this[ int index ] => (T)this.NodesAndSeparators[ index * 2 ];
 
-        public SyntaxToken? GetSeparator( int index )
+        public SyntaxToken GetSeparator( int index )
         {
-            if( index == this.Count - 1 )
+            if( index < 0 || index >= this.Count - 1 )
             {
-                return null;
+                throw new ArgumentOutOfRangeException();
             }
 
             return (SyntaxToken)this.NodesAndSeparators[ index * 2 + 1 ];

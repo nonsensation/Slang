@@ -2,7 +2,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class Conversion
+    internal sealed class Conversion
     {
         public static readonly Conversion None     = new Conversion( exists: false , isIdentity: false , isImplicit: false );
         public static readonly Conversion Identity = new Conversion( exists: true  , isIdentity: true  , isImplicit: true  );

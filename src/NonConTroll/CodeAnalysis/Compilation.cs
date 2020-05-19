@@ -8,10 +8,11 @@ using System.Threading;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
+using NonConTroll.Emit;
 
 namespace NonConTroll.CodeAnalysis
 {
-    public class Compilation
+    public sealed class Compilation
     {
         private Compilation( bool isScript , Compilation? previous , params SyntaxTree[]? syntaxTrees )
         {
@@ -30,12 +31,12 @@ namespace NonConTroll.CodeAnalysis
 
         private BoundGlobalScope? globalScope;
 
-        public bool IsScript { get; }
-        public Compilation? Previous { get; }
-        public BuiltinFunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
-        public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
-        public ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
-        public ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;
+        internal bool IsScript { get; }
+        internal Compilation? Previous { get; }
+        internal BuiltinFunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
+        internal ImmutableArray<SyntaxTree> SyntaxTrees { get; }
+        internal ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
+        internal ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;
 
         internal BoundGlobalScope GlobalScope {
             get {
@@ -106,7 +107,7 @@ namespace NonConTroll.CodeAnalysis
                 return new EvaluationResult( this.GlobalScope.Diagnostics , null );
             }
 
-            var program      = this.GetProgram();
+            var program = this.GetProgram();
 
 #if false // CFG Graphviz output
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
@@ -164,6 +165,22 @@ namespace NonConTroll.CodeAnalysis
             }
 
             body.WriteTo( writer );
+        }
+
+        public ImmutableArray<Diagnostic> Emit( string moduleName , string[] references , string outputPath )
+        {
+            var program = this.GetProgram();
+
+            if( program.Diagnostics.Any() )
+            {
+                return program.Diagnostics;
+            }
+
+            // var diagnostics = this.Emit( program , moduleName , references , outputPath );
+
+            // return diagnostics;
+
+            throw new Exception();
         }
     }
 }

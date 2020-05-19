@@ -218,16 +218,16 @@ namespace NonConTroll.CodeAnalysis
 
         private object EvaluateUnaryExpression( BoundUnaryExpression u )
         {
-            var operand = this.EvaluateExpression( u.Operand )!;
+            var operand = this.EvaluateExpression( u.Expression )!;
 
-            switch( u.Op.Kind )
+            switch( u.Operator.Kind )
             {
                 case BoundUnaryOperatorKind.Identity:        return  (int)operand;
                 case BoundUnaryOperatorKind.Negation:        return -(int)operand;
                 case BoundUnaryOperatorKind.LogicalNegation: return !(bool)operand;
 
                 default:
-                    throw new Exception( $"Unexpected unary operator {u.Op}" );
+                    throw new Exception( $"Unexpected unary operator {u.Operator}" );
             }
         }
 

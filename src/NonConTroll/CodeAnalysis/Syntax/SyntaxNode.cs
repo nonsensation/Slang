@@ -61,8 +61,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private static void PrettyPrint( TextWriter writer , SyntaxNode node , string indent = "" , bool isLast = true )
         {
+            var midNodeStr   = "├──";
+            var noNodeStr    = "│  ";
+            var lastNodeStr  = "└──";
+            var emptyNodeStr = "   ";
+
             var isToConsole = writer == Console.Out;
-            var marker = isLast ? "└──" : "├──";
+            var marker = isLast ? lastNodeStr : midNodeStr;
             var token = node as SyntaxToken;
 
             if( isToConsole )
@@ -75,7 +80,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 foreach( var trivia in token.LeadingTrivia )
                 {
                     var isLastTriva = trivia == token.TrailingTrivia.Last();
-                    var triviaMarker = isLastTriva ? "└──" : "├──";
+                    var triviaMarker = isLastTriva ? lastNodeStr : midNodeStr;
 
                     writer.Write( indent );
                     writer.Write( isLastTriva );
@@ -107,7 +112,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 foreach( var trivia in token.TrailingTrivia )
                 {
                     var isLastTriva = trivia == token.TrailingTrivia.Last();
-                    var triviaMarker = isLastTriva ? "└──" : "├──";
+                    var triviaMarker = isLastTriva ? lastNodeStr : midNodeStr;
 
                     writer.Write( indent );
                     writer.Write( triviaMarker );
@@ -115,7 +120,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 }
             }
 
-            indent += isLast ? "   " : "│  ";
+            indent += isLast ? emptyNodeStr : noNodeStr;
 
             var lastChild = node.GetChildren().LastOrDefault();
 

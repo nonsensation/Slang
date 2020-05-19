@@ -8,7 +8,7 @@ using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Syntax
 {
-    public partial class Parser
+    internal sealed partial class Parser
     {
         public readonly DiagnosticBag Diagnostics = new DiagnosticBag();
 
@@ -385,7 +385,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var identifier  = this.MatchToken( SyntaxKind.Identifier );
             var equalsToken = this.MatchToken( SyntaxKind.EqToken );
             var lowerBound  = this.ParseExpression();
-            var toKeyword   = this.MatchToken( SyntaxKind.To );
+            var toKeyword   = this.MatchToken( SyntaxKind.ToKeyword );
             var upperBound  = this.ParseExpression();
             var body        = this.ParseStatement();
 

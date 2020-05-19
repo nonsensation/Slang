@@ -3,7 +3,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundProgram
+    internal sealed class BoundProgram
     {
         public BoundProgram( BoundProgram? previous ,
                              BuiltinFunctionSymbol? mainFunction ,

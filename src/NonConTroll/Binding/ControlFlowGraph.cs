@@ -9,7 +9,7 @@ using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class ControlFlowGraph
+    internal sealed class ControlFlowGraph
     {
         private ControlFlowGraph( BasicBlock start , BasicBlock end , List<BasicBlock> blocks , List<BasicBlockBranch> branches )
         {
@@ -24,7 +24,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         public List<BasicBlock> Blocks { get; }
         public List<BasicBlockBranch> Branches { get; }
 
-        public class BasicBlock
+        public sealed class BasicBlock
         {
             public BasicBlock()
             {
@@ -66,7 +66,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
         }
 
-        public class BasicBlockBranch
+        public sealed class BasicBlockBranch
         {
             public BasicBlockBranch( BasicBlock from , BasicBlock to , BoundExpression? condition )
             {

@@ -6,7 +6,7 @@ using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis
 {
-    public class Lexer
+    internal sealed class Lexer
     {
         private readonly SyntaxTree SyntaxTree;
         private SourceText Text => this.SyntaxTree.Text;
@@ -47,23 +47,22 @@ namespace NonConTroll.CodeAnalysis
 
             this.ReadToken();
 
+            var tokenKind = this.Kind;
             var tokenLength = this.Position - this.StartPos;
-
 
             this.ReadTrivia( isLeading: false );
 
             var trailingTrivia = this.TriviaBuilder.ToImmutable();
 
-            var length = this.Position - this.StartPos;
-            var text = this.Kind.GetName();
+            var tokenText = this.Kind.GetText();
 
-            if( text == null )
+            if( tokenText == null )
             {
-                text = this.Text.ToString( tokenStartPos , tokenLength );
+                tokenText = this.Text.ToString( tokenStartPos , tokenLength );
             }
 
-            return new SyntaxToken( this.SyntaxTree , this.Kind , this.StartPos ,
-                                    text /*, leadingTrivia , trailingTrivia*/ );
+            return new SyntaxToken( this.SyntaxTree , this.Kind , tokenStartPos ,
+                                    tokenText , leadingTrivia , trailingTrivia );
         }
 
         public void ReadToken()
@@ -77,6 +76,7 @@ namespace NonConTroll.CodeAnalysis
                 case ' ':
                 case '\r':
                 case '\t':
+                case '#':
                 {
                     throw new Exception( "should be handled in ReadTrivia()" );
                 }
@@ -471,7 +471,7 @@ namespace NonConTroll.CodeAnalysis
             this.Kind = SyntaxKind.StringLiteral;
         }
 
-        private void ReadWhiteSpace()
+        private void ReadWhiteSpaceTrivia()
         {
             while( char.IsWhiteSpace( this.Current ) )
             {
@@ -527,13 +527,13 @@ namespace NonConTroll.CodeAnalysis
                     break;
                     case '#':
                     {
-                        this.ReadComment();
+                        this.ReadCommentTrivia();
                     }
                     break;
                     case '\n':
                     case '\r':
                     {
-                        this.ReadWhiteSpace();
+                        this.ReadWhiteSpaceTrivia();
 
                         if( !isLeading )
                         {
@@ -545,13 +545,44 @@ namespace NonConTroll.CodeAnalysis
             }
 
             var length = this.Position - this.StartPos;
-            var text = this.Text.ToString( this.StartPos , length );
-            var trivia = new SyntaxTrivia( this.SyntaxTree , this.Kind , this.StartPos , text );
+
+            if( length > 0 )
+            {
+                var text = this.Text.ToString( this.StartPos , length );
+                var trivia = new SyntaxTrivia( this.SyntaxTree , this.Kind , this.StartPos , text );
+
+                this.TriviaBuilder.Add( trivia );
+            }
         }
 
-        private void ReadComment()
+        private void ReadCommentTrivia()
         {
+            Debug.Assert( this.Current == '#' );
 
+            this.Kind = SyntaxKind.None; // BadTrivia?
+
+            var done = false;
+
+            while( !done )
+            {
+                switch( this.Current )
+                {
+                    case '\0':
+                    case '\r':
+                    case '\n':
+                    {
+                        done = true;
+                        break;
+                    }
+                    default:
+                    {
+                        this.Advance();
+                        break;
+                    }
+                }
+            }
+
+            this.Kind = SyntaxKind.CommentTrivia;
         }
     }
 }

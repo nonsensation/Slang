@@ -7,6 +7,7 @@ using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.IO;
 using System.IO;
 using System.Collections.Immutable;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll
 {
@@ -25,22 +26,73 @@ namespace NonConTroll
             this.LoadSubmissions();
         }
 
-        protected override void RenderLine( string line )
+        private sealed class RenderState
         {
-            var tokens = SyntaxTree.ParseTokens( line );
-
-            foreach( var token in tokens )
+            public RenderState( SourceText text , SyntaxTree tree )
             {
-                if(      token.Kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
-                else if( token.Kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-                else if( token.Kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
-                else if( token.Kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
-                else if( token.Kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
-                else                                                   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+                this.Text = text;
+                this.Tree = tree;
+            }
 
-                Console.Write( token.Text );
+            public SourceText Text { get; }
+            public SyntaxTree Tree { get; }
+        }
+
+        protected override object RenderLine( IReadOnlyList<string> lines , int lineIndex , object state  )
+        {
+            var syntaxTree = default( SyntaxTree );
+
+            if( state == null )
+            {
+                var text = string.Join( Environment.NewLine , lines );
+                var sourceText = SourceText.From( text );
+
+                syntaxTree = SyntaxTree.Parse( sourceText );
+            }
+            else
+            {
+                syntaxTree = (SyntaxTree)state;
+            }
+
+            var lineSpan = syntaxTree.Text.Lines[ lineIndex ].Span;
+            var classifiedSpans = Classifier.Classify( syntaxTree , lineSpan );
+
+            foreach( var classifiedSpan in classifiedSpans )
+            {
+                var tokenText = syntaxTree.Text.ToString( classifiedSpan.Span );
+
+                switch( classifiedSpan.Classification )
+                {
+                    case Classification.Text:
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        break;
+                    case Classification.Keyword:
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        break;
+                    case Classification.Identifier:
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        break;
+                    case Classification.Number:
+                        Console.ForegroundColor = ConsoleColor.DarkCyan;
+                        break;
+                    case Classification.String:
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        break;
+                    case Classification.Punctuation:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                    case Classification.Comment:
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                        break;
+                    default:
+                        throw new Exception();
+                }
+
+                Console.Write( tokenText );
                 Console.ResetColor();
             }
+
+            return syntaxTree;
         }
 
         [MetaCommand( "tree" , "Shows the parse tree" )]
@@ -240,67 +292,95 @@ namespace NonConTroll
         }
 
 
-        public class ClassifiedSpan
+        internal enum Classification
         {
-
+            Text,
+            Keyword,
+            Identifier,
+            Number,
+            String,
+            Punctuation,
+            Comment,
         }
 
-        public class Classifier
+        internal class ClassifiedSpan
         {
-            // public static ImmutableArray<ClassifiedSpan> Classify( SyntaxTree syntaxTree , TextSpan span )
-            // {
-            //     var result = ImmutableArray.CreateBuilder<ClassifiedSpan>();
+            public ClassifiedSpan( TextSpan span , Classification classification )
+            {
+                this.Span = span;
+                this.Classification = classification;
+            }
 
-            //     Classify( syntaxTree.Root , span , result );
+            public TextSpan Span { get; }
+            public Classification Classification { get; }
+        }
 
-            //     return result.ToImmutable();
-            // }
+        internal class Classifier
+        {
+            public static ImmutableArray<ClassifiedSpan> Classify( SyntaxTree syntaxTree , TextSpan span )
+            {
+                var result = ImmutableArray.CreateBuilder<ClassifiedSpan>();
 
-            // public static void Classify( SyntaxNode node, TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     if( !node.FullSpan.OverlapsWith( span ) )
-            //         return;
+                ClassifyNode( syntaxTree.Root , span , result );
 
-            //     if( node is SyntaxToken token )
-            //     {
-            //         ClassifyToken( token , span , result );
-            //     }
-            // }
+                return result.ToImmutable();
+            }
 
-            // public static void ClassifyToken( SyntaxNode token , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     foreach( var trivia in token.LeadingTrivia )
-            //     {
-            //         ClassifyTrivia( trivia , span , result );
-            //     }
+            public static void ClassifyNode( SyntaxNode node, TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            {
 
-            //     foreach( var trivia in token.TrailingTrivia )
-            //     {
-            //         ClassifyTrivia( trivia , span , result );
-            //     }
-            // }
+                if( !node.FullSpan.OverlapsWith( span ) )
+                {
+                    return;
+                }
 
-            // public static void ClassifyTrivia( SyntaxTrivia trivia , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     AddClassification( trivia.Kind , trivia.Span , span , result );
-            // }
+                if( node is SyntaxToken token )
+                {
+                    ClassifyToken( token , span , result );
+                }
+            }
 
-            // private static void AddClassification( SyntaxKind elementKind , TextSpan elementSpan , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     var classification = GetClassification( elementKind );
-            //     var adjustedEnd = Math.Min( elementSpan.End , span.End );
-            //     var adjustedSpan = TextSpan.Create( )
-            // }
+            public static void ClassifyToken( SyntaxToken token , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            {
+                foreach( var trivia in token.LeadingTrivia )
+                {
+                    ClassifyTrivia( trivia , span , result );
+                }
 
-            // private static Classification GetClassification( SyntaxKind kind )
-            // {
-            //     if(      kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
-            //     else if( kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-            //     else if( kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
-            //     else if( kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
-            //     else if( kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
-            //     else                                             { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-            // }
+                AddClassification( token.Kind , token.Span , span , result );
+
+                foreach( var trivia in token.TrailingTrivia )
+                {
+                    ClassifyTrivia( trivia , span , result );
+                }
+            }
+
+            public static void ClassifyTrivia( SyntaxTrivia trivia , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            {
+                AddClassification( trivia.Kind , trivia.Span , span , result );
+            }
+
+            private static void AddClassification( SyntaxKind elementKind , TextSpan elementSpan , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
+            {
+                var classification = GetClassification( elementKind );
+                var adjustedStart = Math.Max( elementSpan.Start , span.Start );
+                var adjustedEnd = Math.Min( elementSpan.End , span.End );
+                var adjustedSpan = TextSpan.FromBounds( adjustedStart , adjustedEnd );
+                var classifiedSpan = new ClassifiedSpan( adjustedSpan , classification );
+
+                result.Add( classifiedSpan );
+            }
+
+            private static Classification GetClassification( SyntaxKind kind )
+            {
+                if( kind.IsKeyword() )                       { return Classification.Keyword    ; }
+                else if( kind.IsPunctuation() )              { return Classification.Punctuation; }
+                else if( kind == SyntaxKind.Identifier )     { return Classification.Identifier ; }
+                else if( kind == SyntaxKind.NumericLiteral ) { return Classification.Number     ; }
+                else if( kind == SyntaxKind.StringLiteral )  { return Classification.String     ; }
+                else if( kind == SyntaxKind.CommentTrivia )  { return Classification.Comment    ; }
+                else                                         { return Classification.Text       ; }
+            }
         }
 
     }

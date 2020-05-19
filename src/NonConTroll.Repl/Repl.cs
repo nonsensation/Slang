@@ -336,9 +336,11 @@ namespace NonConTroll
             this.SubmissionHistory.Clear();
         }
 
-        protected virtual void RenderLine( string line )
+        protected virtual object RenderLine( IReadOnlyList<string> line , int lineIndex , object state )
         {
             Console.Write( line );
+
+            return state;
         }
 
         private void EvaluateMetaCommand( string input )
@@ -443,17 +445,18 @@ namespace NonConTroll
 
         protected abstract void EvaluateSubmission( string text );
 
+        private delegate object? LineRenderHandler( IReadOnlyList<string> lines , int lineIndex , object? state );
 
         private sealed class SubmissionView
         {
-            private readonly Action<string> LineRenderer;
+            private readonly LineRenderHandler LineRenderer;
             private readonly ObservableCollection<string> SubmissionDocument;
             private int CursorTop;
             private int RenderedLineCount;
             private int currentLine;
             private int currentCharacter;
 
-            public SubmissionView( Action<string> lineRenderer , ObservableCollection<string> submissionDocument )
+            public SubmissionView( LineRenderHandler lineRenderer , ObservableCollection<string> submissionDocument )
             {
                 this.LineRenderer       = lineRenderer;
                 this.SubmissionDocument = submissionDocument;
@@ -473,6 +476,7 @@ namespace NonConTroll
                 Console.CursorVisible = false;
 
                 var lineCount = 0;
+                var state = (object?)null;
 
                 foreach( var line in this.SubmissionDocument )
                 {
@@ -502,7 +506,7 @@ namespace NonConTroll
 
                     Console.ResetColor();
 
-                    this.LineRenderer( line );
+                    state = this.LineRenderer( this.SubmissionDocument , lineCount , state );
 
                     Console.Write( new string( ' ' , Console.WindowWidth - line.Length - 2 ) );
 

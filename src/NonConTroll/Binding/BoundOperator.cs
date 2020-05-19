@@ -5,7 +5,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     #region Binary Op
 
-    public enum BoundBinaryOperatorKind
+    internal enum BoundBinaryOperatorKind
     {
         Addition,
         Subtraction,
@@ -22,7 +22,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         Infix,
     }
 
-    public class BoundBinaryOperator
+    internal class BoundBinaryOperator
     {
         private BoundBinaryOperator( SyntaxKind tokenType , BoundBinaryOperatorKind kind , TypeSymbol type )
             : this( tokenType , kind , type , type , type )
@@ -94,7 +94,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     #region Unary Op
 
-    public enum BoundUnaryOperatorKind
+    internal enum BoundUnaryOperatorKind
     {
         Identity,
         Negation,
@@ -102,7 +102,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         OnesComplement
     }
 
-    public class BoundUnaryOperator
+    internal class BoundUnaryOperator
     {
         private BoundUnaryOperator( SyntaxKind syntaxKind , BoundUnaryOperatorKind kind , TypeSymbol operandType )
             : this( syntaxKind , kind , operandType , operandType )
@@ -126,7 +126,6 @@ namespace NonConTroll.CodeAnalysis.Binding
             new BoundUnaryOperator( SyntaxKind.ExmToken   , BoundUnaryOperatorKind.LogicalNegation , BuiltinTypes.Bool ) ,
             new BoundUnaryOperator( SyntaxKind.PlusToken  , BoundUnaryOperatorKind.Identity        , BuiltinTypes.Int  ) ,
             new BoundUnaryOperator( SyntaxKind.MinusToken , BoundUnaryOperatorKind.Negation        , BuiltinTypes.Int  ) ,
-            new BoundUnaryOperator( SyntaxKind.TildeToken , BoundUnaryOperatorKind.OnesComplement  , BuiltinTypes.Int  ) ,
         };
 
         public static BoundUnaryOperator? Bind( SyntaxKind tokenType , TypeSymbol operandType )

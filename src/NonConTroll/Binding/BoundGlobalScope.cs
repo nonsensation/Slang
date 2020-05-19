@@ -3,7 +3,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundGlobalScope
+    internal sealed class BoundGlobalScope
     {
         public BoundGlobalScope( BoundGlobalScope? previous ,
                                  BuiltinFunctionSymbol? mainFunction ,

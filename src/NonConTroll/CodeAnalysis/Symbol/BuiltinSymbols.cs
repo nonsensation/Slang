@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace NonConTroll.CodeAnalysis.Symbols
 {
-    public static class BuiltinFunctions
+    internal static class BuiltinFunctions
     {
         public static readonly BuiltinFunctionSymbol Print
             = new BuiltinFunctionSymbol( "print" ,
@@ -29,7 +29,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
                 .Cast<BuiltinFunctionSymbol>();
     }
 
-    public static class BuiltinTypes
+    internal static class BuiltinTypes
     {
         public static readonly BuiltinTypeSymbol Error = new BuiltinTypeSymbol( "?" );
 
@@ -62,6 +62,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
             => typeof( BuiltinTypeSymbol )
                 .GetFields( BindingFlags.Public | BindingFlags.Static )
                 .Where( f => f.FieldType == typeof( BuiltinTypeSymbol ) )
+                .Where( f => f.Name != "Error" )
                 .Select( f => f.GetValue( null ) )
                 .Where( f => f != null )
                 .Cast<BuiltinTypeSymbol>();

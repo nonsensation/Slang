@@ -170,7 +170,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             if( expression is BoundUnaryExpression unary )
             {
-                writer.WriteNestedExpression( parentPrecedence , unary.Op.TkType.GetUnaryOperatorPrecedence() , unary );
+                writer.WriteNestedExpression( parentPrecedence , unary.Operator.TkType.GetUnaryOperatorPrecedence() , unary );
             }
             else if( expression is BoundBinaryExpression binary )
             {
@@ -273,7 +273,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             writer.WriteSpace();
             node.LowerBound.WriteTo( writer );
             writer.WriteSpace();
-            writer.Write( SyntaxKind.To );
+            writer.Write( SyntaxKind.ToKeyword );
             writer.WriteSpace();
             node.UpperBound.WriteTo( writer );
             writer.WriteLine();
@@ -390,10 +390,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteUnaryExpression( BoundUnaryExpression node , IndentedTextWriter writer )
         {
-            var precedence = node.Op.TkType.GetUnaryOperatorPrecedence();
+            var precedence = node.Operator.TkType.GetUnaryOperatorPrecedence();
 
-            writer.WritePunctuation( node.Op.TkType );
-            writer.WriteNestedExpression( precedence , node.Operand );
+            writer.WritePunctuation( node.Operator.TkType );
+            writer.WriteNestedExpression( precedence , node.Expression );
         }
 
         private static void WriteBinaryExpression( BoundBinaryExpression node , IndentedTextWriter writer )

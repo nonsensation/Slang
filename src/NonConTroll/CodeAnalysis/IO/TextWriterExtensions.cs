@@ -44,7 +44,7 @@ namespace NonConTroll.CodeAnalysis.IO
 
         public static void WriteKeyword( this TextWriter writer , SyntaxKind tokenType )
         {
-            writer.WriteKeyword( tokenType.GetName() );
+            writer.WriteKeyword( tokenType.GetText() );
         }
 
         public static void WriteKeyword( this TextWriter writer , string? text )
@@ -82,7 +82,7 @@ namespace NonConTroll.CodeAnalysis.IO
 
         public static void WritePunctuation( this TextWriter writer , SyntaxKind tokenType )
         {
-            writer.WritePunctuation( tokenType.GetName() );
+            writer.WritePunctuation( tokenType.GetText() );
         }
 
         public static void WritePunctuation( this TextWriter writer , string? text )
@@ -94,7 +94,21 @@ namespace NonConTroll.CodeAnalysis.IO
 
         public static void WriteDiagnostics( this TextWriter writer , IEnumerable<Diagnostic> diagnostics )
         {
+
+            foreach( var diagnostic in diagnostics.Where( diag => diag.Location.Text == null ) )
+            {
+                if( diagnostic.Location.FileName == null )
+                {
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.Write( diagnostic.Msg );
+                    Console.WriteLine( diagnostic );
+                    Console.ResetColor();
+                }
+            }
+
             var diags = diagnostics
+                .Where( diag => diag.Location.Text != null )
                 .OrderBy( diag => diag.Location.Text.FileName )
                 .ThenBy( diag => diag.Location.Span.Start )
                 .ThenBy( diag => diag.Location.Span.Length );

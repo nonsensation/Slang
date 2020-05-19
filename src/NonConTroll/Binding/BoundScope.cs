@@ -6,7 +6,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundScope
+    internal sealed class BoundScope
     {
         private Dictionary<string, Symbol>? Symbols;
 

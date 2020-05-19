@@ -9,7 +9,7 @@ using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class Binder
+    internal sealed class Binder
     {
         private readonly DiagnosticBag DiagBag = new DiagnosticBag();
         public DiagnosticBag Diagnostics => this.DiagBag;
@@ -392,19 +392,19 @@ namespace NonConTroll.CodeAnalysis.Binding
             var type                 = this.BindTypeClause( syntax.TypeClause );
             var initializer          = this.BindExpression( syntax.Initializer );
             var variableType         = type ?? initializer.Type;
-            var variable             = this.BindVariableDeclaration( syntax.Identifier , isReadOnly , variableType );
+            var variable             = this.BindVariableDeclaration( syntax.Identifier , isReadOnly , variableType , initializer.ConstantValue );
             var convertedInitializer = this.BindConversion( syntax.Initializer.Location , initializer , variableType ,
                                                             allowExplicit: false );
 
             return new BoundVariableDeclaration( variable , convertedInitializer );
         }
 
-        private VariableSymbol BindVariableDeclaration( SyntaxToken identifier , bool isReadOnly , TypeSymbol type )
+        private VariableSymbol BindVariableDeclaration( SyntaxToken identifier , bool isReadOnly , TypeSymbol type , BoundConstant? constant )
         {
             var name = identifier.Text ?? "?";
             var variable = this.Function == null
-                                ? (VariableSymbol)new GlobalVariableSymbol( name , isReadOnly , type )
-                                : new LocalVariableSymbol( name , isReadOnly , type );
+                ? (VariableSymbol)new GlobalVariableSymbol( name , isReadOnly , type , constant )
+                : (VariableSymbol)new  LocalVariableSymbol( name , isReadOnly , type , constant );
 
             if( !identifier.IsMissing && !this.Scope!.TryDeclareVariable( variable ) )
             {
@@ -467,7 +467,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             this.Scope = new BoundScope( this.Scope );
 
-            var variable = this.BindVariableDeclaration( syntax.Identifier , isReadOnly: true , BuiltinTypes.Int );
+            var variable = this.BindVariableDeclaration( syntax.Identifier , isReadOnly: true , BuiltinTypes.Int , constant: null );
             var body     = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
 
             this.Scope = this.Scope.Parent;
@@ -1066,22 +1066,6 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
 
             return new BoundConversionExpression( type , expression );
-        }
-
-        private VariableSymbol BindVariable( SyntaxToken identifier , bool isReadOnly , TypeSymbol type )
-        {
-            var name     = identifier.Text ?? "?";
-            var declare  = !identifier.IsMissing;
-            var variable = this.Function == null
-                ? new GlobalVariableSymbol( name , isReadOnly , type ) as VariableSymbol
-                : new LocalVariableSymbol(  name , isReadOnly , type ) as VariableSymbol;
-
-            if( declare && !this.Scope!.TryDeclareVariable( variable ) )
-            {
-                this.DiagBag.ReportSymbolAlreadyDeclared( identifier.Location , name );
-            }
-
-            return variable;
         }
 
         private VariableSymbol? BindVariableReference( SyntaxToken identifierToken )

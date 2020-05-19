@@ -6,7 +6,7 @@ using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public abstract class BoundTreeRewriter
+    internal abstract class BoundTreeRewriter
     {
         #region Statements
 
@@ -237,14 +237,14 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         protected virtual BoundExpression RewriteUnaryExpression( BoundUnaryExpression node )
         {
-            var operand = this.RewriteExpression( node.Operand );
+            var operand = this.RewriteExpression( node.Expression );
 
-            if( operand == node.Operand )
+            if( operand == node.Expression )
             {
                 return node;
             }
 
-            return new BoundUnaryExpression( node.Op , operand );
+            return new BoundUnaryExpression( node.Operator , operand );
         }
 
         protected virtual BoundExpression RewriteBinaryExpression( BoundBinaryExpression node )

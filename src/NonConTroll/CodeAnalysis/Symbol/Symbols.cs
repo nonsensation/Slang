@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Symbols
@@ -54,21 +55,23 @@ namespace NonConTroll.CodeAnalysis.Symbols
 
     public abstract class VariableSymbol : Symbol
     {
-        public VariableSymbol( string name , bool isReadOnly , TypeSymbol type )
+        internal VariableSymbol( string name , bool isReadOnly , TypeSymbol type , BoundConstant? constant )
             : base( name )
         {
             this.IsReadOnly = isReadOnly;
             this.Type = type;
+            this.Constant = isReadOnly ? constant : null;
         }
 
         public bool IsReadOnly { get; }
         public TypeSymbol Type { get; }
+        internal BoundConstant? Constant { get; }
     }
 
     public class GlobalVariableSymbol : VariableSymbol
     {
-        public GlobalVariableSymbol( string name , bool isReadOnly , TypeSymbol type )
-            : base( name , isReadOnly , type )
+        internal GlobalVariableSymbol( string name , bool isReadOnly , TypeSymbol type , BoundConstant? constant )
+            : base( name , isReadOnly , type , constant )
         {
         }
 
@@ -77,8 +80,8 @@ namespace NonConTroll.CodeAnalysis.Symbols
 
     public class LocalVariableSymbol : VariableSymbol
     {
-        public LocalVariableSymbol( string name , bool isReadOnly , TypeSymbol type )
-            : base( name , isReadOnly , type )
+        internal LocalVariableSymbol( string name , bool isReadOnly , TypeSymbol type , BoundConstant? constant )
+            : base( name , isReadOnly , type , constant )
         {
         }
 
@@ -89,7 +92,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
     public sealed class ParameterSymbol : LocalVariableSymbol
     {
         public ParameterSymbol( string name , TypeSymbol type )
-            : base( name , isReadOnly: true , type )
+            : base( name , isReadOnly: true , type , constant: null )
         {
         }
 

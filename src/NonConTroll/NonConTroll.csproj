@@ -22,4 +22,16 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedSources)</DefaultItemExcludes>
   </PropertyGroup>
 
+  <PropertyGroup>
+      <NoWarn>
+        IDE0066, <!-- Use 'switch' expression -->
+        IDE0057, <!-- Substring can be simplified (to use ranges [2..^2]) -->
+        IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
+        IDE0019  <!-- Use pattern macthing -->
+        IDE0051, <!-- Private member 'foo' is unused. -->
+        IDE0060, <!-- Remove unused parameter -->
+        CS0168   <!-- The variable'ex' is declared but never used -->
+      </NoWarn>
+  </PropertyGroup>
+
 </Project>
