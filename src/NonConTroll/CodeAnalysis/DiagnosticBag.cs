@@ -93,7 +93,7 @@ namespace NonConTroll.CodeAnalysis
             throw new NotImplementedException();
         }
 
-        public void ReportWrongArgumentType( TextLocation location, DeclaredFunctionSymbol function, string name, TypeSymbol expectedType, TypeSymbol actualType )
+        public void ReportWrongArgumentType( TextLocation location, FunctionSymbol function, string name, TypeSymbol expectedType, TypeSymbol actualType )
             => this.Report( location, $"Parameter '{name}' for funnction '{function}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
 
         public void ReportExpressionMustHaveValue( TextLocation location )

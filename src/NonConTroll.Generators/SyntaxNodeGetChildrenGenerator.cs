@@ -54,6 +54,7 @@ namespace NonConTroll.Generators
                 indentedTextWriter.Indent++;
 
                 var properties = type.GetMembers().OfType<IPropertySymbol>();
+                var isEmpty = true;
 
                 foreach( var property in properties )
                 {
@@ -62,6 +63,8 @@ namespace NonConTroll.Generators
                         if( this.IsDerivedFrom( propertyType , syntaxNodeType ) )
                         {
                             indentedTextWriter.WriteLine( $"yield return this.{property.Name};" );
+
+                            isEmpty = false;
                         }
                         else if( propertyType.TypeArguments.Length == 1 &&
                                  this.IsDerivedFrom( propertyType.TypeArguments[ 0 ] , syntaxNodeType ) &&
@@ -71,6 +74,8 @@ namespace NonConTroll.Generators
                             indentedTextWriter.Indent++;
                             indentedTextWriter.WriteLine( "yield return child;" );
                             indentedTextWriter.Indent--;
+
+                            isEmpty = false;
                         }
                         else if( SymbolEqualityComparer.Default.Equals( propertyType.OriginalDefinition , separatedSyntaxListType ) &&
                                  this.IsDerivedFrom( propertyType.TypeArguments[ 0 ] , syntaxNodeType ) )
@@ -79,11 +84,21 @@ namespace NonConTroll.Generators
                             indentedTextWriter.Indent++;
                             indentedTextWriter.WriteLine( "yield return child;" );
                             indentedTextWriter.Indent--;
+
+                            isEmpty = false;
+                        }
+                        else
+                        {
+
                         }
                     }
                 }
 
-                indentedTextWriter.WriteLine( "yield break;" );
+                if( isEmpty )
+                {
+                    indentedTextWriter.WriteLine( "yield break;" );
+                }
+
                 indentedTextWriter.Indent--;
                 indentedTextWriter.WriteLine( "}" );
                 indentedTextWriter.Indent--;

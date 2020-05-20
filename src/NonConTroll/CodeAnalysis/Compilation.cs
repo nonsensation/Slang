@@ -33,7 +33,7 @@ namespace NonConTroll.CodeAnalysis
 
         internal bool IsScript { get; }
         internal Compilation? Previous { get; }
-        internal BuiltinFunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
+        internal FunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
         internal ImmutableArray<SyntaxTree> SyntaxTrees { get; }
         internal ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
         internal ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;

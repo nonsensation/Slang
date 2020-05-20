@@ -101,14 +101,14 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             #region check for main and global statements
 
-            var mainFunction = default( BuiltinFunctionSymbol );
-            var evalFunction = default( BuiltinFunctionSymbol );
+            var mainFunction = default( DeclaredFunctionSymbol );
+            var evalFunction = default( DeclaredFunctionSymbol );
 
             if( isScript )
             {
                 if( globalStatements.Any() )
                 {
-                    evalFunction = new BuiltinFunctionSymbol( "$eval" ,
+                    evalFunction = new DeclaredFunctionSymbol( "$eval" ,
                                                                ImmutableArray<ParameterSymbol>.Empty ,
                                                                BuiltinTypes.Any , null );
                 }
@@ -119,16 +119,14 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
             else
             {
-                mainFunction = functions.OfType<BuiltinFunctionSymbol>().FirstOrDefault( x => x.Name == "main" );
+                mainFunction = functions.OfType<DeclaredFunctionSymbol>().FirstOrDefault( x => x.Name == "main" );
             }
 
             if( mainFunction != null )
             {
                 if( mainFunction.ReturnType != BuiltinTypes.Void || mainFunction.Parameters.Any() )
                 {
-                    // var location = mainFunction.Name.Location;
-
-                    // binder.Diagnostics.ReportInvalidMainSignature( location );
+                    binder.Diagnostics.ReportInvalidMainSignature( mainFunction.Declaration!.Identifier.Location );
                 }
             }
 
@@ -136,18 +134,16 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 if( mainFunction != null )
                 {
-                    // var location = mainFunction.Declaration!.Identifier.Location;
+                    binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( mainFunction.Declaration!.Identifier.Location );
 
-                    // binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( location );
-
-                    // foreach( var globalStatement in globalStatements )
-                    // {
-                    //     binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( globalStatement.Location );
-                    // }
+                    foreach( var globalStatement in globalStatements )
+                    {
+                        binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( globalStatement.Location );
+                    }
                 }
                 else
                 {
-                    mainFunction = new BuiltinFunctionSymbol( "main" ,
+                    mainFunction = new DeclaredFunctionSymbol( "main" ,
                                                                ImmutableArray<ParameterSymbol>.Empty ,
                                                                BuiltinTypes.Void , null );
                 }
@@ -795,7 +791,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }
 
-            var function = symbol as DeclaredFunctionSymbol;
+            var function = symbol as FunctionSymbol;
 
             if( function == null )
             {

@@ -37,7 +37,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 var first    = children.First();
                 var last     = children.Last();
 
-                return TextSpan.FromBounds( first.Span.Start , last.Span.End );
+                return TextSpan.FromBounds( first.FullSpan.Start , last.FullSpan.End );
             }
         }
 
@@ -61,6 +61,11 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private static void PrettyPrint( TextWriter writer , SyntaxNode node , string indent = "" , bool isLast = true )
         {
+            if( node == null )
+            {
+                return;
+            }
+
             var midNodeStr   = "├──";
             var noNodeStr    = "│  ";
             var lastNodeStr  = "└──";
@@ -70,25 +75,34 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var marker = isLast ? lastNodeStr : midNodeStr;
             var token = node as SyntaxToken;
 
-            if( isToConsole )
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-            }
-
             if( token != null )
             {
                 foreach( var trivia in token.LeadingTrivia )
                 {
-                    var isLastTriva = trivia == token.TrailingTrivia.Last();
-                    var triviaMarker = isLastTriva ? lastNodeStr : midNodeStr;
+                    if( isToConsole )
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                    }
 
                     writer.Write( indent );
-                    writer.Write( isLastTriva );
-                    writer.Write( trivia.Kind );
+                    writer.Write( midNodeStr );
+
+                    if( isToConsole )
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    }
+
+                    writer.WriteLine( $"L: {trivia.Kind}" );
                 }
             }
 
             var hasTrailingTrivia = token != null && token.TrailingTrivia.Any();
+            var tokenMarker = !hasTrailingTrivia && isLast ? lastNodeStr : midNodeStr;
+
+            if( isToConsole )
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
 
             writer.Write( indent );
             writer.Write( marker );
@@ -112,11 +126,22 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 foreach( var trivia in token.TrailingTrivia )
                 {
                     var isLastTriva = trivia == token.TrailingTrivia.Last();
-                    var triviaMarker = isLastTriva ? lastNodeStr : midNodeStr;
+                    var triviaMarker = isLast && isLastTriva ? lastNodeStr : midNodeStr;
+
+                    if( isToConsole )
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                    }
 
                     writer.Write( indent );
                     writer.Write( triviaMarker );
-                    writer.Write( trivia.Kind );
+
+                    if( isToConsole )
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    }
+
+                    writer.WriteLine( $"T: {trivia.Kind}" );
                 }
             }
 

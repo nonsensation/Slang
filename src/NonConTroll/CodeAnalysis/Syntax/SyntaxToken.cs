@@ -20,15 +20,22 @@ namespace NonConTroll.CodeAnalysis.Syntax
             this.Text           = text ?? string.Empty;
             this.LeadingTrivia  = leadingTrivia;
             this.TrailingTrivia = trailingTrivia;
+            this.IsMissing      = text == null;
         }
 
         public override SyntaxKind Kind { get; }
-        // public override TextSpan Span => new TextSpan( this.Position , this.Text?.Length ?? 0 );
-        // // public override TextSpan FullSpan {
-        // //     get {
 
-        // //     }
-        // // }
+        public override TextSpan FullSpan
+        {
+            get
+            {
+                var start = this.LeadingTrivia.Any() ? LeadingTrivia.First().Span.Start : this.Span.Start;
+                var end = this.TrailingTrivia.Any() ? this.TrailingTrivia.Last().Span.End : this.Span.End;
+
+                return TextSpan.FromBounds( start , end );
+            }
+        }
+
 
         public ImmutableArray<SyntaxTrivia> LeadingTrivia { get; }
         public ImmutableArray<SyntaxTrivia> TrailingTrivia { get; }
@@ -37,7 +44,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public string Text { get; }
 
         /// <summary>A token is missing if it was inserted by the parser and doesn't appear in source.</summary>
-        public bool IsMissing => this.Text == null;
+        public bool IsMissing { get; }
 
         public override IEnumerable<SyntaxNode> GetChildren() => Array.Empty<SyntaxNode>();
 

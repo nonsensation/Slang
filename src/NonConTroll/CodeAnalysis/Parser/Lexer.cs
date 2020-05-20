@@ -53,7 +53,6 @@ namespace NonConTroll.CodeAnalysis
             this.ReadTrivia( isLeading: false );
 
             var trailingTrivia = this.TriviaBuilder.ToImmutable();
-
             var tokenText = this.Kind.GetText();
 
             if( tokenText == null )
@@ -61,7 +60,7 @@ namespace NonConTroll.CodeAnalysis
                 tokenText = this.Text.ToString( tokenStartPos , tokenLength );
             }
 
-            return new SyntaxToken( this.SyntaxTree , this.Kind , tokenStartPos ,
+            return new SyntaxToken( this.SyntaxTree , tokenKind , tokenStartPos ,
                                     tokenText , leadingTrivia , trailingTrivia );
         }
 
@@ -473,9 +472,32 @@ namespace NonConTroll.CodeAnalysis
 
         private void ReadWhiteSpaceTrivia()
         {
-            while( char.IsWhiteSpace( this.Current ) )
+            var done = false;
+
+            while( !done )
             {
-                this.Advance( 1 );
+                switch( this.Current )
+                {
+                    case '\0':
+                    case '\r':
+                    case '\n':
+                    {
+                        done = true;
+                    }
+                    break;
+                    default:
+                    {
+                        if( !char.IsWhiteSpace( Current ) )
+                        {
+                            done = true;
+                        }
+                        else
+                        {
+                            this.Advance();
+                        }
+                    }
+                    break;
+                }
             }
 
             this.Kind = SyntaxKind.WhiteSpaceTrivia;
@@ -533,26 +555,58 @@ namespace NonConTroll.CodeAnalysis
                     case '\n':
                     case '\r':
                     {
-                        this.ReadWhiteSpaceTrivia();
-
                         if( !isLeading )
+                        {
+                            done = true;
+                        }
+
+                        this.ReadNewLineWhiteSpaceTrivia();
+                    }
+                    break;
+                    case ' ':
+                    case '\t':
+                    {
+                        this.ReadWhiteSpaceTrivia();
+                    }
+                    break;
+                    default:
+                    {
+                        if( char.IsWhiteSpace( this.Current ) )
+                        {
+                            this.ReadWhiteSpaceTrivia();
+                        }
+                        else
                         {
                             done = true;
                         }
                     }
                     break;
                 }
+
+                var length = this.Position - this.StartPos;
+
+                if( length > 0 )
+                {
+                    var text = this.Text.ToString( this.StartPos , length );
+                    var trivia = new SyntaxTrivia( this.SyntaxTree , this.Kind , this.StartPos , text );
+
+                    this.TriviaBuilder.Add( trivia );
+                }
             }
+        }
 
-            var length = this.Position - this.StartPos;
-
-            if( length > 0 )
+        private void ReadNewLineWhiteSpaceTrivia()
+        {
+            if( this.Current == '\r' && this.Peek( 1 ) == '\n' )
             {
-                var text = this.Text.ToString( this.StartPos , length );
-                var trivia = new SyntaxTrivia( this.SyntaxTree , this.Kind , this.StartPos , text );
-
-                this.TriviaBuilder.Add( trivia );
+                this.Advance( 2 );
             }
+            else
+            {
+                this.Advance( 1 );
+            }
+
+            this.Kind = SyntaxKind.NewLineWhiteSpaceTrivia;
         }
 
         private void ReadCommentTrivia()

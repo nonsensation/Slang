@@ -149,6 +149,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         CommentTrivia,
         DocCommentTrivia,
 
+        SkippedTextTrivia,
+
         #endregion
 
         #region Literals

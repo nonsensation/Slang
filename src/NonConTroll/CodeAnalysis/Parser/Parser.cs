@@ -23,19 +23,48 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var tokens = new List<SyntaxToken>();
             var lexer = new Lexer( syntaxTree );
             var token = default( SyntaxToken );
+            var invalidTokens = new List<SyntaxToken>();
 
             do
             {
                 token = lexer.Lex();
 
-                if( token.Kind != SyntaxKind.WhiteSpaceTrivia &&
-                    !token.Kind.ToString().EndsWith( "Trivia" ) &&
-                    token.Kind != SyntaxKind.None )
+                if( token.Kind == SyntaxKind.None )
                 {
+                    invalidTokens.Add( token );
+                }
+                else
+                {
+                    if( invalidTokens.Any() )
+                    {
+                        var leadingTrivia = token.LeadingTrivia.ToBuilder();
+                        var index = 0;
+
+                        foreach( var invalidToken in invalidTokens )
+                        {
+                            foreach( var lt in invalidToken.LeadingTrivia )
+                            {
+                                leadingTrivia.Insert( index++ , lt );
+                            }
+
+                            var trivia = new SyntaxTrivia( syntaxTree , SyntaxKind.SkippedTextTrivia , invalidToken.Position , invalidToken.Text );
+
+                            leadingTrivia.Insert( index++ , trivia );
+
+                            foreach( var tt in invalidToken.TrailingTrivia )
+                            {
+                                leadingTrivia.Insert( index++ , tt );
+                            }
+                        }
+
+                        invalidTokens.Clear();
+
+                        token =  new SyntaxToken( token.SyntaxTree , token.Kind , token.Position , token.Text , leadingTrivia.ToImmutable() , token.TrailingTrivia );
+                    }
+
                     tokens.Add( token );
                 }
-            }
-            while( token.Kind != SyntaxKind.EndOfFile );
+            } while( token.Kind != SyntaxKind.EndOfFile );
 
             this.SyntaxTree = syntaxTree;
             this.Tokens = tokens.ToImmutableArray();
@@ -63,7 +92,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         }
 
         private SyntaxToken CreateMissingToken( SyntaxKind tokenType )
-            => new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null );
+            => new SyntaxToken( this.SyntaxTree , tokenType , this.Current.Position , null ,
+                                ImmutableArray<SyntaxTrivia>.Empty , ImmutableArray<SyntaxTrivia>.Empty );
 
         private SyntaxToken NextToken()
         {
@@ -578,7 +608,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
             while( parseNextArgument &&
                    this.Current.Kind != SyntaxKind.CloseParenToken &&
-                   this.Current.Kind != SyntaxKind.EndOfFile )
+                   this.Current.Kind != SyntaxKind.EndOfFile &&
+                   this.Current.Kind != SyntaxKind.None )
             {
                 var node = parseFunc();
 
@@ -635,8 +666,12 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
             while( true )
             {
-                if( this.Current.Kind == SyntaxKind.CloseBraceToken )
+                if( this.Current.Kind == SyntaxKind.CloseBraceToken ||
+                    this.Current.Kind == SyntaxKind.EndOfFile ||
+                    this.Current.Kind == SyntaxKind.None )
+                {
                     break;
+                }
 
                 var pattern = parsePatternSectionFunc();
 
