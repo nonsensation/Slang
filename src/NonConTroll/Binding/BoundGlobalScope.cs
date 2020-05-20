@@ -6,9 +6,9 @@ namespace NonConTroll.CodeAnalysis.Binding
     internal sealed class BoundGlobalScope
     {
         public BoundGlobalScope( BoundGlobalScope? previous ,
-                                 FunctionSymbol? mainFunction ,
-                                 FunctionSymbol? evalFunction ,
-                                 ImmutableArray<FunctionSymbol> functions ,
+                                 DeclaredFunctionSymbol? mainFunction ,
+                                 DeclaredFunctionSymbol? evalFunction ,
+                                 ImmutableArray<DeclaredFunctionSymbol> functions ,
                                  ImmutableArray<VariableSymbol> variables ,
                                  ImmutableArray<BoundStatement> statements ,
                                  ImmutableArray<Diagnostic> diagnostics )
@@ -23,9 +23,9 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public BoundGlobalScope? Previous { get; }
-        public FunctionSymbol? MainFunction { get; }
-        public FunctionSymbol? EvalFunction { get; }
-        public ImmutableArray<FunctionSymbol> Functions { get; }
+        public DeclaredFunctionSymbol? MainFunction { get; }
+        public DeclaredFunctionSymbol? EvalFunction { get; }
+        public ImmutableArray<DeclaredFunctionSymbol> Functions { get; }
         public ImmutableArray<VariableSymbol> Variables { get; }
         public ImmutableArray<BoundStatement> Statements { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }

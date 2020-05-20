@@ -47,7 +47,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( binder.Diagnostics.Any() )
             {
                 return new BoundGlobalScope( previous , mainFunction: null , evalFunction: null ,
-                                             ImmutableArray<FunctionSymbol>.Empty ,
+                                             ImmutableArray<DeclaredFunctionSymbol>.Empty ,
                                              ImmutableArray<VariableSymbol>.Empty ,
                                              ImmutableArray<BoundStatement>.Empty ,
                                              binder.Diagnostics.ToImmutableArray() );
@@ -62,7 +62,6 @@ namespace NonConTroll.CodeAnalysis.Binding
                 binder.BindFunctionDeclaration( function );
             }
 
-            var variables   = binder.Scope!.GetDeclaredVariables();
             var functions   = binder.Scope!.GetDeclaredFunctions();
             var globalStatements = syntaxTrees
                 .SelectMany( x => x.Root.Members )
@@ -120,38 +119,44 @@ namespace NonConTroll.CodeAnalysis.Binding
             else
             {
                 mainFunction = functions.OfType<DeclaredFunctionSymbol>().FirstOrDefault( x => x.Name == "main" );
-            }
 
-            if( mainFunction != null )
-            {
-                if( mainFunction.ReturnType != BuiltinTypes.Void || mainFunction.Parameters.Any() )
-                {
-                    binder.Diagnostics.ReportInvalidMainSignature( mainFunction.Declaration!.Identifier.Location );
-                }
-            }
 
-            if( globalStatements.Any() )
-            {
                 if( mainFunction != null )
                 {
-                    binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( mainFunction.Declaration!.Identifier.Location );
-
-                    foreach( var globalStatement in globalStatements )
+                    if( mainFunction.ReturnType != BuiltinTypes.Void || mainFunction.Parameters.Any() )
                     {
-                        binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( globalStatement.Location );
+                        var location = mainFunction.Declaration!.Identifier.Location;
+
+                        binder.Diagnostics.ReportInvalidMainSignature( location );
                     }
                 }
-                else
+
+                if( globalStatements.Any() )
                 {
-                    mainFunction = new DeclaredFunctionSymbol( "main" ,
-                                                               ImmutableArray<ParameterSymbol>.Empty ,
-                                                               BuiltinTypes.Void , null );
+                    if( mainFunction != null )
+                    {
+                        var location = mainFunction.Declaration!.Identifier.Location;
+
+                        binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( location );
+
+                        foreach( var globalStatement in globalStatements )
+                        {
+                            binder.Diagnostics.ReportCannotMixMainAndGlobalStatements( globalStatement.Location );
+                        }
+                    }
+                    else
+                    {
+                        mainFunction = new DeclaredFunctionSymbol( "main" ,
+                                                                    ImmutableArray<ParameterSymbol>.Empty ,
+                                                                    BuiltinTypes.Void , null );
+                    }
                 }
             }
 
             #endregion
 
             var diagnostics = binder.Diagnostics.ToImmutableArray();
+            var variables   = binder.Scope!.GetDeclaredVariables();
 
             if( previous != null )
             {
@@ -170,19 +175,20 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 return new BoundProgram( previous! , globalScope.MainFunction , globalScope.EvalFunction ,
                                          globalScope.Diagnostics.ToImmutableArray() ,
-                                         ImmutableDictionary<FunctionSymbol , BoundBlockStatement>.Empty );
+                                         ImmutableDictionary<DeclaredFunctionSymbol , BoundBlockStatement>.Empty );
             }
 
-            var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
+            var functionBodies = ImmutableDictionary.CreateBuilder<DeclaredFunctionSymbol, BoundBlockStatement>();
             var diagnostics    = ImmutableArray.CreateBuilder<Diagnostic>();
 
             foreach( DeclaredFunctionSymbol function in globalScope.Functions )
             {
                 var binder      = new Binder( isScript , parentScope , function );
                 var body        = binder.BindGlobalStatement( function.Declaration!.Body );
-                var loweredBody = Lowerer.Lower( body );
+                var loweredBody = Lowerer.Lower( function , body );
 
-                if( function.ReturnType is BuiltinTypeSymbol type && type != BuiltinTypes.Void &&
+                if( function.ReturnType is BuiltinTypeSymbol type &&
+                    type != BuiltinTypes.Void &&
                     !ControlFlowGraph.AllPathsReturn( loweredBody ) )
                 {
                     binder.DiagBag.ReportAllPathsMustReturn( function.Declaration.Identifier.Location );
@@ -192,11 +198,9 @@ namespace NonConTroll.CodeAnalysis.Binding
                 diagnostics.AddRange( binder.Diagnostics );
             }
 
-            var statement = Lowerer.Lower( new BoundBlockStatement( globalScope.Statements ) );
-
             if( globalScope.MainFunction != null && globalScope.Statements.Any() )
             {
-                var body = Lowerer.Lower( new BoundBlockStatement( globalScope.Statements ) );
+                var body = Lowerer.Lower( globalScope.MainFunction , new BoundBlockStatement( globalScope.Statements ) );
 
                 functionBodies.Add( globalScope.MainFunction , body );
             }
@@ -218,7 +222,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     statements = statements.Add( new BoundReturnStatement( nullValue ) );
                 }
 
-                var body = Lowerer.Lower( new BoundBlockStatement( statements ) );
+                var body = Lowerer.Lower( globalScope.EvalFunction , new BoundBlockStatement( statements ) );
 
                 functionBodies.Add( globalScope.EvalFunction , body );
             }
@@ -321,6 +325,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     var isAllowedExpression =
                         exprStmt.Expression.Kind == BoundNodeKind.ErrorExpression ||
                         exprStmt.Expression.Kind == BoundNodeKind.AssignmentExpression ||
+                        exprStmt.Expression.Kind == BoundNodeKind.MatchExpression ||
                         exprStmt.Expression.Kind == BoundNodeKind.CallExpression;
 
                     // TODO: incement, decrement, await, new object
@@ -384,18 +389,24 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundStatement BindVariableDeclaration( VariableDeclarationSyntax syntax )
         {
-            var isReadOnly           = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
-            var type                 = this.BindTypeClause( syntax.TypeClause );
-            var initializer          = this.BindExpression( syntax.Initializer );
-            var variableType         = type ?? initializer.Type;
-            var variable             = this.BindVariableDeclaration( syntax.Identifier , isReadOnly , variableType , initializer.ConstantValue );
-            var convertedInitializer = this.BindConversion( syntax.Initializer.Location , initializer , variableType ,
-                                                            allowExplicit: false );
+            var isReadOnly   = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
+            var type         = this.BindTypeClause( syntax.TypeClause );
+            var initializer  = this.BindExpression( syntax.Initializer );
+            var variableType = type ?? initializer.Type;
+            var variable     = this.BindVariableDeclaration( syntax.Identifier , isReadOnly ,
+                                                             variableType , initializer.ConstantValue );
+            var convertedInitializer = this.BindConversion( syntax.Initializer.Location , initializer ,
+                                                            variableType , allowExplicit: false );
 
             return new BoundVariableDeclaration( variable , convertedInitializer );
         }
 
-        private VariableSymbol BindVariableDeclaration( SyntaxToken identifier , bool isReadOnly , TypeSymbol type , BoundConstant? constant )
+        private
+        VariableSymbol
+        BindVariableDeclaration( SyntaxToken identifier ,
+                                 bool isReadOnly ,
+                                 TypeSymbol type ,
+                                 BoundConstant? constant )
         {
             var name = identifier.Text ?? "?";
             var variable = this.Function == null
@@ -935,7 +946,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         private BoundStatement BindMatchStatement( MatchStatementSyntax syntax )
         {
             var matchExpr = this.BindExpression( syntax.Expression );
-            var boundPatternSections = this.BindPatternSectionExpressions( syntax.PatternSections );
+            var boundPatternSections = this.BindPatternSectionStatements( syntax.PatternSections );
 
             _ = ValidatePattern( syntax.PatternSections.SelectMany( x => x.Patterns ).ToImmutableArray() );
 
@@ -956,7 +967,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             return builder.MoveToImmutable();
         }
 
-        private ImmutableArray<BoundPatternSectionStatement> BindPatternSectionExpressions( ImmutableArray<PatternSectionStatementSyntax> sections )
+        private ImmutableArray<BoundPatternSectionStatement> BindPatternSectionStatements( ImmutableArray<PatternSectionStatementSyntax> sections )
         {
             var builder = ImmutableArray.CreateBuilder<BoundPatternSectionStatement>( sections.Count() );
 
@@ -1067,8 +1078,9 @@ namespace NonConTroll.CodeAnalysis.Binding
         private VariableSymbol? BindVariableReference( SyntaxToken identifierToken )
         {
             var name = identifierToken.Text!;
+            var symbol = this.Scope!.TryLookupSymbol( name );
 
-            switch( this.Scope!.TryLookupSymbol( name ) )
+            switch( symbol )
             {
                 case VariableSymbol variable:
                     return variable;

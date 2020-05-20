@@ -144,6 +144,32 @@ namespace NonConTroll
             }
         }
 
+        [MetaCommand("exit", "Exits the REPL")]
+        private void Evaluate_Exit()
+        {
+            Environment.Exit( 0 );
+        }
+
+        [MetaCommand( "dump" , "Shows bound tree of a given function" )]
+        private void Evaluate_Dump( string functionName )
+        {
+            var compilation = this.Previous ?? EmptyCompilation;
+            var symbol = compilation.GetSymbols()
+                .OfType<DeclaredFunctionSymbol>()
+                .SingleOrDefault( f => f.Name == functionName );
+
+            if( symbol == null )
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( $"error: function '{functionName}' does not exist" );
+                Console.ResetColor();
+
+                return;
+            }
+
+            compilation.EmitTree( symbol , Console.Out );
+        }
+
         protected override bool IsCompleteSubmission( string text )
         {
             if( string.IsNullOrEmpty( text ) )

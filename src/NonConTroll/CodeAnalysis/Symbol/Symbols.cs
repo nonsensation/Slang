@@ -19,14 +19,14 @@ namespace NonConTroll.CodeAnalysis.Symbols
 
     public sealed class DeclaredFunctionSymbol : FunctionSymbol
     {
-        public DeclaredFunctionSymbol( string name , ImmutableArray<ParameterSymbol> parameters , TypeSymbol returnType , FunctionDeclarationSyntax declaration )
+        public DeclaredFunctionSymbol( string name , ImmutableArray<ParameterSymbol> parameters , TypeSymbol returnType , FunctionDeclarationSyntax? declaration )
             : base( name , parameters , returnType )
         {
             this.Declaration = declaration;
         }
 
         public override SymbolKind Kind => SymbolKind.DeclaredFunction;
-        public FunctionDeclarationSyntax Declaration { get; }
+        public FunctionDeclarationSyntax? Declaration { get; }
     }
 
     public sealed class BuiltinFunctionSymbol : FunctionSymbol

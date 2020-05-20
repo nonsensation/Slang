@@ -83,7 +83,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         public static string? GetText( this SyntaxKind kind )
             => kind switch {
-                SyntaxKind.FuncKeyword      => "Func"      ,
+                SyntaxKind.FuncKeyword      => "func"      ,
                 SyntaxKind.FnKeyword        => "fn"        ,
                 SyntaxKind.ReturnKeyword    => "return"    ,
                 SyntaxKind.RetKeyword       => "ret"       ,

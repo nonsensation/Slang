@@ -51,7 +51,7 @@ namespace NonConTroll
 
                 if( string.IsNullOrEmpty( text ) )
                 {
-                    return;
+                    continue;
                 }
 
                 if( !text.Contains( Environment.NewLine ) && text.StartsWith( this.MetaCommandIdentifier ) )
@@ -71,6 +71,7 @@ namespace NonConTroll
         private string EditSubmission()
         {
             this.IsDone = false;
+
             var document = new ObservableCollection<string>() { "" };
             var view = new SubmissionView( this.RenderLine , document );
 
@@ -434,7 +435,7 @@ namespace NonConTroll
                 var paramNames = string.Join( " " , parameters.Select( x => $"<{x.Name}>" ) );
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine( $"Invalid number of arguments (given {args.Count}, expected {paramNames.Length})" );
+                Console.WriteLine( $"Invalid number of arguments" );
                 Console.WriteLine( $"usage: {this.MetaCommandIdentifier}{cmd.Name} {paramNames}" );
                 Console.ResetColor();
 

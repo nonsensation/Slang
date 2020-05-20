@@ -9,7 +9,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                              FunctionSymbol? mainFunction ,
                              FunctionSymbol? evalFunction ,
                              ImmutableArray<Diagnostic> diagnostics ,
-                             ImmutableDictionary<FunctionSymbol , BoundBlockStatement> functions )
+                             ImmutableDictionary<DeclaredFunctionSymbol , BoundBlockStatement> functions )
         {
             this.Previous     = previous;
             this.MainFunction = mainFunction;
@@ -22,6 +22,6 @@ namespace NonConTroll.CodeAnalysis.Binding
         public FunctionSymbol? MainFunction { get; }
         public FunctionSymbol? EvalFunction { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
-        public ImmutableDictionary<FunctionSymbol , BoundBlockStatement> Functions { get; }
+        public ImmutableDictionary<DeclaredFunctionSymbol , BoundBlockStatement> Functions { get; }
     }
 }
