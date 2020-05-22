@@ -30,7 +30,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundVariableDeclaration node:      WriteVariableDeclaration( node ,      writer ); break;
                 case BoundIfStatement node:              WriteIfStatement( node ,              writer ); break;
                 case BoundWhileStatement node:           WriteWhileStatement( node ,           writer ); break;
-                case BoundDoWhileStatement node:         WriteDoWhileStatement( node ,         writer ); break;
+                // case BoundDoWhileStatement node:         WriteDoWhileStatement( node ,         writer ); break;
                 case BoundForStatement node:             WriteForStatement( node ,             writer ); break;
                 case BoundLabelStatement node:           WriteLabelStatement( node ,           writer ); break;
                 case BoundGotoStatement node:            WriteGotoStatement( node ,            writer ); break;
@@ -252,16 +252,16 @@ namespace NonConTroll.CodeAnalysis.Binding
             writer.WriteNestedStatement( node.Body );
         }
 
-        private static void WriteDoWhileStatement( BoundDoWhileStatement node , IndentedTextWriter writer )
-        {
-            writer.WriteKeyword( SyntaxKind.DoKeyword );
-            writer.WriteLine();
-            writer.WriteNestedStatement( node.Body );
-            writer.WriteKeyword( SyntaxKind.WhileKeyword );
-            writer.WriteSpace();
-            node.Condition.WriteTo( writer );
-            writer.WriteLine();
-        }
+        // private static void WriteDoWhileStatement( BoundDoWhileStatement node , IndentedTextWriter writer )
+        // {
+        //     writer.WriteKeyword( SyntaxKind.DoKeyword );
+        //     writer.WriteLine();
+        //     writer.WriteNestedStatement( node.Body );
+        //     writer.WriteKeyword( SyntaxKind.WhileKeyword );
+        //     writer.WriteSpace();
+        //     node.Condition.WriteTo( writer );
+        //     writer.WriteLine();
+        // }
 
         private static void WriteForStatement( BoundForStatement node , IndentedTextWriter writer )
         {
@@ -273,7 +273,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             writer.WriteSpace();
             node.LowerBound.WriteTo( writer );
             writer.WriteSpace();
-            writer.WriteKeyword( SyntaxKind.ToKeyword );
+            writer.WriteKeyword( SyntaxKind.InKeyword );
             writer.WriteSpace();
             node.UpperBound.WriteTo( writer );
             writer.WriteLine();

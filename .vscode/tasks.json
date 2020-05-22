@@ -20,6 +20,16 @@
                 "isDefault": true
               },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "./src/NonConTroll.Tests/NonConTroll.Tests.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }

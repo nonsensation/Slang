@@ -226,7 +226,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 case SyntaxKind.VarKeyword:      return this.ParseVariableDeclaration( SyntaxKind.VarKeyword );
                 case SyntaxKind.IfKeyword:       return this.ParseIfStatement();
                 case SyntaxKind.WhileKeyword:    return this.ParseWhileStatement();
-                case SyntaxKind.DoKeyword:       return this.ParseDoWhileStatement();
+                // case SyntaxKind.DoKeyword:       return this.ParseDoWhileStatement();
                 case SyntaxKind.ForKeyword:      return this.ParseForStatement();
                 case SyntaxKind.BreakKeyword:    return this.ParseBreakStatement();
                 case SyntaxKind.ContinueKeyword: return this.ParseContinueStatement();
@@ -308,23 +308,23 @@ namespace NonConTroll.CodeAnalysis.Syntax
             }
 
             var typeIdentifier     = default( SyntaxToken? );
-            var typeSpecifier      = ImmutableArray.CreateBuilder<TypeSpecifierSyntax>();
-            var arrayTypeSpecifier = ImmutableArray.CreateBuilder<ArrayTypeSpecifierSyntax>();
+            // var typeSpecifier      = ImmutableArray.CreateBuilder<TypeSpecifierSyntax>();
+            // var arrayTypeSpecifier = ImmutableArray.CreateBuilder<ArrayTypeSpecifierSyntax>();
             var done = false;
 
             while( !done )
             {
                 switch( this.Current.Kind )
                 {
-                    case SyntaxKind.RefKeyword:
-                    case SyntaxKind.PtrKeyword:
+                    // case SyntaxKind.RefKeyword:
+                    // case SyntaxKind.PtrKeyword:
                     //case TokenType.Qm:
-                    case SyntaxKind.NullKeywordLiteral:
-                        typeSpecifier.Add( this.ParseTypeSpecifier() );
-                        break;
-                    case SyntaxKind.OpenBracketToken:
-                        arrayTypeSpecifier.Add( this.ParseArrayTypeSpecifier() );
-                        break;
+                    // case SyntaxKind.NullKeywordLiteral:
+                    //     typeSpecifier.Add( this.ParseTypeSpecifier() );
+                    //     break;
+                    // case SyntaxKind.OpenBracketToken:
+                    //     arrayTypeSpecifier.Add( this.ParseArrayTypeSpecifier() );
+                    //     break;
                     default:
                         typeIdentifier = this.MatchToken( SyntaxKind.Identifier );
                         done = true;
@@ -332,32 +332,32 @@ namespace NonConTroll.CodeAnalysis.Syntax
                 }
             }
 
-            return new TypeNameSyntax( this.SyntaxTree , typeIdentifier , typeSpecifier.ToImmutable() , arrayTypeSpecifier.ToImmutable() );
+            return new TypeNameSyntax( this.SyntaxTree , typeIdentifier /*, typeSpecifier.ToImmutable() , arrayTypeSpecifier.ToImmutable() */);
         }
 
-        private TypeSpecifierSyntax ParseTypeSpecifier()
-        {
-            switch( this.Current.Kind )
-            {
-                case SyntaxKind.RefKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )          , SyntaxKind.ReferenceTypeSpecifier );
-                case SyntaxKind.PtrKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )          , SyntaxKind.PointerTypeSpecifier   );
-                case SyntaxKind.NullKeywordLiteral: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.NullKeywordLiteral )  , SyntaxKind.NullableTypeSpecifier  );
-                //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
-                default:
-                    break;
-            }
+        // private TypeSpecifierSyntax ParseTypeSpecifier()
+        // {
+        //     switch( this.Current.Kind )
+        //     {
+        //         case SyntaxKind.RefKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.RefKeyword )          , SyntaxKind.ReferenceTypeSpecifier );
+        //         case SyntaxKind.PtrKeyword:         return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.PtrKeyword )          , SyntaxKind.PointerTypeSpecifier   );
+        //         case SyntaxKind.NullKeywordLiteral: return new TypeSpecifierSyntax( this.SyntaxTree , this.MatchToken( SyntaxKind.NullKeywordLiteral )  , SyntaxKind.NullableTypeSpecifier  );
+        //         //case TokenType.Qm:   return new TypeSpecifierSyntax( this.MatchToken( TokenType.Colon ) , TypeSpecifierKind.Nullable  );
+        //         default:
+        //             break;
+        //     }
 
-            throw new Exception( "" );
-        }
+        //     throw new Exception( "" );
+        // }
 
-        private ArrayTypeSpecifierSyntax ParseArrayTypeSpecifier()
-        {
-            var openBracketToken  = this.MatchToken( SyntaxKind.OpenBracketToken );
-            var rankExpression    = this.ParseExpression();
-            var closeBracketToken = this.MatchToken( SyntaxKind.CloseBracketToken );
+        // private ArrayTypeSpecifierSyntax ParseArrayTypeSpecifier()
+        // {
+        //     var openBracketToken  = this.MatchToken( SyntaxKind.OpenBracketToken );
+        //     var rankExpression    = this.ParseExpression();
+        //     var closeBracketToken = this.MatchToken( SyntaxKind.CloseBracketToken );
 
-            return new ArrayTypeSpecifierSyntax( this.SyntaxTree , openBracketToken , rankExpression , closeBracketToken );
-        }
+        //     return new ArrayTypeSpecifierSyntax( this.SyntaxTree , openBracketToken , rankExpression , closeBracketToken );
+        // }
 
         private TypeClauseSyntax ParseTypeClause()
         {
@@ -399,15 +399,15 @@ namespace NonConTroll.CodeAnalysis.Syntax
             return new WhileStatementSyntax( this.SyntaxTree , keyword , condition , body );
         }
 
-        private StatementSyntax ParseDoWhileStatement()
-        {
-            var doKeyword    = this.MatchToken( SyntaxKind.DoKeyword );
-            var body         = this.ParseStatement();
-            var whileKeyword = this.MatchToken( SyntaxKind.WhileKeyword );
-            var condition    = this.ParseExpression();
+        // private StatementSyntax ParseDoWhileStatement()
+        // {
+        //     var doKeyword    = this.MatchToken( SyntaxKind.DoKeyword );
+        //     var body         = this.ParseStatement();
+        //     var whileKeyword = this.MatchToken( SyntaxKind.WhileKeyword );
+        //     var condition    = this.ParseExpression();
 
-            return new DoWhileStatementSyntax( this.SyntaxTree , doKeyword , body , whileKeyword , condition );
-        }
+        //     return new DoWhileStatementSyntax( this.SyntaxTree , doKeyword , body , whileKeyword , condition );
+        // }
 
         private StatementSyntax ParseForStatement()
         {
@@ -415,11 +415,11 @@ namespace NonConTroll.CodeAnalysis.Syntax
             var identifier  = this.MatchToken( SyntaxKind.Identifier );
             var equalsToken = this.MatchToken( SyntaxKind.EqToken );
             var lowerBound  = this.ParseExpression();
-            var toKeyword   = this.MatchToken( SyntaxKind.ToKeyword );
+            var inKeyword   = this.MatchToken( SyntaxKind.InKeyword );
             var upperBound  = this.ParseExpression();
             var body        = this.ParseStatement();
 
-            return new ForStatementSyntax( this.SyntaxTree , keyword , identifier , equalsToken , lowerBound , toKeyword , upperBound , body );
+            return new ForStatementSyntax( this.SyntaxTree , keyword , identifier , equalsToken , lowerBound , inKeyword , upperBound , body );
         }
 
         private StatementSyntax ParseBreakStatement()
@@ -726,7 +726,7 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
                 case SyntaxKind.TrueKeywordLiteral:
                 case SyntaxKind.FalseKeywordLiteral:
-                case SyntaxKind.NullKeywordLiteral:
+                // case SyntaxKind.NullKeywordLiteral:
 
                 case SyntaxKind.Identifier:
                 {

@@ -62,7 +62,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 binder.BindFunctionDeclaration( function );
             }
 
-            var functions   = binder.Scope!.GetDeclaredFunctions();
+            var functions = binder.Scope!.GetDeclaredFunctions();
             var globalStatements = syntaxTrees
                 .SelectMany( x => x.Root.Members )
                 .OfType<GlobalStatementSyntax>();
@@ -351,7 +351,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case VariableDeclarationSyntax s: return this.BindVariableDeclaration( s );
                 case IfStatementSyntax s:         return this.BindIfStatement( s );
                 case WhileStatementSyntax s:      return this.BindWhileStatement( s );
-                case DoWhileStatementSyntax s:    return this.BindDoWhileStatement( s );
+                // case DoWhileStatementSyntax s:    return this.BindDoWhileStatement( s );
                 case ForStatementSyntax s:        return this.BindForStatement( s );
                 case BreakStatementSyntax s:      return this.BindBreakStatement( s );
                 case ContinueStatementSyntax s:   return this.BindContinueStatement( s );
@@ -459,13 +459,13 @@ namespace NonConTroll.CodeAnalysis.Binding
             return new BoundWhileStatement( condition , body , breakLabel , continueLabel );
         }
 
-        private BoundStatement BindDoWhileStatement( DoWhileStatementSyntax syntax )
-        {
-            var body      = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
-            var condition = this.BindExpression( syntax.Condition , BuiltinTypes.Bool );
+        // private BoundStatement BindDoWhileStatement( DoWhileStatementSyntax syntax )
+        // {
+        //     var body      = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
+        //     var condition = this.BindExpression( syntax.Condition , BuiltinTypes.Bool );
 
-            return new BoundDoWhileStatement( body , condition , breakLabel , continueLabel );
-        }
+        //     return new BoundDoWhileStatement( body , condition , breakLabel , continueLabel );
+        // }
 
         private BoundStatement BindForStatement( ForStatementSyntax syntax )
         {
@@ -737,12 +737,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private BoundExpression BindBinaryExpression( BinaryExpressionSyntax syntax )
         {
-            if( syntax.OperatorToken.Kind == SyntaxKind.Identifier )
-            {
-                var infixSyntax = new InfixBinaryExpressionSyntax( syntax.SyntaxTree , syntax.Lhs , syntax.OperatorToken , syntax.Rhs );
+            // if( syntax.OperatorToken.Kind == SyntaxKind.Identifier )
+            // {
+            //     var infixSyntax = new InfixBinaryExpressionSyntax( syntax.SyntaxTree , syntax.Lhs , syntax.OperatorToken , syntax.Rhs );
 
-                return this.BindInvokationExpression( infixSyntax );
-            }
+            //     return this.BindInvokationExpression( infixSyntax );
+            // }
 
             var boundLhs = this.BindExpression( syntax.Lhs );
             var boundRhs = this.BindExpression( syntax.Rhs );

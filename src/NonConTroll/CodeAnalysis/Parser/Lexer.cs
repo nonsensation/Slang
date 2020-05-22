@@ -111,18 +111,18 @@ namespace NonConTroll.CodeAnalysis
                     this.Advance();
                     break;
                 }
-                case '[':
-                {
-                    this.Kind = SyntaxKind.OpenBracketToken;
-                    this.Advance();
-                    break;
-                }
-                case ']':
-                {
-                    this.Kind = SyntaxKind.CloseBracketToken;
-                    this.Advance();
-                    break;
-                }
+                // case '[':
+                // {
+                //     this.Kind = SyntaxKind.OpenBracketToken;
+                //     this.Advance();
+                //     break;
+                // }
+                // case ']':
+                // {
+                //     this.Kind = SyntaxKind.CloseBracketToken;
+                //     this.Advance();
+                //     break;
+                // }
                 case ',':
                 {
                     this.Kind = SyntaxKind.CommaToken;
@@ -135,12 +135,12 @@ namespace NonConTroll.CodeAnalysis
                     this.Advance();
                     break;
                 }
-                case ';':
-                {
-                    this.Kind = SyntaxKind.SemicolonToken;
-                    this.Advance();
-                    break;
-                }
+                // case ';':
+                // {
+                //     this.Kind = SyntaxKind.SemicolonToken;
+                //     this.Advance();
+                //     break;
+                // }
                 case '_':
                 {
                     this.Kind = SyntaxKind.UnderscoreToken;
@@ -151,40 +151,40 @@ namespace NonConTroll.CodeAnalysis
                 #endregion
 
                 #region multi character punctuators
-                case '.':
-                {
-                    this.Advance();
+                // case '.':
+                // {
+                //     this.Advance();
 
-                    if( this.Current == '.' )
-                    {
-                        this.Advance();
+                //     if( this.Current == '.' )
+                //     {
+                //         this.Advance();
 
-                        if( this.Current == '.' )
-                        {
-                            this.Kind = SyntaxKind.DotDotDotToken;
-                            this.Advance();
-                        }
-                        else
-                        {
-                            this.Kind = SyntaxKind.DotDotToken;
-                        }
-                    }
-                    else
-                    {
-                        this.Kind = SyntaxKind.DotToken;
-                    }
-                    break;
-                }
+                //         if( this.Current == '.' )
+                //         {
+                //             this.Kind = SyntaxKind.DotDotDotToken;
+                //             this.Advance();
+                //         }
+                //         else
+                //         {
+                //             this.Kind = SyntaxKind.DotDotToken;
+                //         }
+                //     }
+                //     else
+                //     {
+                //         this.Kind = SyntaxKind.DotToken;
+                //     }
+                //     break;
+                // }
                 case '+':
                 {
                     this.Advance();
 
-                    if( this.Current == '=' )
-                    {
-                        this.Kind = SyntaxKind.PlusEq;
-                        this.Advance();
-                    }
-                    else
+                    // if( this.Current == '=' )
+                    // {
+                    //     // this.Kind = SyntaxKind.PlusEq;
+                    //     // this.Advance();
+                    // }
+                    // else
                     {
                         this.Kind = SyntaxKind.PlusToken;
                     }
@@ -194,12 +194,12 @@ namespace NonConTroll.CodeAnalysis
                 {
                     this.Advance();
 
-                    if( this.Current == '=' )
-                    {
-                        this.Kind = SyntaxKind.MinusEqToken;
-                        this.Advance();
-                    }
-                    else
+                    // if( this.Current == '=' )
+                    // {
+                    //     // this.Kind = SyntaxKind.MinusEqToken;
+                    //     // this.Advance();
+                    // }
+                    // else
                     {
                         this.Kind = SyntaxKind.MinusToken;
                     }
@@ -209,12 +209,12 @@ namespace NonConTroll.CodeAnalysis
                 {
                     this.Advance();
 
-                    if( this.Current == '=' )
-                    {
-                        this.Kind = SyntaxKind.StarEqToken;
-                        this.Advance();
-                    }
-                    else
+                    // if( this.Current == '=' )
+                    // {
+                    //     // this.Kind = SyntaxKind.StarEqToken;
+                    //     // this.Advance();
+                    // }
+                    // else
                     {
                         this.Kind = SyntaxKind.StarToken;
                     }
@@ -224,12 +224,12 @@ namespace NonConTroll.CodeAnalysis
                 {
                     this.Advance();
 
-                    if( this.Current == '=' )
-                    {
-                        this.Kind = SyntaxKind.SlashEqToken;
-                        this.Advance();
-                    }
-                    else
+                    // if( this.Current == '=' )
+                    // {
+                    //     // this.Kind = SyntaxKind.SlashEqToken;
+                    //     // this.Advance();
+                    // }
+                    // else
                     {
                         this.Kind = SyntaxKind.SlashToken;
                     }
@@ -246,7 +246,8 @@ namespace NonConTroll.CodeAnalysis
                     }
                     else
                     {
-                        this.Kind = SyntaxKind.AndToken;
+                        goto default;
+                        // this.Kind = SyntaxKind.AndToken;
                     }
                     break;
                 }
@@ -261,7 +262,8 @@ namespace NonConTroll.CodeAnalysis
                     }
                     else
                     {
-                        this.Kind = SyntaxKind.PipeToken;
+                        goto default;
+                        // this.Kind = SyntaxKind.PipeToken;
                     }
                     break;
                 }
@@ -518,7 +520,9 @@ namespace NonConTroll.CodeAnalysis
 
         private void ReadIdentifierOrKeyword()
         {
-            while( char.IsLetter( this.Current ) )
+            Debug.Assert( char.IsLetter( this.Current ) ); // disallow identifiers with leading underscore (or numbers)
+
+            while( char.IsLetterOrDigit( this.Current ) || this.Current == '_' )
             {
                 this.Advance();
             }
