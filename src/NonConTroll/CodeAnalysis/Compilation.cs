@@ -8,10 +8,11 @@ using System.Threading;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
+using NonConTroll.Emit;
 
 namespace NonConTroll.CodeAnalysis
 {
-    public class Compilation
+    public sealed class Compilation
     {
         private Compilation( bool isScript , Compilation? previous , params SyntaxTree[]? syntaxTrees )
         {
@@ -30,12 +31,12 @@ namespace NonConTroll.CodeAnalysis
 
         private BoundGlobalScope? globalScope;
 
-        public bool IsScript { get; }
-        public Compilation? Previous { get; }
-        public BuiltinFunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
-        public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
-        public ImmutableArray<FunctionSymbol> Functions => this.GlobalScope.Functions;
-        public ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;
+        internal bool IsScript { get; }
+        internal Compilation? Previous { get; }
+        internal FunctionSymbol? MainFunction => this.GlobalScope.MainFunction;
+        internal ImmutableArray<SyntaxTree> SyntaxTrees { get; }
+        internal ImmutableArray<DeclaredFunctionSymbol> Functions => this.GlobalScope.Functions;
+        internal ImmutableArray<VariableSymbol> Variables => this.GlobalScope.Variables;
 
         internal BoundGlobalScope GlobalScope {
             get {
@@ -54,20 +55,10 @@ namespace NonConTroll.CodeAnalysis
         {
             var submission = this;
             var seenSymbolNames = new HashSet<string>();
+            var builtinFunctions = BuiltinFunctions.GetAll();
 
             while( submission != null )
             {
-                var bindingFlags =
-                    BindingFlags.Static |
-                    BindingFlags.Public |
-                    BindingFlags.NonPublic;
-                var builtinFunctions = typeof( BuiltinFunctions )
-                    .GetFields( bindingFlags )
-                    .Where( x => x.FieldType == typeof( DeclaredFunctionSymbol ) )
-                    .Select( x => (DeclaredFunctionSymbol)x.GetValue( obj: null )! )
-                    .Where( x => x != null )
-                    .ToList();
-
                 foreach( var function in submission.Functions )
                 {
                     if( seenSymbolNames.Add( function.Name ) )
@@ -97,7 +88,11 @@ namespace NonConTroll.CodeAnalysis
         }
 
         private BoundProgram GetProgram()
-            => Binding.Binder.BindProgram( this.IsScript , this.Previous?.GetProgram() , this.GlobalScope );
+        {
+            var previous = this.Previous == null ? null : this.Previous.GetProgram();
+
+            return Binding.Binder.BindProgram( this.IsScript , previous , this.GlobalScope );
+        }
 
         public EvaluationResult Evaluate( Dictionary<VariableSymbol , object> variables )
         {
@@ -106,7 +101,7 @@ namespace NonConTroll.CodeAnalysis
                 return new EvaluationResult( this.GlobalScope.Diagnostics , null );
             }
 
-            var program      = this.GetProgram();
+            var program = this.GetProgram();
 
 #if false // CFG Graphviz output
             var appPath      = Environment.GetCommandLineArgs()[ 0 ];
@@ -151,7 +146,7 @@ namespace NonConTroll.CodeAnalysis
             }
         }
 
-        public void EmitTree( FunctionSymbol symbol , TextWriter writer )
+        public void EmitTree( DeclaredFunctionSymbol symbol , TextWriter writer )
         {
             var program = this.GetProgram();
 
@@ -164,6 +159,23 @@ namespace NonConTroll.CodeAnalysis
             }
 
             body.WriteTo( writer );
+        }
+
+        public ImmutableArray<Diagnostic> Emit( string moduleName , string[] references , string outputPath )
+        {
+            var parseDiagnostics = this.SyntaxTrees.SelectMany( st => st.Diagnostics );
+            var diagnostics = parseDiagnostics.Concat( this.GlobalScope.Diagnostics ).ToImmutableArray();
+
+            if( diagnostics.Any() )
+            {
+                return diagnostics;
+            }
+
+            var program = this.GetProgram();
+
+            // return Emitter.Emit( program , moduleName , references , outputPath );
+
+            throw new NotImplementedException();
         }
     }
 }

@@ -2,13 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis
 {
-    public sealed class DiagnosticBag : IEnumerable<Diagnostic>
+    internal sealed class DiagnosticBag : IEnumerable<Diagnostic>
     {
         private readonly List<Diagnostic> Diagnostics = new List<Diagnostic>();
 
@@ -53,6 +54,11 @@ namespace NonConTroll.CodeAnalysis
         public void ReportCannotConvert( TextLocation location, TypeSymbol fromType, TypeSymbol toType )
             => this.Report( location, $"Cannot convert type '{fromType}' to '{toType}'." );
 
+        internal void ReportInvalidReference( string reference )
+        {
+            throw new NotImplementedException();
+        }
+
         public void ReportCannotConvertImplicit( TextLocation location, TypeSymbol fromType, TypeSymbol toType )
             => this.Report( location, $"Cannot convert type '{fromType}' to '{toType}'. An explicit conversion exists (are you missing a cast?)" );
 
@@ -77,7 +83,17 @@ namespace NonConTroll.CodeAnalysis
         internal void ReportOnlyOneFileCanHaveGlobalStatements( TextLocation location )
             => this.Report( location, $"At most one file can have global statements." );
 
-        public void ReportWrongArgumentType( TextLocation location, DeclaredFunctionSymbol function, string name, TypeSymbol expectedType, TypeSymbol actualType )
+        internal void ReportRequiredTypeNotFound( string? minskName , string metadataName )
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void ReportRequiredTypeAmbiguous( string? minskName , string metadataName , TypeDefinition[] foundTypes )
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReportWrongArgumentType( TextLocation location, FunctionSymbol function, string name, TypeSymbol expectedType, TypeSymbol actualType )
             => this.Report( location, $"Parameter '{name}' for funnction '{function}' requires a value of type '{expectedType}' but was given a value of type '{actualType}'." );
 
         public void ReportExpressionMustHaveValue( TextLocation location )
@@ -97,6 +113,11 @@ namespace NonConTroll.CodeAnalysis
 
         public void ReportMissingReturnExpression( TextLocation location, TypeSymbol returnType )
             => this.Report( location, $"An expression of type '{returnType}' is expected." );
+
+        internal void ReportRequiredMethodNotFound( string typeName , string methodName , string[] parameterTypeNames )
+        {
+            throw new NotImplementedException();
+        }
 
         public void ReportExpressionInvalidLiteral( TextLocation location )
             => this.Report( location, "Invalid literal." );
@@ -125,6 +146,14 @@ namespace NonConTroll.CodeAnalysis
         internal void ReportInvalidReturnWithValueInGlobalStatements( TextLocation location )
             => this.Report( location, $"The 'return' keyword cannot be followed by an espression in global statements." );
 
+        internal void ReportBuiltinTypeAmbiguous( TypeSymbol type , TypeDefinition[] foundTypes )
+            => this.Report( default , $"The builtin type '{type}' was found in multiple references: '{string.Join( ", " , foundTypes.Select( x => x.Module.Assembly.Name ) )}'" );
+
+        internal void ReportBuiltinTypeNotFound( TypeSymbol type )
+            => this.Report( default , $"The builtin type '{type}' cannot be resolved among the given references." );
+
+        public void ReportBadImagePath( string reference )
+            => this.Report( default , $"The reference is not a valid .NET assembly: '{reference}'" );
 
         #endregion
 

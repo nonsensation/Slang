@@ -15,6 +15,7 @@ namespace NonConTroll
         private readonly List<string> SubmissionHistory = new List<string>();
         private int SubmissionHistoryIndex;
         private bool IsDone;
+        private string MetaCommandIdentifier { get; } = "§";
 
         protected Repl()
         {
@@ -50,10 +51,10 @@ namespace NonConTroll
 
                 if( string.IsNullOrEmpty( text ) )
                 {
-                    return;
+                    continue;
                 }
 
-                if( !text.Contains( Environment.NewLine ) && text.StartsWith( "#" ) )
+                if( !text.Contains( Environment.NewLine ) && text.StartsWith( this.MetaCommandIdentifier ) )
                 {
                     this.EvaluateMetaCommand( text );
                 }
@@ -70,6 +71,7 @@ namespace NonConTroll
         private string EditSubmission()
         {
             this.IsDone = false;
+
             var document = new ObservableCollection<string>() { "" };
             var view = new SubmissionView( this.RenderLine , document );
 
@@ -94,19 +96,19 @@ namespace NonConTroll
             {
                 switch( key.Key )
                 {
-                    case ConsoleKey.Escape:     this.HandleEscape( document , view );     break;
-                    case ConsoleKey.Enter:      this.HandleEnter( document , view );      break;
-                    case ConsoleKey.LeftArrow:  this.HandleLeftArrow( document , view );  break;
+                    case ConsoleKey.Escape:     this.HandleEscape(     document , view ); break;
+                    case ConsoleKey.Enter:      this.HandleEnter(      document , view ); break;
+                    case ConsoleKey.LeftArrow:  this.HandleLeftArrow(  document , view ); break;
                     case ConsoleKey.RightArrow: this.HandleRightArrow( document , view ); break;
-                    case ConsoleKey.UpArrow:    this.HandleUpArrow( document , view );    break;
-                    case ConsoleKey.DownArrow:  this.HandleDownArrow( document , view );  break;
-                    case ConsoleKey.Backspace:  this.HandleBackspace( document , view );  break;
-                    case ConsoleKey.Delete:     this.HandleDelete( document , view );     break;
-                    case ConsoleKey.Home:       this.HandleHome( document , view );       break;
-                    case ConsoleKey.End:        this.HandleEnd( document , view );        break;
-                    case ConsoleKey.Tab:        this.HandleTab( document , view );        break;
-                    case ConsoleKey.PageUp:     this.HandlePageUp( document , view );     break;
-                    case ConsoleKey.PageDown:   this.HandlePageDown( document , view );   break;
+                    case ConsoleKey.UpArrow:    this.HandleUpArrow(    document , view ); break;
+                    case ConsoleKey.DownArrow:  this.HandleDownArrow(  document , view ); break;
+                    case ConsoleKey.Backspace:  this.HandleBackspace(  document , view ); break;
+                    case ConsoleKey.Delete:     this.HandleDelete(     document , view ); break;
+                    case ConsoleKey.Home:       this.HandleHome(       document , view ); break;
+                    case ConsoleKey.End:        this.HandleEnd(        document , view ); break;
+                    case ConsoleKey.Tab:        this.HandleTab(        document , view ); break;
+                    case ConsoleKey.PageUp:     this.HandlePageUp(     document , view ); break;
+                    case ConsoleKey.PageDown:   this.HandlePageDown(   document , view ); break;
                 }
             }
             else if( key.Modifiers == ConsoleModifiers.Control )
@@ -114,13 +116,17 @@ namespace NonConTroll
                 switch( key.Key )
                 {
                     case ConsoleKey.Enter:
+                    {
                         this.HandleControlEnter( document , view );
-                        break;
+                    }
+                    break;
                 }
             }
 
             if( key.KeyChar >= ' ' )
+            {
                 this.HandleTyping( document , view , key.KeyChar.ToString() );
+            }
         }
 
         private void HandleEscape( ObservableCollection<string> document , SubmissionView view )
@@ -136,7 +142,7 @@ namespace NonConTroll
         {
             var submissionText = string.Join( Environment.NewLine , document );
 
-            if( submissionText.StartsWith( "#" ) || this.IsCompleteSubmission( submissionText ) )
+            if( submissionText.StartsWith( this.MetaCommandIdentifier ) || this.IsCompleteSubmission( submissionText ) )
             {
                 this.IsDone = true;
 
@@ -336,9 +342,11 @@ namespace NonConTroll
             this.SubmissionHistory.Clear();
         }
 
-        protected virtual void RenderLine( string line )
+        protected virtual object? RenderLine( IReadOnlyList<string> line , int lineIndex , object? state )
         {
             Console.Write( line );
+
+            return state;
         }
 
         private void EvaluateMetaCommand( string input )
@@ -427,8 +435,8 @@ namespace NonConTroll
                 var paramNames = string.Join( " " , parameters.Select( x => $"<{x.Name}>" ) );
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine( $"Invalid number of arguments (given {args.Count}, expected {paramNames.Length})" );
-                Console.WriteLine( $"usage: #{cmd.Name} {paramNames}" );
+                Console.WriteLine( $"Invalid number of arguments" );
+                Console.WriteLine( $"usage: {this.MetaCommandIdentifier}{cmd.Name} {paramNames}" );
                 Console.ResetColor();
 
                 return;
@@ -443,17 +451,18 @@ namespace NonConTroll
 
         protected abstract void EvaluateSubmission( string text );
 
+        private delegate object? LineRenderHandler( IReadOnlyList<string> lines , int lineIndex , object? state );
 
         private sealed class SubmissionView
         {
-            private readonly Action<string> LineRenderer;
+            private readonly LineRenderHandler LineRenderer;
             private readonly ObservableCollection<string> SubmissionDocument;
             private int CursorTop;
             private int RenderedLineCount;
             private int currentLine;
             private int currentCharacter;
 
-            public SubmissionView( Action<string> lineRenderer , ObservableCollection<string> submissionDocument )
+            public SubmissionView( LineRenderHandler lineRenderer , ObservableCollection<string> submissionDocument )
             {
                 this.LineRenderer       = lineRenderer;
                 this.SubmissionDocument = submissionDocument;
@@ -473,6 +482,7 @@ namespace NonConTroll
                 Console.CursorVisible = false;
 
                 var lineCount = 0;
+                var state = (object?)null;
 
                 foreach( var line in this.SubmissionDocument )
                 {
@@ -502,7 +512,7 @@ namespace NonConTroll
 
                     Console.ResetColor();
 
-                    this.LineRenderer( line );
+                    state = this.LineRenderer( this.SubmissionDocument , lineCount , state );
 
                     Console.Write( new string( ' ' , Console.WindowWidth - line.Length - 2 ) );
 
@@ -542,7 +552,6 @@ namespace NonConTroll
                     {
                         this.currentLine = value;
                         this.currentCharacter = Math.Min( this.SubmissionDocument[ this.currentLine ].Length , this.currentCharacter );
-
                         this.UpdateCursorPosition();
                     }
                 }
@@ -554,12 +563,13 @@ namespace NonConTroll
                     if( this.currentCharacter != value )
                     {
                         this.currentCharacter = value;
-
                         this.UpdateCursorPosition();
                     }
                 }
             }
         }
+
+        #region Meta-commands
 
         [AttributeUsage( AttributeTargets.Method , AllowMultiple = false )]
         protected class MetaCommandAttribute : Attribute
@@ -602,12 +612,12 @@ namespace NonConTroll
                 {
                     var paddedName = metaCmd.Name.PadRight( maxNameLength );
 
-                    Console.Out.WritePunctuation( "#" );
+                    Console.Out.WritePunctuation( this.MetaCommandIdentifier );
                     Console.Out.WriteIdentifier( paddedName );
                 }
                 else
                 {
-                    Console.Out.WritePunctuation( "#" );
+                    Console.Out.WritePunctuation( this.MetaCommandIdentifier );
                     Console.Out.WriteIdentifier( metaCmd.Name );
 
                     foreach( var paramInfo in metaParams )
@@ -632,5 +642,7 @@ namespace NonConTroll
                 Console.Out.WriteLine();
             }
         }
+
+        #endregion
     }
 }

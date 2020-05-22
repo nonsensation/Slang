@@ -55,10 +55,6 @@
         IDE0057, <!-- Substring can be simplified (to use ranges [2..^2]) -->
         IDE0059, <!-- Unnecessary assignment of a value to 'myValue' -->
         IDE0019  <!-- Use pattern macthing -->
-
-        <!-- these below should only be in debug, but vscode seems to not recognize this -->
-        IDE0051, <!-- Private member 'foo' is unused. -->
-        IDE0060, <!-- Remove unused parameter -->
       </NoWarn>
   </PropertyGroup>
 
@@ -66,6 +62,7 @@
       <NoWarn>
         IDE0051, <!-- Private member 'foo' is unused. -->
         IDE0060, <!-- Remove unused parameter -->
+        CS0168   <!-- The variable'ex' is declared but never used -->
       </NoWarn>
   </PropertyGroup>
 

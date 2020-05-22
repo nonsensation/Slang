@@ -7,10 +7,11 @@ using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.IO;
 using System.IO;
 using System.Collections.Immutable;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll
 {
-    internal class NonConTrollRepl : Repl
+    internal partial class NonConTrollRepl : Repl
     {
         private Compilation? Previous;
         private bool ShowTree;
@@ -25,22 +26,61 @@ namespace NonConTroll
             this.LoadSubmissions();
         }
 
-        protected override void RenderLine( string line )
+        protected override object? RenderLine( IReadOnlyList<string> lines , int lineIndex , object? state  )
         {
-            var tokens = SyntaxTree.ParseTokens( line );
+            var syntaxTree = default( SyntaxTree );
 
-            foreach( var token in tokens )
+            if( state == null )
             {
-                if(      token.Kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
-                else if( token.Kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-                else if( token.Kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
-                else if( token.Kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
-                else if( token.Kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
-                else                                                   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
+                var text = string.Join( Environment.NewLine , lines );
+                var sourceText = SourceText.From( text );
 
-                Console.Write( token.Text );
+                syntaxTree = SyntaxTree.Parse( sourceText );
+            }
+            else
+            {
+                syntaxTree = (SyntaxTree)state;
+            }
+
+            var lineSpan = syntaxTree.Text.Lines[ lineIndex ].Span;
+            var classifiedSpans = Classifier.Classify( syntaxTree , lineSpan );
+
+            foreach( var classifiedSpan in classifiedSpans )
+            {
+                var tokenText = syntaxTree.Text.ToString( classifiedSpan.Span );
+
+                switch( classifiedSpan.Classification )
+                {
+                    case Classification.Text:
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        break;
+                    case Classification.Keyword:
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        break;
+                    case Classification.Identifier:
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        break;
+                    case Classification.Number:
+                        Console.ForegroundColor = ConsoleColor.DarkCyan;
+                        break;
+                    case Classification.String:
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        break;
+                    case Classification.Punctuation:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                    case Classification.Comment:
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                        break;
+                    default:
+                        throw new Exception();
+                }
+
+                Console.Write( tokenText );
                 Console.ResetColor();
             }
+
+            return syntaxTree;
         }
 
         [MetaCommand( "tree" , "Shows the parse tree" )]
@@ -104,6 +144,32 @@ namespace NonConTroll
             }
         }
 
+        [MetaCommand("exit", "Exits the REPL")]
+        private void Evaluate_Exit()
+        {
+            Environment.Exit( 0 );
+        }
+
+        [MetaCommand( "dump" , "Shows bound tree of a given function" )]
+        private void Evaluate_Dump( string functionName )
+        {
+            var compilation = this.Previous ?? EmptyCompilation;
+            var symbol = compilation.GetSymbols()
+                .OfType<DeclaredFunctionSymbol>()
+                .SingleOrDefault( f => f.Name == functionName );
+
+            if( symbol == null )
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine( $"error: function '{functionName}' does not exist" );
+                Console.ResetColor();
+
+                return;
+            }
+
+            compilation.EmitTree( symbol , Console.Out );
+        }
+
         protected override bool IsCompleteSubmission( string text )
         {
             if( string.IsNullOrEmpty( text ) )
@@ -126,10 +192,19 @@ namespace NonConTroll
             var syntaxTree = SyntaxTree.Parse( text );
 
             // Use Members because we need to exclude the EndOfFileToken.
-            if( !syntaxTree.Root.Members.Any() ||
-                syntaxTree.Root.Members.Last().GetLastToken().IsMissing )
+            if( !syntaxTree.Root.Members.Any() )
             {
                 return false;
+            }
+            else
+            {
+                var lastMember = syntaxTree.Root.Members.Last();
+                var lastToken = lastMember.GetLastToken();
+
+                if( lastToken.IsMissing )
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -237,70 +312,6 @@ namespace NonConTroll
             var fileName = Path.Combine( submissionsDir , name );
 
             File.WriteAllText( fileName , text );
-        }
-
-
-        public class ClassifiedSpan
-        {
-
-        }
-
-        public class Classifier
-        {
-            // public static ImmutableArray<ClassifiedSpan> Classify( SyntaxTree syntaxTree , TextSpan span )
-            // {
-            //     var result = ImmutableArray.CreateBuilder<ClassifiedSpan>();
-
-            //     Classify( syntaxTree.Root , span , result );
-
-            //     return result.ToImmutable();
-            // }
-
-            // public static void Classify( SyntaxNode node, TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     if( !node.FullSpan.OverlapsWith( span ) )
-            //         return;
-
-            //     if( node is SyntaxToken token )
-            //     {
-            //         ClassifyToken( token , span , result );
-            //     }
-            // }
-
-            // public static void ClassifyToken( SyntaxNode token , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     foreach( var trivia in token.LeadingTrivia )
-            //     {
-            //         ClassifyTrivia( trivia , span , result );
-            //     }
-
-            //     foreach( var trivia in token.TrailingTrivia )
-            //     {
-            //         ClassifyTrivia( trivia , span , result );
-            //     }
-            // }
-
-            // public static void ClassifyTrivia( SyntaxTrivia trivia , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     AddClassification( trivia.Kind , trivia.Span , span , result );
-            // }
-
-            // private static void AddClassification( SyntaxKind elementKind , TextSpan elementSpan , TextSpan span , ImmutableArray<ClassifiedSpan>.Builder result )
-            // {
-            //     var classification = GetClassification( elementKind );
-            //     var adjustedEnd = Math.Min( elementSpan.End , span.End );
-            //     var adjustedSpan = TextSpan.Create( )
-            // }
-
-            // private static Classification GetClassification( SyntaxKind kind )
-            // {
-            //     if(      kind.ToString().EndsWith( "Keyword" ) ) { Console.ForegroundColor = ConsoleColor.DarkMagenta; }
-            //     else if( kind.ToString().EndsWith( "Token" ) )   { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-            //     else if( kind == SyntaxKind.Identifier )         { Console.ForegroundColor = ConsoleColor.DarkCyan;    }
-            //     else if( kind == SyntaxKind.NumericLiteral )     { Console.ForegroundColor = ConsoleColor.DarkGreen;   }
-            //     else if( kind == SyntaxKind.StringLiteral )      { Console.ForegroundColor = ConsoleColor.DarkYellow;  }
-            //     else                                             { Console.ForegroundColor = ConsoleColor.DarkGray;    }
-            // }
         }
 
     }

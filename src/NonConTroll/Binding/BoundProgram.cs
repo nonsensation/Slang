@@ -3,13 +3,13 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundProgram
+    internal sealed class BoundProgram
     {
         public BoundProgram( BoundProgram? previous ,
-                             BuiltinFunctionSymbol? mainFunction ,
-                             BuiltinFunctionSymbol? evalFunction ,
+                             FunctionSymbol? mainFunction ,
+                             FunctionSymbol? evalFunction ,
                              ImmutableArray<Diagnostic> diagnostics ,
-                             ImmutableDictionary<FunctionSymbol , BoundBlockStatement> functions )
+                             ImmutableDictionary<DeclaredFunctionSymbol , BoundBlockStatement> functions )
         {
             this.Previous     = previous;
             this.MainFunction = mainFunction;
@@ -19,9 +19,9 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public BoundProgram? Previous { get; }
-        public BuiltinFunctionSymbol? MainFunction { get; }
-        public BuiltinFunctionSymbol? EvalFunction { get; }
+        public FunctionSymbol? MainFunction { get; }
+        public FunctionSymbol? EvalFunction { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
-        public ImmutableDictionary<FunctionSymbol , BoundBlockStatement> Functions { get; }
+        public ImmutableDictionary<DeclaredFunctionSymbol , BoundBlockStatement> Functions { get; }
     }
 }

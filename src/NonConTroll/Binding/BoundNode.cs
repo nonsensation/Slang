@@ -16,4 +16,13 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
     }
 
+    internal sealed class BoundConstant
+    {
+        public BoundConstant( object value )
+        {
+            this.Value = value;
+        }
+
+        public object Value { get; }
+    }
 }

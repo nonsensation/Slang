@@ -60,36 +60,36 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public SyntaxToken CloseParenthesisToken { get; }
     }
 
-    public sealed partial class InfixBinaryExpressionSyntax : InvokationExpressionSyntax
-    {
-        public InfixBinaryExpressionSyntax( SyntaxTree syntaxTree , ExpressionSyntax lhsExpression , SyntaxToken identifier , ExpressionSyntax rhsExpression )
-            : base( syntaxTree )
-        {
-            this.Lhs        = lhsExpression;
-            this.Identifier = identifier;
-            this.Rhs        = rhsExpression;
-        }
+    // public sealed partial class InfixBinaryExpressionSyntax : InvokationExpressionSyntax
+    // {
+    //     public InfixBinaryExpressionSyntax( SyntaxTree syntaxTree , ExpressionSyntax lhsExpression , SyntaxToken identifier , ExpressionSyntax rhsExpression )
+    //         : base( syntaxTree )
+    //     {
+    //         this.Lhs        = lhsExpression;
+    //         this.Identifier = identifier;
+    //         this.Rhs        = rhsExpression;
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.InfixBinaryCallExpression;
+    //     public override SyntaxKind Kind => SyntaxKind.InfixBinaryCallExpression;
 
-        public ExpressionSyntax Lhs { get; }
-        public SyntaxToken Identifier { get; }
-        public ExpressionSyntax Rhs { get; }
-    }
+    //     public ExpressionSyntax Lhs { get; }
+    //     public SyntaxToken Identifier { get; }
+    //     public ExpressionSyntax Rhs { get; }
+    // }
 
-    public sealed partial class InfixUnaryExpressionSyntax : InvokationExpressionSyntax
-    {
-        public InfixUnaryExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , ExpressionSyntax expression )
-            : base( syntaxTree )
-        {
-            this.Identifier = identifier;
-            this.Expression = expression;
-        }
+    // public sealed partial class InfixUnaryExpressionSyntax : InvokationExpressionSyntax
+    // {
+    //     public InfixUnaryExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken identifier , ExpressionSyntax expression )
+    //         : base( syntaxTree )
+    //     {
+    //         this.Identifier = identifier;
+    //         this.Expression = expression;
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.InfixUnaryCallExpression;
-        public SyntaxToken Identifier { get; }
-        public ExpressionSyntax Expression { get; }
-    }
+    //     public override SyntaxKind Kind => SyntaxKind.InfixUnaryCallExpression;
+    //     public SyntaxToken Identifier { get; }
+    //     public ExpressionSyntax Expression { get; }
+    // }
 
     public sealed partial class ContinueStatementSyntax : StatementSyntax
     {
@@ -286,92 +286,92 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
     public sealed partial class TypeNameSyntax : TypeSyntax
     {
-        public TypeNameSyntax( SyntaxTree syntaxTree , SyntaxToken? identifier , ImmutableArray<TypeSpecifierSyntax> typeSpecifier , ImmutableArray<ArrayTypeSpecifierSyntax> arrayTypeSpecifier )
+        public TypeNameSyntax( SyntaxTree syntaxTree , SyntaxToken? identifier /*, ImmutableArray<TypeSpecifierSyntax> typeSpecifier , ImmutableArray<ArrayTypeSpecifierSyntax> arrayTypeSpecifier */)
             : base( syntaxTree )
         {
             this.Identifier         = identifier;
-            this.TypeSpecifier      = typeSpecifier;
-            this.ArrayTypeSpecifier = arrayTypeSpecifier;
+            // this.TypeSpecifier      = typeSpecifier;
+            // this.ArrayTypeSpecifier = arrayTypeSpecifier;
         }
 
         public SyntaxToken? Identifier { get; }
-        public ImmutableArray<TypeSpecifierSyntax> TypeSpecifier { get; }
-        public ImmutableArray<ArrayTypeSpecifierSyntax> ArrayTypeSpecifier { get; }
+        // public ImmutableArray<TypeSpecifierSyntax> TypeSpecifier { get; }
+        // public ImmutableArray<ArrayTypeSpecifierSyntax> ArrayTypeSpecifier { get; }
 
         public override SyntaxKind Kind => SyntaxKind.Type;
     }
 
-    public sealed partial class TupleTypeSyntax : TypeSyntax
-    {
-        public TupleTypeSyntax( SyntaxTree syntaxTree )
-            : base( syntaxTree )
-        {
-        }
+    // public sealed partial class TupleTypeSyntax : TypeSyntax
+    // {
+    //     public TupleTypeSyntax( SyntaxTree syntaxTree )
+    //         : base( syntaxTree )
+    //     {
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.TupleType;
-    }
+    //     public override SyntaxKind Kind => SyntaxKind.TupleType;
+    // }
 
-    public sealed partial class TupleTypeElementSyntax : TypeSyntax
-    {
-        public TupleTypeElementSyntax( SyntaxTree syntaxTree )
-            : base( syntaxTree )
-        {
-        }
+    // public sealed partial class TupleTypeElementSyntax : TypeSyntax
+    // {
+    //     public TupleTypeElementSyntax( SyntaxTree syntaxTree )
+    //         : base( syntaxTree )
+    //     {
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.TupleElementType;
-    }
+    //     public override SyntaxKind Kind => SyntaxKind.TupleElementType;
+    // }
 
-    public sealed partial class ArrayTypeSpecifierSyntax : SyntaxNode
-    {
-        public ArrayTypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken openBracket , ExpressionSyntax rankExpression , SyntaxToken closeBracket )
-            : base( syntaxTree )
-        {
-            this.OpenBracket    = openBracket;
-            this.RankExpression = rankExpression;
-            this.CloseBracket   = closeBracket;
-        }
+    // public sealed partial class ArrayTypeSpecifierSyntax : SyntaxNode
+    // {
+    //     public ArrayTypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken openBracket , ExpressionSyntax rankExpression , SyntaxToken closeBracket )
+    //         : base( syntaxTree )
+    //     {
+    //         this.OpenBracket    = openBracket;
+    //         this.RankExpression = rankExpression;
+    //         this.CloseBracket   = closeBracket;
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.ArrayTypeSpecifier;
+    //     public override SyntaxKind Kind => SyntaxKind.ArrayTypeSpecifier;
 
-        public SyntaxToken OpenBracket { get; }
-        public ExpressionSyntax RankExpression { get; }
-        public SyntaxToken CloseBracket { get; }
+    //     public SyntaxToken OpenBracket { get; }
+    //     public ExpressionSyntax RankExpression { get; }
+    //     public SyntaxToken CloseBracket { get; }
 
-    }
+    // }
 
-    public sealed partial class TypeSpecifierSyntax : SyntaxNode // TODO: these should be separate classes for ref/null/ptr
-    {
-        public TypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken specifierToken , SyntaxKind specifierKind )
-            : base( syntaxTree )
-        {
-            this.SpecifierToken = specifierToken;
-            this.SpecifierKind  = specifierKind;
-        }
+    // public sealed partial class TypeSpecifierSyntax : SyntaxNode // TODO: these should be separate classes for ref/null/ptr
+    // {
+    //     public TypeSpecifierSyntax( SyntaxTree syntaxTree , SyntaxToken specifierToken , SyntaxKind specifierKind )
+    //         : base( syntaxTree )
+    //     {
+    //         this.SpecifierToken = specifierToken;
+    //         this.SpecifierKind  = specifierKind;
+    //     }
 
-        public override SyntaxKind Kind => this.SpecifierKind;
+    //     public override SyntaxKind Kind => this.SpecifierKind;
 
-        public SyntaxToken SpecifierToken { get; }
+    //     public SyntaxToken SpecifierToken { get; }
 
-        private SyntaxKind SpecifierKind { get; }
-    }
+    //     private SyntaxKind SpecifierKind { get; }
+    // }
 
-    public sealed partial class TupleExpressionSyntax : ExpressionSyntax
-    {
-        public TupleExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken openParen , SeparatedSyntaxList<IdentifierNameSyntax> arguments , SyntaxToken closeParen )
-            : base( syntaxTree )
-        {
-            this.OpenParen  = openParen;
-            this.Arguments  = arguments;
-            this.CloseParen = closeParen;
-        }
+    // public sealed partial class TupleExpressionSyntax : ExpressionSyntax
+    // {
+    //     public TupleExpressionSyntax( SyntaxTree syntaxTree , SyntaxToken openParen , SeparatedSyntaxList<IdentifierNameSyntax> arguments , SyntaxToken closeParen )
+    //         : base( syntaxTree )
+    //     {
+    //         this.OpenParen  = openParen;
+    //         this.Arguments  = arguments;
+    //         this.CloseParen = closeParen;
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.TupleExpression;
+    //     public override SyntaxKind Kind => SyntaxKind.TupleExpression;
 
-        public SyntaxToken OpenParen { get; }
-        public SeparatedSyntaxList<IdentifierNameSyntax> Arguments { get; }
-        public SyntaxToken CloseParen { get; }
+    //     public SyntaxToken OpenParen { get; }
+    //     public SeparatedSyntaxList<IdentifierNameSyntax> Arguments { get; }
+    //     public SyntaxToken CloseParen { get; }
 
-    }
+    // }
 
     public abstract class StatementSyntax : SyntaxNode
     {
@@ -535,21 +535,21 @@ namespace NonConTroll.CodeAnalysis.Syntax
     }
 
 
-    public sealed partial class QualifiedNameSyntax : NameSyntax
-    {
-        public QualifiedNameSyntax( SyntaxTree syntaxTree , NameSyntax lhsName , SyntaxToken dotToken , NameSyntax rhsName )
-            : base( syntaxTree )
-        {
-            this.LhsName  = lhsName;
-            this.DotToken = dotToken;
-            this.RhsName  = rhsName;
-        }
+    // public sealed partial class QualifiedNameSyntax : NameSyntax
+    // {
+    //     public QualifiedNameSyntax( SyntaxTree syntaxTree , NameSyntax lhsName , SyntaxToken dotToken , NameSyntax rhsName )
+    //         : base( syntaxTree )
+    //     {
+    //         this.LhsName  = lhsName;
+    //         this.DotToken = dotToken;
+    //         this.RhsName  = rhsName;
+    //     }
 
-        public override SyntaxKind Kind => SyntaxKind.QualifiedName;
-        public NameSyntax LhsName { get; }
-        public SyntaxToken DotToken { get; }
-        public NameSyntax RhsName { get; }
-    }
+    //     public override SyntaxKind Kind => SyntaxKind.QualifiedName;
+    //     public NameSyntax LhsName { get; }
+    //     public SyntaxToken DotToken { get; }
+    //     public NameSyntax RhsName { get; }
+    // }
 
     public sealed partial class ParameterSyntax : SyntaxNode
     {

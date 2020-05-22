@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using Mono.Options;
+
 using NonConTroll.CodeAnalysis;
 using NonConTroll.CodeAnalysis.IO;
 using NonConTroll.CodeAnalysis.Symbols;
@@ -13,14 +16,49 @@ namespace NonConTroll
     {
         public static int Main( string[] args )
         {
-            if( !args.Any() )
+            var helpRequested  = false;
+            var moduleName     = default( string? );
+            var outputPath     = default( string? );
+            var sourcePaths    = new List<string>();
+            var referencePaths = new List<string>();
+
+            var options = new OptionSet {
+                "usage: NonConTroll.Compiler <source-files> [options]" ,
+                { "-r=" , "The {path} of an assembly reference" , x => referencePaths.Add( x ) } ,
+                { "-o=" , "The output {path} of the assembly to create" , x => outputPath = x } ,
+                { "-m=" , "The name of the module" , x => moduleName = x } ,
+                { "-?|-h|--help" , "Prints help" , x => helpRequested = true } ,
+                { "<>" , x => sourcePaths.Add( x ) } ,
+            };
+
+            options.Parse( args );
+
+            if( helpRequested )
             {
-                Console.Error.WriteLine( "usage: kk <source-files>" );
+                options.WriteOptionDescriptions( Console.Out );
+
+                return 0;
+            }
+
+            var paths = GetFilePaths( sourcePaths );
+
+            if( !paths.Any() )
+            {
+                Console.Error.WriteLine( "error: need at least one source file" );
 
                 return 1;
             }
 
-            var paths = GetFilePaths( args );
+            if( outputPath == null )
+            {
+                outputPath = Path.ChangeExtension( sourcePaths.First() , ".exe" );
+            }
+
+            if( moduleName == null )
+            {
+                moduleName = Path.GetFileNameWithoutExtension( outputPath );
+            }
+
             var syntaxTrees = new List<SyntaxTree>();
             var hasErrors = false;
 
@@ -46,18 +84,16 @@ namespace NonConTroll
             }
 
             var compilation = Compilation.Create( syntaxTrees.ToArray() );
-            var result = compilation.Evaluate( new Dictionary<VariableSymbol,object>() );
 
-            if( result.Diagnostics.Any() )
+            var diagnostics = compilation.Emit( moduleName , referencePaths.ToArray() , outputPath );
+
+            // var result = compilation.Evaluate( new Dictionary<VariableSymbol,object>() );
+
+            if( diagnostics.Any() )
             {
-                Console.Error.WriteDiagnostics( result.Diagnostics );
+                Console.Error.WriteDiagnostics( diagnostics );
 
                 return 1;
-            }
-
-            if( result.Value != null )
-            {
-                Console.WriteLine( result.Value );
             }
 
             return 0;

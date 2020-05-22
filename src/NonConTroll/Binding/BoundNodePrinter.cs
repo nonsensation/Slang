@@ -30,7 +30,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundVariableDeclaration node:      WriteVariableDeclaration( node ,      writer ); break;
                 case BoundIfStatement node:              WriteIfStatement( node ,              writer ); break;
                 case BoundWhileStatement node:           WriteWhileStatement( node ,           writer ); break;
-                case BoundDoWhileStatement node:         WriteDoWhileStatement( node ,         writer ); break;
+                // case BoundDoWhileStatement node:         WriteDoWhileStatement( node ,         writer ); break;
                 case BoundForStatement node:             WriteForStatement( node ,             writer ); break;
                 case BoundLabelStatement node:           WriteLabelStatement( node ,           writer ); break;
                 case BoundGotoStatement node:            WriteGotoStatement( node ,            writer ); break;
@@ -60,11 +60,11 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteMatchExpression( BoundMatchExpression node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.MatchKeyword );
+            writer.WriteKeyword( SyntaxKind.MatchKeyword );
             writer.WriteSpace();
             node.Expression.WriteTo( writer );
             writer.WriteLine();
-            writer.Write( SyntaxKind.OpenBraceToken );
+            writer.WriteKeyword( SyntaxKind.OpenBraceToken );
             writer.Indent++;
 
             foreach( var patternSection in node.PatternSections )
@@ -73,16 +73,16 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
 
             writer.Indent--;
-            writer.Write( SyntaxKind.CloseBraceToken );
+            writer.WriteKeyword( SyntaxKind.CloseBraceToken );
         }
 
         private static void WriteMatchStatement( BoundMatchStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.MatchKeyword );
+            writer.WriteKeyword( SyntaxKind.MatchKeyword );
             writer.WriteSpace();
             node.Expression.WriteTo( writer );
             writer.WriteLine();
-            writer.Write( SyntaxKind.OpenBraceToken );
+            writer.WriteKeyword( SyntaxKind.OpenBraceToken );
             writer.Indent++;
 
             foreach( var patternSection in node.PatternSections )
@@ -91,7 +91,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
 
             writer.Indent--;
-            writer.Write( SyntaxKind.CloseBraceToken );
+            writer.WriteKeyword( SyntaxKind.CloseBraceToken );
         }
 
         private static void WritePatternSectionExpression( BoundPatternSectionExpression node , IndentedTextWriter writer )
@@ -170,7 +170,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             if( expression is BoundUnaryExpression unary )
             {
-                writer.WriteNestedExpression( parentPrecedence , unary.Op.TkType.GetUnaryOperatorPrecedence() , unary );
+                writer.WriteNestedExpression( parentPrecedence , unary.Operator.TkType.GetUnaryOperatorPrecedence() , unary );
             }
             else if( expression is BoundBinaryExpression binary )
             {
@@ -229,7 +229,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteIfStatement( BoundIfStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.IfKeyword );
+            writer.WriteKeyword( SyntaxKind.IfKeyword );
             writer.WriteSpace();
             node.Condition.WriteTo( writer );
             writer.WriteLine();
@@ -237,7 +237,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             if( node.ElseStatement != null )
             {
-                writer.Write( SyntaxKind.ElseKeyword );
+                writer.WriteKeyword( SyntaxKind.ElseKeyword );
                 writer.WriteLine();
                 writer.WriteNestedStatement( node.ElseStatement );
             }
@@ -245,27 +245,27 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteWhileStatement( BoundWhileStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.WhileKeyword );
+            writer.WriteKeyword( SyntaxKind.WhileKeyword );
             writer.WriteSpace();
             node.Condition.WriteTo( writer );
             writer.WriteLine();
             writer.WriteNestedStatement( node.Body );
         }
 
-        private static void WriteDoWhileStatement( BoundDoWhileStatement node , IndentedTextWriter writer )
-        {
-            writer.Write( SyntaxKind.DoKeyword );
-            writer.WriteLine();
-            writer.WriteNestedStatement( node.Body );
-            writer.Write( SyntaxKind.WhileKeyword );
-            writer.WriteSpace();
-            node.Condition.WriteTo( writer );
-            writer.WriteLine();
-        }
+        // private static void WriteDoWhileStatement( BoundDoWhileStatement node , IndentedTextWriter writer )
+        // {
+        //     writer.WriteKeyword( SyntaxKind.DoKeyword );
+        //     writer.WriteLine();
+        //     writer.WriteNestedStatement( node.Body );
+        //     writer.WriteKeyword( SyntaxKind.WhileKeyword );
+        //     writer.WriteSpace();
+        //     node.Condition.WriteTo( writer );
+        //     writer.WriteLine();
+        // }
 
         private static void WriteForStatement( BoundForStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.ForKeyword );
+            writer.WriteKeyword( SyntaxKind.ForKeyword );
             writer.WriteSpace();
             writer.WriteIdentifier( node.Variable.Name );
             writer.WriteSpace();
@@ -273,7 +273,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             writer.WriteSpace();
             node.LowerBound.WriteTo( writer );
             writer.WriteSpace();
-            writer.Write( SyntaxKind.To );
+            writer.WriteKeyword( SyntaxKind.InKeyword );
             writer.WriteSpace();
             node.UpperBound.WriteTo( writer );
             writer.WriteLine();
@@ -321,7 +321,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteDeferStatement( BoundDeferStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.DeferKeyword );
+            writer.WriteKeyword( SyntaxKind.DeferKeyword );
             writer.WriteSpace();
             node.Expression.WriteTo( writer );
             writer.WriteLine();
@@ -329,7 +329,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteReturnStatement( BoundReturnStatement node , IndentedTextWriter writer )
         {
-            writer.Write( SyntaxKind.ReturnKeyword );
+            writer.WriteKeyword( SyntaxKind.ReturnKeyword );
 
             if( node.Expression != null )
             {
@@ -390,10 +390,10 @@ namespace NonConTroll.CodeAnalysis.Binding
 
         private static void WriteUnaryExpression( BoundUnaryExpression node , IndentedTextWriter writer )
         {
-            var precedence = node.Op.TkType.GetUnaryOperatorPrecedence();
+            var precedence = node.Operator.TkType.GetUnaryOperatorPrecedence();
 
-            writer.WritePunctuation( node.Op.TkType );
-            writer.WriteNestedExpression( precedence , node.Operand );
+            writer.WritePunctuation( node.Operator.TkType );
+            writer.WriteNestedExpression( precedence , node.Expression );
         }
 
         private static void WriteBinaryExpression( BoundBinaryExpression node , IndentedTextWriter writer )

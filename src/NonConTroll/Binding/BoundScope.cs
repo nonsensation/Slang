@@ -6,7 +6,7 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundScope
+    internal sealed class BoundScope
     {
         private Dictionary<string, Symbol>? Symbols;
 
@@ -54,8 +54,8 @@ namespace NonConTroll.CodeAnalysis.Binding
         public ImmutableArray<VariableSymbol> GetDeclaredVariables()
             => this.GetDeclaredSymbols<VariableSymbol>();
 
-        public ImmutableArray<FunctionSymbol> GetDeclaredFunctions()
-            => this.GetDeclaredSymbols<FunctionSymbol>();
+        public ImmutableArray<DeclaredFunctionSymbol> GetDeclaredFunctions()
+            => this.GetDeclaredSymbols<DeclaredFunctionSymbol>();
 
         private ImmutableArray<TSymbol> GetDeclaredSymbols<TSymbol>()
             where TSymbol : Symbol

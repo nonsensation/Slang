@@ -31,15 +31,17 @@ namespace NonConTroll.CodeAnalysis.Lowering
             return new BoundLabelStatement( label );
         }
 
-        public static BoundBlockStatement Lower( BoundStatement statement )
+        public static BoundBlockStatement Lower( FunctionSymbol function , BoundStatement statement )
         {
             var lowerer = new Lowerer();
             var result = lowerer.RewriteStatement( statement );
+            var flattenedResult = Flatten( function , result );
+            var removedDeadCodeResult = RemoveDeadCode( flattenedResult );
 
-            return Flatten( result );
+            return removedDeadCodeResult;
         }
 
-        private static BoundBlockStatement Flatten( BoundStatement statement )
+        private static BoundBlockStatement Flatten( FunctionSymbol function , BoundStatement statement )
         {
             var builder = ImmutableArray.CreateBuilder<BoundStatement>();
             var stack = new Stack<BoundStatement>();
@@ -60,6 +62,42 @@ namespace NonConTroll.CodeAnalysis.Lowering
                 else
                 {
                     builder.Add( current );
+                }
+            }
+
+            if( function.ReturnType == BuiltinTypes.Void )
+            {
+                if( builder.Count == 0 || CanFallThrough( builder.Last() ) )
+                {
+                    builder.Add( new BoundReturnStatement( null ) );
+                }
+            }
+
+            return new BoundBlockStatement( builder.ToImmutable() );
+        }
+
+        private static bool CanFallThrough( BoundStatement boundStatement )
+        {
+            // TODO: We don't rewrite conditional gotos where the condition is
+            //       always true. We shouldn't handle this here, because we
+            //       should really rewrite those to unconditional gotos in the
+            //       first place.
+            return boundStatement.Kind != BoundNodeKind.ReturnStatement &&
+                   boundStatement.Kind != BoundNodeKind.GotoStatement;
+        }
+
+        private static BoundBlockStatement RemoveDeadCode( BoundBlockStatement node )
+        {
+            var controlFlow = ControlFlowGraph.Create( node );
+            var reachableStatements = new HashSet<BoundStatement>(
+                controlFlow.Blocks.SelectMany( b => b.Statements ) );
+            var builder = node.Statements.ToBuilder();
+
+            for( int i = builder.Count - 1 ; i >= 0 ; i-- )
+            {
+                if( !reachableStatements.Contains( builder[ i ] ) )
+                {
+                    builder.RemoveAt( i );
                 }
             }
 
@@ -189,7 +227,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
             var variableDeclaration = new BoundVariableDeclaration( node.Variable , node.LowerBound );
             var variableExpression  = new BoundVariableExpression( node.Variable );
 
-            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , BuiltinTypes.Int );
+            var boundSymbol       = new LocalVariableSymbol( "upperBound" , true , BuiltinTypes.Int , node.UpperBound.ConstantValue );
             var boundDecl         = new BoundVariableDeclaration( boundSymbol , node.UpperBound );
             var boundExpr         = new BoundVariableExpression( boundSymbol );
             var boundComparisonOp = BoundBinaryOperator.Bind( SyntaxKind.LtEqToken , BuiltinTypes.Int , BuiltinTypes.Int );
@@ -231,7 +269,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
                     <stmtMatchAny>
             */
 
-            var exprVariableSymbol = new LocalVariableSymbol( "matchExpression" , isReadOnly: true , node.Expression.Type );
+            var exprVariableSymbol = new LocalVariableSymbol( "matchExpression" , isReadOnly: true , node.Expression.Type , node.Expression.ConstantValue );
             var exprVariableDecl   = new BoundVariableDeclaration( exprVariableSymbol , node.Expression );
             var exprVariableExpr   = new BoundVariableExpression( exprVariableSymbol );
 
@@ -325,7 +363,25 @@ namespace NonConTroll.CodeAnalysis.Lowering
             return this.RewriteExpression( expr! );
         }
 
+        protected override BoundStatement RewriteConditionalGotoStatement( BoundConditionalGotoStatement node )
+        {
+            if( node.Condition.ConstantValue != null )
+            {
+                var value = (bool)node.Condition.ConstantValue.Value;
+                var condition = node.JumpIfTrue ? value : !value;
 
+                if( condition )
+                {
+                    return new BoundGotoStatement( node.Label );
+                }
+                else
+                {
+                    //return new BoundNop();
+                }
+            }
+
+            return base.RewriteConditionalGotoStatement( node );
+        }
 
     }
 }

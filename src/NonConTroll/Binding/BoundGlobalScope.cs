@@ -3,12 +3,12 @@ using NonConTroll.CodeAnalysis.Symbols;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
-    public class BoundGlobalScope
+    internal sealed class BoundGlobalScope
     {
         public BoundGlobalScope( BoundGlobalScope? previous ,
-                                 BuiltinFunctionSymbol? mainFunction ,
-                                 BuiltinFunctionSymbol? evalFunction ,
-                                 ImmutableArray<FunctionSymbol> functions ,
+                                 DeclaredFunctionSymbol? mainFunction ,
+                                 DeclaredFunctionSymbol? evalFunction ,
+                                 ImmutableArray<DeclaredFunctionSymbol> functions ,
                                  ImmutableArray<VariableSymbol> variables ,
                                  ImmutableArray<BoundStatement> statements ,
                                  ImmutableArray<Diagnostic> diagnostics )
@@ -23,9 +23,9 @@ namespace NonConTroll.CodeAnalysis.Binding
         }
 
         public BoundGlobalScope? Previous { get; }
-        public BuiltinFunctionSymbol? MainFunction { get; }
-        public BuiltinFunctionSymbol? EvalFunction { get; }
-        public ImmutableArray<FunctionSymbol> Functions { get; }
+        public DeclaredFunctionSymbol? MainFunction { get; }
+        public DeclaredFunctionSymbol? EvalFunction { get; }
+        public ImmutableArray<DeclaredFunctionSymbol> Functions { get; }
         public ImmutableArray<VariableSymbol> Variables { get; }
         public ImmutableArray<BoundStatement> Statements { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
