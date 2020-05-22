@@ -13,8 +13,8 @@ namespace NonConTroll.CodeAnalysis.Binding
                 switch( op.Kind )
                 {
                     case BoundUnaryOperatorKind.Identity:        return new BoundConstant( /*(int)*/value );
-                    case BoundUnaryOperatorKind.LogicalNegation: return new BoundConstant( -(int)value );
-                    case BoundUnaryOperatorKind.Negation:        return new BoundConstant( !(bool)value );
+                    case BoundUnaryOperatorKind.Negation:        return new BoundConstant( -(int)value );
+                    case BoundUnaryOperatorKind.LogicalNegation: return new BoundConstant( !(bool)value );
                     default:
                         throw new Exception( $"Unexpected unary operator '{op.Kind}' for type '{rhs.Type}'" );
 

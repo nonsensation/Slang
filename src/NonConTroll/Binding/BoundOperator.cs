@@ -49,8 +49,14 @@ namespace NonConTroll.CodeAnalysis.Binding
         public TypeSymbol RhsType { get; }
         public TypeSymbol Type { get; }
 
+        public TypeSymbol ResultType => this.Type;
+        public TypeSymbol OperandType => this.LhsType; // TODO: common type somehow?
+
         private static readonly BoundBinaryOperator[] Operators =
         {
+            new BoundBinaryOperator( SyntaxKind.EqEqToken     , BoundBinaryOperatorKind.Equals          , BuiltinTypes.Any    , BuiltinTypes.Bool ) ,
+            new BoundBinaryOperator( SyntaxKind.ExmEqToken    , BoundBinaryOperatorKind.NotEquals       , BuiltinTypes.Any    , BuiltinTypes.Bool ) ,
+
             new BoundBinaryOperator( SyntaxKind.PlusToken     , BoundBinaryOperatorKind.Addition        , BuiltinTypes.Int                      ) ,
             new BoundBinaryOperator( SyntaxKind.MinusToken    , BoundBinaryOperatorKind.Subtraction     , BuiltinTypes.Int                      ) ,
             new BoundBinaryOperator( SyntaxKind.StarToken     , BoundBinaryOperatorKind.Multiplication  , BuiltinTypes.Int                      ) ,

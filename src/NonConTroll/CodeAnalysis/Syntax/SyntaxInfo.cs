@@ -253,5 +253,31 @@ namespace NonConTroll.CodeAnalysis.Syntax
                     return 0;
             }
         }
+
+        public static IEnumerable<SyntaxKind> GetUnaryOperatorKinds()
+        {
+            var kinds = Enum.GetValues( typeof( SyntaxKind ) ).OfType<SyntaxKind>();
+
+            foreach( var kind in kinds )
+            {
+                if( GetUnaryOperatorPrecedence( kind ) > 0 )
+                {
+                    yield return kind;
+                }
+            }
+        }
+
+        public static IEnumerable<SyntaxKind> GetBinaryOperatorKinds()
+        {
+            var kinds = Enum.GetValues( typeof( SyntaxKind ) ).OfType<SyntaxKind>();
+
+            foreach( var kind in kinds )
+            {
+                if( GetBinaryOperatorPrecedence( kind ) > 0 )
+                {
+                    yield return kind;
+                }
+            }
+        }
     }
 }

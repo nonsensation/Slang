@@ -101,7 +101,7 @@ namespace NonConTroll.CodeAnalysis.IO
                 {
                     Console.WriteLine();
                     Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.Write( diagnostic.Msg );
+                    Console.Write( diagnostic.Message );
                     Console.WriteLine( diagnostic );
                     Console.ResetColor();
                 }

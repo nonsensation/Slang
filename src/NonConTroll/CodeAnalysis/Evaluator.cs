@@ -190,6 +190,12 @@ namespace NonConTroll.CodeAnalysis
 
         private object EvaluateLiteralExpression( BoundLiteralExpression n )
         {
+            // HACK
+            if( n.Type == BuiltinTypes.String )
+            {
+                return ((string)n.Value).Replace( "\"" , "" );
+            }
+
             return n.Value;
         }
 
@@ -233,35 +239,66 @@ namespace NonConTroll.CodeAnalysis
 
         private object EvaluateBinaryExpression( BoundBinaryExpression binExpr )
         {
-            var lhs = this.EvaluateExpression( binExpr.Lhs )!;
-            var rhs = this.EvaluateExpression( binExpr.Rhs )!;
+            var lhsValue = this.EvaluateExpression( binExpr.Lhs )!;
+            var rhsvalue = this.EvaluateExpression( binExpr.Rhs )!;
 
-            switch( binExpr.Operator.Kind )
+            if( binExpr.Operator.OperandType == BuiltinTypes.Any )
             {
-                case BoundBinaryOperatorKind.Addition:
-                    if( binExpr.Type == BuiltinTypes.Int )
-                    {
-                        return (int)lhs + (int)rhs;
-                    }
-                    else
-                    {
-                        return ((string)lhs).Replace( "\"" , "" )
-                             + ((string)rhs).Replace( "\"" , "" );
-                    }
+                var lhs = lhsValue;
+                var rhs = rhsvalue;
 
-                case BoundBinaryOperatorKind.Equals:          return  Equals( lhs , rhs );
-                case BoundBinaryOperatorKind.NotEquals:       return !Equals( lhs , rhs );
-                case BoundBinaryOperatorKind.Subtraction:     return (int)lhs - (int)rhs;
-                case BoundBinaryOperatorKind.LogicalAnd:      return (bool)lhs && (bool)rhs;
-                case BoundBinaryOperatorKind.LogicalOr:       return (bool)lhs || (bool)rhs;
-                case BoundBinaryOperatorKind.Less:            return (int)lhs  <  (int)rhs;
-                case BoundBinaryOperatorKind.LessOrEquals:    return (int)lhs  <= (int)rhs;
-                case BoundBinaryOperatorKind.Greater:         return (int)lhs  >  (int)rhs;
-                case BoundBinaryOperatorKind.GreaterOrEquals: return (int)lhs  >= (int)rhs;
-
-                default:
-                    throw new Exception( $"Unexpected binary operator {binExpr.Operator}" );
+                switch( binExpr.Operator.Kind )
+                {
+                    case BoundBinaryOperatorKind.Equals:     return Equals( lhs , rhs );
+                    case BoundBinaryOperatorKind.NotEquals:  return Equals( lhs , rhs );
+                }
             }
+            else if( binExpr.Operator.OperandType == BuiltinTypes.Int )
+            {
+                var lhs = (int)lhsValue;
+                var rhs = (int)rhsvalue;
+
+                switch( binExpr.Operator.Kind )
+                {
+                    case BoundBinaryOperatorKind.Addition:        return lhs + rhs;
+                    case BoundBinaryOperatorKind.Subtraction:     return lhs - rhs;
+                    case BoundBinaryOperatorKind.Multiplication:  return lhs * rhs;
+                    case BoundBinaryOperatorKind.Division:        return lhs / rhs;
+                    case BoundBinaryOperatorKind.Less:            return lhs  <  rhs;
+                    case BoundBinaryOperatorKind.LessOrEquals:    return lhs  <= rhs;
+                    case BoundBinaryOperatorKind.Greater:         return lhs  >  rhs;
+                    case BoundBinaryOperatorKind.GreaterOrEquals: return lhs  >= rhs;
+                    case BoundBinaryOperatorKind.Equals:          return lhs == rhs;
+                    case BoundBinaryOperatorKind.NotEquals:       return lhs != rhs;
+                }
+            }
+            else if( binExpr.Operator.OperandType == BuiltinTypes.String )
+            {
+                var lhs = (string)lhsValue;
+                var rhs = (string)rhsvalue;
+
+                switch( binExpr.Operator.Kind )
+                {
+                    case BoundBinaryOperatorKind.Addition:   return lhs + rhs;//.Replace( "\"" , "" );
+                    case BoundBinaryOperatorKind.Equals:     return lhs == rhs;
+                    case BoundBinaryOperatorKind.NotEquals:  return lhs != rhs;
+                }
+            }
+            else if( binExpr.Operator.OperandType == BuiltinTypes.Bool )
+            {
+                var lhs = (bool)lhsValue;
+                var rhs = (bool)rhsvalue;
+
+                switch( binExpr.Operator.Kind )
+                {
+                    case BoundBinaryOperatorKind.Equals:     return lhs == rhs;
+                    case BoundBinaryOperatorKind.NotEquals:  return lhs != rhs;
+                    case BoundBinaryOperatorKind.LogicalAnd: return lhs && rhs;
+                    case BoundBinaryOperatorKind.LogicalOr:  return lhs || rhs;
+                }
+            }
+
+            throw new Exception( $"Unexpected binary operator {binExpr.Operator} between types '{binExpr.Lhs.Type}' and '{binExpr.Rhs.Type}'" );
         }
 
         private object? EvaluateCallExpression( BoundCallExpression node )

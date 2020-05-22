@@ -7,12 +7,12 @@ namespace NonConTroll.CodeAnalysis
         public Diagnostic( TextLocation textLocation , string msg )
         {
             this.Location = textLocation;
-            this.Msg = msg;
+            this.Message = msg;
         }
 
         public TextLocation Location { get; }
-        public string Msg { get; }
+        public string Message { get; }
 
-        public override string ToString() => this.Msg;
+        public override string ToString() => this.Message;
     }
 }
