@@ -17,7 +17,7 @@
 
       <NonConTrollScriptExt Condition="$([MSBuild]::IsOSUnixLike())">.sh</NonConTrollScriptExt>
       <NonConTrollScriptExt Condition="$([MSBuild]::IsOSPlatform('Windows'))">.cmd</NonConTrollScriptExt>
-      <NonConTrollCompilerScript Condition="'$(NonConTrollCompilerScript)' == ''">NonConTroll.Compiler$(NonConTrollScriptExt)</NonConTrollCompilerScript>
+      <NonConTrollCompilerScript Condition="'$(NonConTrollCompilerScript)' == ''">compiler$(NonConTrollScriptExt)</NonConTrollCompilerScript>
       <NonConTrollCompileCommand>"$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\', '$(NonConTrollCompilerScript)'))" $(NonConTrollCompilerArgs)</NonConTrollCompileCommand>
     </PropertyGroup>
 

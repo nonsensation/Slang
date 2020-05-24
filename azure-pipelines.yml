@@ -42,9 +42,9 @@ jobs:
           projects: $(tests)
           arguments: --configuration ${{ c }}
           publishTestResults: true
-      - task: DotNetCoreCLI@2
-        displayName: Build samples (${{ os.name }} ${{ c }})
-        inputs:
-          command: build
-          projects: $(samples)
-          arguments: --configuration ${{ c }}
+      # - task: DotNetCoreCLI@2
+      #   displayName: Build samples (${{ os.name }} ${{ c }})
+      #   inputs:
+      #     command: build
+      #     projects: $(samples)
+      #     arguments: --configuration ${{ c }}
