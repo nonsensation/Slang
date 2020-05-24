@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.Tests.CodeAnalysis.Syntax;
 using Xunit;
@@ -15,6 +16,10 @@ namespace NonConTroll.Tests.CodeAnalysis
             var op2Precedence = SyntaxInfo.GetBinaryOperatorPrecedence( op2 );
             var op1Text = SyntaxInfo.GetText( op1 );
             var op2Text = SyntaxInfo.GetText( op2 );
+
+            Debug.Assert( op1Text != null );
+            Debug.Assert( op2Text != null );
+
             var text = $"a {op1Text} b {op2Text} c";
             var expression = ParseExpression( text );
 
@@ -69,6 +74,10 @@ namespace NonConTroll.Tests.CodeAnalysis
             var binaryPrecedence = SyntaxInfo.GetBinaryOperatorPrecedence( binaryKind );
             var unaryText = SyntaxInfo.GetText( unaryKind );
             var binaryText = SyntaxInfo.GetText( binaryKind );
+
+            Debug.Assert( unaryText  != null );
+            Debug.Assert( binaryText != null );
+
             var text = $"{unaryText} a {binaryText} b";
             var expression = ParseExpression( text );
 

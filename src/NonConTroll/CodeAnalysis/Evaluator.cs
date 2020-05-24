@@ -332,9 +332,9 @@ namespace NonConTroll.CodeAnalysis
                 }
                 else if( builtinFunctionSymbol == BuiltinFunctions.Print )
                 {
-                    var message = (string)this.EvaluateExpression( node.Arguments[ 0 ] )!;
+                    var value = this.EvaluateExpression( node.Arguments[ 0 ] )!;
 
-                    Console.WriteLine( message );
+                    Console.WriteLine( value );
 
                     return null;
                 }

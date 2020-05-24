@@ -1,3 +1,10 @@
 @echo off
 
-dotnet run --project .\src\NonConTroll.Repl\NonConTroll.Repl.csproj
+REM Vars
+set "SLNDIR=%~dp0src"
+
+REM Restore + Build
+dotnet build "%SLNDIR%\NonConTroll.Repl" --nologo || exit /b
+
+REM Run
+dotnet run -p "%SLNDIR%\NonConTroll.Repl" --no-build

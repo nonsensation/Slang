@@ -74,7 +74,7 @@ namespace NonConTroll.Tests.CodeAnalysis
 
             using( var reader = new StringReader( text ) )
             {
-                string line;
+                var line = default( string? );
 
                 while( (line = reader.ReadLine()) != null )
                 {

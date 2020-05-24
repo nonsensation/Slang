@@ -9,7 +9,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
     {
         public static readonly BuiltinFunctionSymbol Print
             = new BuiltinFunctionSymbol( "print" ,
-                                         ImmutableArray.Create( new ParameterSymbol( "text" , BuiltinTypes.String ) ) ,
+                                         ImmutableArray.Create( new ParameterSymbol( "text" , BuiltinTypes.Any ) ) ,
                                          BuiltinTypes.Void , null );
         public static readonly BuiltinFunctionSymbol Input
             = new BuiltinFunctionSymbol( "input" ,

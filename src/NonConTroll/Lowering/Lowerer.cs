@@ -4,8 +4,6 @@ using System;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
-
-using static NonConTroll.CodeAnalysis.Lowering.BoundNodeFactory;
 using NonConTroll.CodeAnalysis.Syntax;
 using System.Diagnostics;
 
@@ -144,11 +142,12 @@ namespace NonConTroll.CodeAnalysis.Lowering
             // break:
 
             var bodyLabel = Label();
-            var gotoContinue = Goto( node.ContinueLabel );
-            var continueLabel = Label( node.ContinueLabel );
-            var gotoTrue = GotoIf( bodyLabel , node.Condition );
-            var breakLabel = Label( node.BreakLabel );
-            var result = Block( gotoContinue , bodyLabel , node.Body , continueLabel , gotoTrue , breakLabel );
+            var result = Block( Goto( node.ContinueLabel ) ,
+                                bodyLabel ,
+                                node.Body ,
+                                Label( node.ContinueLabel ) ,
+                                GotoIfTrue( bodyLabel , node.Condition ) ,
+                                Label( node.BreakLabel ) );
 
             return this.RewriteStatement( result );
         }
@@ -168,10 +167,12 @@ namespace NonConTroll.CodeAnalysis.Lowering
             // break:
 
             var bodyLabel = Label();
-            var continueLabel = Label( node.ContinueLabel );
-            var gotoTrue = GotoIf( bodyLabel , node.Condition );
-            var breakLabel = Label( node.BreakLabel );
-            var result = Block( bodyLabel , node.Body , continueLabel , gotoTrue , breakLabel );
+            var result = Block( bodyLabel ,
+                                node.Body ,
+                                Label( node.ContinueLabel ) ,
+                                GotoIfTrue( bodyLabel , node.Condition ) ,
+                                Label( node.BreakLabel )
+                              );
 
             return this.RewriteStatement( result );
         }
@@ -195,27 +196,19 @@ namespace NonConTroll.CodeAnalysis.Lowering
             //      break:
             // }
 
-#if false // old, maybe use again
-            var variableDecl = VarDecl( node.Variable , node.LowerBound );
-            var variableExpr = Var( variableDecl );
-            var boundSymbol = Symbol( "upperBound" , BuiltinTypes.Int , isReadOnly: true , node.UpperBound.ConstantValue );
-            var boundDecl = VarDecl( boundSymbol , node.UpperBound );
-            var boundExpr = Var( boundSymbol );
-            var condition = LtEq( variableExpr , boundExpr );
-            var increment = Incr( variableExpr );
-            var continueLabel = Label( node.ContinueLabel );
-            var whileBody = Block( node.Body , continueLabel , increment );
-            var whileStatement = While( condition , whileBody , node.BreakLabel );
-            var result = Block( variableDecl , boundDecl , whileStatement );
-#else // this creates Var( variableDecl ) multiple times
+
             var lowerBound = VariableDeclaration( node.Variable , node.LowerBound );
-            var upperBound = Symbol( "upperBound" , BuiltinTypes.Int , isReadOnly: true , node.UpperBound.ConstantValue );
+            var upperBound = ConstantDeclaration( "upperBound" , node.UpperBound , BuiltinTypes.Int );
             var result = Block( lowerBound ,
-                                VariableDeclaration( upperBound , node.UpperBound ) ,
-                                While( condition: CompareLessThanOrEqual( Variable( lowerBound ) , Variable( upperBound ) ) ,
-                                            body: Block( node.Body , Label( node.ContinueLabel ) , Increment( Variable( lowerBound ) ) ) ,
-                                      breakLabel: node.BreakLabel ) );
-#endif
+                                upperBound ,
+                                While( CompareLessThanOrEqual( Variable( lowerBound ) , Variable( upperBound ) ) ,
+                                Block( node.Body ,
+                                       Label( node.ContinueLabel ) ,
+                                       Increment( Variable( lowerBound ) )
+                                ) ,
+                                node.BreakLabel )
+                        );
+
             return this.RewriteStatement( result );
         }
 
@@ -240,9 +233,8 @@ namespace NonConTroll.CodeAnalysis.Lowering
                     <stmtMatchAny>
             */
 
-            var exprVariableSymbol = Symbol( "matchExpression" , node.Expression.Type , isReadOnly: true , node.Expression.ConstantValue );
-            var exprVariableDecl = VariableDeclaration( exprVariableSymbol , node.Expression );
-            var exprVariableExpr = Variable( exprVariableSymbol );
+            var exprVariableDecl = ConstantDeclaration( "matchExpression" , node.Expression );
+            var exprVariableExpr = Variable( exprVariableDecl );
 
             var prevStmt = default( BoundStatement );
 
@@ -378,27 +370,27 @@ namespace NonConTroll.CodeAnalysis.Lowering
             => BinExpr( lhs , SyntaxKind.SlashToken , rhs );
         private BoundBinaryExpression CompareGreaterThan( BoundExpression lhs , BoundExpression rhs )
             => BinExpr( lhs , SyntaxKind.GtToken , rhs );
-        private BoundBinaryExpression CompareGreatherThanOrEqual( BoundExpression lhs , BoundExpression rhs )
+        private BoundBinaryExpression CompareGreaterThanOrEqual( BoundExpression lhs , BoundExpression rhs )
             => BinExpr( lhs , SyntaxKind.GtEqToken , rhs );
         private BoundBinaryExpression CompareLessThan( BoundExpression lhs , BoundExpression rhs )
             => BinExpr( lhs , SyntaxKind.LtToken , rhs );
         private BoundBinaryExpression CompareLessThanOrEqual( BoundExpression lhs , BoundExpression rhs )
             => BinExpr( lhs , SyntaxKind.LtEqToken , rhs );
-        private BoundBinaryExpression And( BoundExpression lhs , BoundExpression rhs )
-            => BinExpr( lhs , SyntaxKind.AndAndToken , rhs );
         private BoundBinaryExpression Or( BoundExpression lhs , BoundExpression rhs )
             => BinExpr( lhs , SyntaxKind.PipePipeToken , rhs );
+        private BoundBinaryExpression And( BoundExpression lhs , BoundExpression rhs )
+            => BinExpr( lhs , SyntaxKind.AndAndToken , rhs );
 
         private BoundBinaryExpression BinExpr( BoundExpression lhs , SyntaxKind kind , BoundExpression rhs )
         {
-            var op = BoundBinaryOperator.Bind( SyntaxKind.EqEqToken , lhs.Type , rhs.Type )!;
+            var op = BoundBinaryOperator.Bind( kind , lhs.Type , rhs.Type )!;
 
             return new BoundBinaryExpression( lhs , op , rhs );
         }
 
         private BoundUnaryExpression UnExpr( SyntaxKind kind , BoundExpression expr )
         {
-            var op = BoundUnaryOperator.Bind( SyntaxKind.EqEqToken , expr.Type )!;
+            var op = BoundUnaryOperator.Bind( kind , expr.Type )!;
 
             return new BoundUnaryExpression( op , expr );
         }
@@ -443,15 +435,16 @@ namespace NonConTroll.CodeAnalysis.Lowering
             return new BoundGotoStatement( label );
         }
 
-        private BoundConditionalGotoStatement GotoIf( BoundLabelStatement label , BoundExpression condition , bool jumpIfTrue = true )
-            => new BoundConditionalGotoStatement( label.Label , condition , jumpIfTrue );
+        private BoundConditionalGotoStatement GotoIf( BoundLabelStatement label , BoundExpression condition , bool jumpIfTrue )
+        {
+            return new BoundConditionalGotoStatement( label.Label , condition , jumpIfTrue );
+        }
 
         private BoundConditionalGotoStatement GotoIfTrue( BoundLabelStatement label , BoundExpression condition )
-            => new BoundConditionalGotoStatement( label.Label , condition , true );
+            => GotoIf( label , condition , jumpIfTrue: true );
 
         private BoundConditionalGotoStatement GotoIfFalse( BoundLabelStatement label , BoundExpression condition )
-            => new BoundConditionalGotoStatement( label.Label , condition , false );
-
+            => GotoIf( label , condition , jumpIfTrue: false );
 
         private BoundLabel GenerateLabel()
         {
@@ -470,6 +463,19 @@ namespace NonConTroll.CodeAnalysis.Lowering
         private BoundLabelStatement Label( BoundLabel label )
         {
             return new BoundLabelStatement( label );
+        }
+
+        private BoundVariableDeclaration ConstantDeclaration( string name , BoundExpression initExpr , TypeSymbol? type = null )
+            => VariableDeclarationInternal( name , initExpr , type , isReadOnly: true );
+
+        private BoundVariableDeclaration VariableDeclaration( string name , BoundExpression initExpr , TypeSymbol? type = null )
+            => VariableDeclarationInternal( name , initExpr , type , isReadOnly: false );
+
+        private BoundVariableDeclaration VariableDeclarationInternal( string name , BoundExpression initExpr , TypeSymbol? type , bool isReadOnly )
+        {
+            var symbol = Symbol( name , type ?? initExpr.Type , isReadOnly , initExpr.ConstantValue );
+
+            return new BoundVariableDeclaration( symbol , initExpr );
         }
 
         private BoundVariableDeclaration VariableDeclaration( VariableSymbol symbol , BoundExpression initExpr )

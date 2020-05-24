@@ -318,7 +318,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             this.Operator      = @operator;
             this.Expression    = expression;
-            this.ConstantValue = ConstantFolding.ComputeConstant( @operator , expression );
+            this.ConstantValue = ConstantFolding.Fold( @operator , expression );
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.UnaryExpression;
@@ -378,7 +378,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             this.Lhs      = lhs;
             this.Operator = op;
             this.Rhs      = rhs;
-            this.ConstantValue = ConstantFolding.ComputeConstant( lhs , op , rhs );
+            this.ConstantValue = ConstantFolding.Fold( lhs , op , rhs );
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression;

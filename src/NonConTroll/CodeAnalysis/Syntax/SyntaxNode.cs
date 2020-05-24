@@ -61,11 +61,6 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
         private static void PrettyPrint( TextWriter writer , SyntaxNode node , string indent = "" , bool isLast = true )
         {
-            if( node == null )
-            {
-                return;
-            }
-
             var midNodeStr   = "├──";
             var noNodeStr    = "│  ";
             var lastNodeStr  = "└──";

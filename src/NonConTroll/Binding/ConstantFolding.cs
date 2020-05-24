@@ -4,7 +4,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 {
     internal static class ConstantFolding
     {
-        public static BoundConstant? ComputeConstant( BoundUnaryOperator op , BoundExpression rhs )
+        public static BoundConstant? Fold( BoundUnaryOperator op , BoundExpression rhs )
         {
             if( rhs.ConstantValue != null )
             {
@@ -24,7 +24,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             return null;
         }
 
-        public static BoundConstant? ComputeConstant( BoundExpression lhsExpr , BoundBinaryOperator op , BoundExpression rhsExpr )
+        public static BoundConstant? Fold( BoundExpression lhsExpr , BoundBinaryOperator op , BoundExpression rhsExpr )
         {
             if( lhsExpr.ConstantValue == null || rhsExpr.ConstantValue == null )
             {

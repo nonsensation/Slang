@@ -171,7 +171,8 @@ namespace NonConTroll.Tests.CodeAnalysis
         {
             var fixedTokens = Enum.GetValues( typeof( SyntaxKind ) ).Cast<SyntaxKind>()
                 .Select( k => (kind: k, text: SyntaxInfo.GetText( k )) )
-                .Where( t => t.text != null );
+                .Where( t => t.text != null )
+                .Cast<(SyntaxKind,string)>();
 
 
             var dynamicTokens = new[]

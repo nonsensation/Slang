@@ -25,9 +25,14 @@ namespace NonConTroll.Generators
 
             var compilation = (CSharpCompilation)context.Compilation;
 
-            var immutableArrayType      = compilation.GetTypeByMetadataName( "System.Collections.Immutable.ImmutableArray`1"         );
+            var immutableArrayType = compilation.GetTypeByMetadataName( "System.Collections.Immutable.ImmutableArray`1" );
             var separatedSyntaxListType = compilation.GetTypeByMetadataName( "NonConTroll.CodeAnalysis.Syntax.SeparatedSyntaxList`1" );
-            var syntaxNodeType          = compilation.GetTypeByMetadataName( "NonConTroll.CodeAnalysis.Syntax.SyntaxNode"            );
+            var syntaxNodeType = compilation.GetTypeByMetadataName( "NonConTroll.CodeAnalysis.Syntax.SyntaxNode" );
+
+            if( immutableArrayType == null || separatedSyntaxListType == null || syntaxNodeType == null )
+            {
+                return;
+            }
 
             var types = this.GetAllTypes( compilation.Assembly );
             var syntaxNodeTypes = types.Where( t => !t.IsAbstract && this.IsPartial( t ) && this.IsDerivedFrom( t , syntaxNodeType ) );
@@ -62,7 +67,21 @@ namespace NonConTroll.Generators
                     {
                         if( this.IsDerivedFrom( propertyType , syntaxNodeType ) )
                         {
+                            var canBeNull = property.NullableAnnotation == NullableAnnotation.Annotated;
+
+                            if( canBeNull )
+                            {
+                                indentedTextWriter.WriteLine( $"if( {property.Name} != null )" );
+                                indentedTextWriter.Indent++;
+                            }
+
                             indentedTextWriter.WriteLine( $"yield return this.{property.Name};" );
+
+                            if( canBeNull )
+                            {
+                                indentedTextWriter.Indent--;
+                            }
+
 
                             isEmpty = false;
                         }
@@ -173,14 +192,16 @@ namespace NonConTroll.Generators
 
         private bool IsDerivedFrom( ITypeSymbol type , INamedTypeSymbol baseType )
         {
-            while( type != null )
+            var currentType = type;
+
+            while( currentType != null )
             {
-                if( SymbolEqualityComparer.Default.Equals( type , baseType ) )
+                if( SymbolEqualityComparer.Default.Equals( currentType , baseType ) )
                 {
                     return true;
                 }
 
-                type = type.BaseType;
+                currentType = currentType.BaseType;
             }
 
             return false;
