@@ -30,7 +30,7 @@ jobs:
         vmImage:  ${{ os.vmImage }}
       steps:
       - task: DotNetCoreCLI@2
-        displayName: Build minsk (${{ os.name }} ${{ c }})
+        displayName: Build NonConTroll (${{ os.name }} ${{ c }})
         inputs:
           command: build
           projects: $(sln)

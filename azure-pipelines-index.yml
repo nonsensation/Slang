@@ -15,7 +15,7 @@ pr: none
 
 steps:
 - task: DotNetCoreCLI@2
-  displayName: Build non ($(buildConfiguration))
+  displayName: Build NonConTroll ($(buildConfiguration))
   inputs:
     command: build
     projects: $(sln)
