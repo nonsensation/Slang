@@ -1,10 +1,18 @@
 using System.IO;
+using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
     public abstract class BoundNode
     {
-        public abstract BoundNodeKind Kind { get; }
+        public BoundNodeKind Kind { get; }
+        public SyntaxNode Syntax { get; }
+
+        public BoundNode( BoundNodeKind kind , SyntaxNode syntax )
+        {
+            this.Kind = kind;
+            this.Syntax = syntax;
+        }
 
         public override string ToString()
         {

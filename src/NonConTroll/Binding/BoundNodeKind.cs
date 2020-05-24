@@ -39,5 +39,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         MatchAnyPattern,
         ConstantPattern,
         InfixPattern,
+
+        SequencePoint,
     }
 }

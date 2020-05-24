@@ -198,31 +198,35 @@ namespace NonConTroll.CodeAnalysis.Binding
                 diagnostics.AddRange( binder.Diagnostics );
             }
 
+            var statements = globalScope.Statements;
+
             if( globalScope.MainFunction != null && globalScope.Statements.Any() )
             {
-                var body = Lowerer.Lower( globalScope.MainFunction , new BoundBlockStatement( globalScope.Statements ) );
+                SyntaxNode syntax = null; // HACK: syntax might be a new BoundSequencePoint( statements )
+
+                var body = Lowerer.Lower( globalScope.MainFunction , new BoundBlockStatement( syntax , statements ) );
 
                 functionBodies.Add( globalScope.MainFunction , body );
             }
             else if( globalScope.EvalFunction != null )
             {
-                var statements = globalScope.Statements;
+                SyntaxNode syntax = null; // HACK
 
                 if( statements.Length == 1 &&
                     statements.First() is BoundExpressionStatement exprStmt &&
                     exprStmt.Expression.Type != BuiltinTypes.Void )
                 {
-                    statements = statements.SetItem( 0 , new BoundReturnStatement( exprStmt.Expression ) );
+                    statements = statements.SetItem( 0 , new BoundReturnStatement( exprStmt.Syntax , exprStmt.Expression ) );
                 }
                 else if( statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement )
                 {
                     // TODO: cant do 'null' right now
-                    var nullValue = new BoundLiteralExpression( "" );
+                    var nullValue = new BoundLiteralExpression( syntax , "" );
 
-                    statements = statements.Add( new BoundReturnStatement( nullValue ) );
+                    statements = statements.Add( new BoundReturnStatement( syntax , nullValue ) );
                 }
 
-                var body = Lowerer.Lower( globalScope.EvalFunction , new BoundBlockStatement( statements ) );
+                var body = Lowerer.Lower( globalScope.EvalFunction , new BoundBlockStatement( syntax , statements ) );
 
                 functionBodies.Add( globalScope.EvalFunction , body );
             }
@@ -309,9 +313,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             return result;
         }
 
-        private BoundStatement BindErrorStatement()
+        private BoundStatement BindErrorStatement( SyntaxNode syntax )
         {
-            return new BoundExpressionStatement( new BoundErrorExpression() );
+            return new BoundExpressionStatement( syntax , new BoundErrorExpression( syntax ) );
         }
 
         private BoundStatement BindStatement( StatementSyntax syntax , bool isGlobal = false )
@@ -368,7 +372,7 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             var expr = this.BindExpression( syntax.Expression , BuiltinTypes.Void );
 
-            return new BoundDeferStatement( expr );
+            return new BoundDeferStatement( syntax , expr );
         }
 
         private BoundStatement BindBlockStatement( BlockStatementSyntax syntax )
@@ -384,7 +388,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             this.Scope = this.Scope.Parent;
 
-            return new BoundBlockStatement( statements.ToImmutable() );
+            return new BoundBlockStatement( syntax , statements.ToImmutable() );
         }
 
         private BoundStatement BindVariableDeclaration( VariableDeclarationSyntax syntax )
@@ -398,15 +402,13 @@ namespace NonConTroll.CodeAnalysis.Binding
             var convertedInitializer = this.BindConversion( syntax.Initializer.Location , initializer ,
                                                             variableType , allowExplicit: false );
 
-            return new BoundVariableDeclaration( variable , convertedInitializer );
+            return new BoundVariableDeclaration( syntax , variable , convertedInitializer );
         }
 
-        private
-        VariableSymbol
-        BindVariableDeclaration( SyntaxToken identifier ,
-                                 bool isReadOnly ,
-                                 TypeSymbol type ,
-                                 BoundConstant? constant )
+        private VariableSymbol BindVariableDeclaration( SyntaxToken identifier ,
+                                                        bool isReadOnly ,
+                                                        TypeSymbol type ,
+                                                        BoundConstant? constant )
         {
             var name = identifier.Text ?? "?";
             var variable = this.Function == null
@@ -448,7 +450,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var elseStatement = syntax.ElseClause == null ? null :
                 this.BindGlobalStatement( syntax.ElseClause.ElseStatement );
 
-            return new BoundIfStatement( condition , thenStatement , elseStatement );
+            return new BoundIfStatement( syntax , condition , thenStatement , elseStatement );
         }
 
         private BoundStatement BindWhileStatement( WhileStatementSyntax syntax )
@@ -456,7 +458,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var condition = this.BindExpression( syntax.Condition , BuiltinTypes.Bool );
             var body      = this.BindLoopBody( syntax.Body , out var breakLabel , out var continueLabel );
 
-            return new BoundWhileStatement( condition , body , breakLabel , continueLabel );
+            return new BoundWhileStatement( syntax , condition , body , breakLabel , continueLabel );
         }
 
         // private BoundStatement BindDoWhileStatement( DoWhileStatementSyntax syntax )
@@ -479,7 +481,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             this.Scope = this.Scope.Parent;
 
-            return new BoundForStatement( variable , lowerBound , upperBound , body , breakLabel , continueLabel );
+            return new BoundForStatement( syntax , variable , lowerBound , upperBound , body , breakLabel , continueLabel );
         }
 
         private BoundStatement BindLoopBody( StatementSyntax body , out BoundLabel breakLabel , out BoundLabel continueLabel )
@@ -504,10 +506,10 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportInvalidBreakOrContinue( syntax.Keyword.Location , syntax.Keyword.Text! );
 
-                return this.BindErrorStatement();
+                return this.BindErrorStatement( syntax );
             }
 
-            return new BoundGotoStatement( this.LoopStack.Peek().BreakLabel );
+            return new BoundGotoStatement( syntax , this.LoopStack.Peek().BreakLabel );
         }
 
         private BoundStatement BindContinueStatement( ContinueStatementSyntax syntax )
@@ -516,10 +518,10 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportInvalidBreakOrContinue( syntax.Keyword.Location , syntax.Keyword.Text! );
 
-                return this.BindErrorStatement();
+                return this.BindErrorStatement( syntax );
             }
 
-            return new BoundGotoStatement( this.LoopStack.Peek().ContinueLabel );
+            return new BoundGotoStatement( syntax , this.LoopStack.Peek().ContinueLabel );
         }
 
         private BoundStatement BindReturnStatement( ReturnStatementSyntax syntax )
@@ -533,7 +535,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     // Ignore because we allow both return with and without values.
                     if( expression == null )
                     {
-                        expression = new BoundLiteralExpression( "" );
+                        expression = new BoundLiteralExpression( syntax , "" );
                     }
                 }
                 else if( expression != null )
@@ -567,14 +569,14 @@ namespace NonConTroll.CodeAnalysis.Binding
                 }
             }
 
-            return new BoundReturnStatement( expression );
+            return new BoundReturnStatement( syntax , expression );
         }
 
         private BoundStatement BindExpressionStatement( ExpressionStatementSyntax syntax )
         {
             var expression = this.BindExpression( syntax.Expression , canBeVoid: true );
 
-            return new BoundExpressionStatement( expression );
+            return new BoundExpressionStatement( syntax , expression );
         }
 
         private BoundExpression BindExpression( ExpressionSyntax syntax , TypeSymbol targetType )
@@ -590,7 +592,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportExpressionMustHaveValue( syntax.Location );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             return result;
@@ -630,7 +632,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     {
                         this.DiagBag.ReportExpressionInvalidNumericLiteral( syntax.Location , syntax.LiteralToken.Text! );
 
-                        return new BoundErrorExpression();
+                        return new BoundErrorExpression( syntax );
                     }
 
                     value = val;
@@ -657,10 +659,10 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportExpressionInvalidLiteral( syntax.Location );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
-            return new BoundLiteralExpression( value );
+            return new BoundLiteralExpression( syntax , value );
         }
 
         private BoundExpression BindNameExpression( NameExpressionSyntax syntax )
@@ -671,17 +673,17 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 // This means the token was inserted by the parser. We already
                 // reported error so we can just return an error expression.
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             var variable = this.BindVariableReference( syntax.IdentifierNameToken );
 
             if( variable == null )
             {
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
-            return new BoundVariableExpression( variable );
+            return new BoundVariableExpression( syntax , variable );
         }
 
         private BoundExpression BindAssignmentExpression( AssignmentExpressionSyntax syntax )
@@ -703,7 +705,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var convertedExpression = this.BindConversion( syntax.Expression.Location , boundExpression ,
                                                            variable.Type , allowExplicit: false );
 
-            return new BoundAssignmentExpression( variable , convertedExpression );
+            return new BoundAssignmentExpression( syntax , variable , convertedExpression );
         }
 
         private BoundExpression BindUnaryExpression( UnaryExpressionSyntax syntax )
@@ -720,7 +722,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             if( boundOperand.Type == BuiltinTypes.Error )
             {
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             var boundOperator = BoundUnaryOperator.Bind( syntax.OperatorToken.Kind , boundOperand.Type );
@@ -729,10 +731,10 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportUndefinedUnaryOperator( syntax.OperatorToken.Location , syntax.OperatorToken.Text! , boundOperand.Type );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
-            return new BoundUnaryExpression( boundOperator , boundOperand );
+            return new BoundUnaryExpression( syntax , boundOperator , boundOperand );
         }
 
         private BoundExpression BindBinaryExpression( BinaryExpressionSyntax syntax )
@@ -750,7 +752,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             if( boundLhs.Type == BuiltinTypes.Error ||
                 boundRhs.Type == BuiltinTypes.Error )
             {
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             var boundOperator = BoundBinaryOperator.Bind( syntax.OperatorToken.Kind , boundLhs.Type , boundRhs.Type );
@@ -759,10 +761,10 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportUndefinedBinaryOperator( syntax.OperatorToken.Location , syntax.OperatorToken.Text! , boundLhs.Type , boundRhs.Type );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
-            return new BoundBinaryExpression( boundLhs , boundOperator , boundRhs );
+            return new BoundBinaryExpression( syntax , boundLhs , boundOperator , boundRhs );
         }
 
         private BoundExpression BindInvokationExpression( InvokationExpressionSyntax syntax )
@@ -799,7 +801,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportUndefinedFunction( syntax.Identifier.Location , identifierText );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             var function = symbol as FunctionSymbol;
@@ -808,7 +810,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             {
                 this.DiagBag.ReportNotAFunction( syntax.Identifier.Location , identifierText );
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
             }
 
             if( syntax is CallExpressionSyntax callSyntax )
@@ -845,7 +847,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
                     this.DiagBag.ReportWrongArgumentCount( location , function.Name , function.Parameters.Length , syntax.Arguments.Count );
 
-                    return new BoundErrorExpression();
+                    return new BoundErrorExpression( syntax );
                 }
             }
             // else if( syntax is InfixBinaryExpressionSyntax infixBinarySyntax )
@@ -901,9 +903,9 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
 
             if( hasErrors )
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( syntax );
 
-            return new BoundCallExpression( function , boundArguments.ToImmutable() );
+            return new BoundCallExpression( syntax , function , boundArguments.ToImmutable() );
         }
 
         private bool ValidatePattern( ImmutableArray<PatternSyntax> patterns )
@@ -940,7 +942,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             _ = ValidatePattern( syntax.PatternSections.SelectMany( x => x.Patterns ).ToImmutableArray() );
 
-            return new BoundMatchExpression( matchExpr , boundPatternSections.ToImmutableArray() );
+            return new BoundMatchExpression( syntax , matchExpr , boundPatternSections.ToImmutableArray() );
         }
 
         private BoundStatement BindMatchStatement( MatchStatementSyntax syntax )
@@ -950,7 +952,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             _ = ValidatePattern( syntax.PatternSections.SelectMany( x => x.Patterns ).ToImmutableArray() );
 
-            return new BoundMatchStatement( matchExpr , boundPatternSections.ToImmutableArray() );
+            return new BoundMatchStatement( syntax , matchExpr , boundPatternSections.ToImmutableArray() );
         }
 
         private ImmutableArray<BoundPatternSectionExpression> BindPatternSectionExpressions( ImmutableArray<PatternSectionExpressionSyntax> sections )
@@ -986,7 +988,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var result = this.BindExpression( syntax.Expression , canBeVoid: false );
             var patterns = this.BindPatterns( syntax.Patterns );
 
-            return new BoundPatternSectionExpression( patterns , result );
+            return new BoundPatternSectionExpression( syntax , patterns , result );
         }
 
         private BoundPatternSectionStatement BindPatternSectionStatement( PatternSectionStatementSyntax syntax )
@@ -994,7 +996,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             var result = this.BindStatement( syntax.Statement );
             var patterns = this.BindPatterns( syntax.Patterns );
 
-            return new BoundPatternSectionStatement( patterns , result );
+            return new BoundPatternSectionStatement( syntax , patterns , result );
         }
 
         private ImmutableArray<BoundPattern> BindPatterns( IEnumerable<PatternSyntax> patterns )
@@ -1018,13 +1020,13 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case ConstantPatternSyntax s:
                 {
                     var patternExpr  = this.BindExpression( s.Expression );
-                    var boundPattern = new BoundConstantPattern( patternExpr );
+                    var boundPattern = new BoundConstantPattern( s , patternExpr );
 
                     return boundPattern;
                 }
                 case MatchAnyPatternSyntax s:
                 {
-                    var boundPattern = new BoundMatchAnyPattern();
+                    var boundPattern = new BoundMatchAnyPattern( s );
 
                     return boundPattern;
                 }
@@ -1059,7 +1061,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                     this.DiagBag.ReportCannotConvert( location , expression.Type , type );
                 }
 
-                return new BoundErrorExpression();
+                return new BoundErrorExpression( expression.Syntax );
             }
 
             if( !allowExplicit && conversion.IsExplicit )
@@ -1072,7 +1074,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return expression;
             }
 
-            return new BoundConversionExpression( type , expression );
+            return new BoundConversionExpression( expression.Syntax , type , expression );
         }
 
         private VariableSymbol? BindVariableReference( SyntaxToken identifierToken )

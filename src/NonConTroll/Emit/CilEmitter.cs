@@ -682,7 +682,10 @@ namespace NonConTroll.CodeAnalysis.Emit
 
                 if( sb?.Length > 0 )
                 {
-                    yield return new BoundLiteralExpression( sb.ToString() );
+                    // HACK
+                    var syntax = default( SyntaxNode );
+
+                    yield return new BoundLiteralExpression( syntax , sb.ToString() );
                 }
             }
         }

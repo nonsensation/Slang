@@ -2,19 +2,31 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Symbols;
+using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
+
+    internal sealed class BoundSequencePoint : BoundStatement
+    {
+        public BoundSequencePoint( SyntaxNode syntax , BoundStatement? statement )
+            : base( BoundNodeKind.SequencePoint , syntax )
+        {
+            this.Statement = statement;
+        }
+
+        public BoundStatement? Statement { get; }
+    }
+
     internal sealed class BoundIfStatement : BoundStatement
     {
-        public BoundIfStatement( BoundExpression condition , BoundStatement thenStatement , BoundStatement? elseStatement )
+        public BoundIfStatement( SyntaxNode syntax , BoundExpression condition , BoundStatement thenStatement , BoundStatement? elseStatement )
+            : base( BoundNodeKind.IfStatement , syntax )
         {
             this.Condition = condition;
             this.ThenStatement = thenStatement;
             this.ElseStatement = elseStatement;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.IfStatement;
 
         public BoundExpression Condition { get; }
         public BoundStatement ThenStatement { get; }
@@ -23,7 +35,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed class BoundLiteralExpression : BoundExpression
     {
-        public BoundLiteralExpression( object value )
+        public BoundLiteralExpression( SyntaxNode syntax , object value )
+            : base( BoundNodeKind.LiteralExpression , syntax )
         {
             this.ConstantValue = new BoundConstant( value );
 
@@ -37,7 +50,6 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.LiteralExpression;
         public override TypeSymbol Type { get; }
         public override BoundConstant ConstantValue { get; }
 
@@ -46,13 +58,13 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundMatchExpression : BoundExpression
     {
-        public BoundMatchExpression( BoundExpression expression , ImmutableArray<BoundPatternSectionExpression> patternSections )
+        public BoundMatchExpression( SyntaxNode syntax , BoundExpression expression , ImmutableArray<BoundPatternSectionExpression> patternSections )
+            : base( BoundNodeKind.MatchExpression , syntax )
         {
             this.Expression      = expression;
             this.PatternSections = patternSections;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.MatchExpression;
         public override TypeSymbol Type =>
             // TODO: get common type, if this.IsStatement == false
             (this.PatternSections.FirstOrDefault()?.Expression as BoundExpression)?.Type
@@ -66,13 +78,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundMatchStatement : BoundStatement
     {
-        public BoundMatchStatement( BoundExpression expression , ImmutableArray<BoundPatternSectionStatement> patternSections )
+        public BoundMatchStatement( SyntaxNode syntax , BoundExpression expression , ImmutableArray<BoundPatternSectionStatement> patternSections )
+            : base( BoundNodeKind.MatchStatement , syntax )
         {
             this.Expression      = expression;
             this.PatternSections = patternSections;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.MatchExpression;
 
         public BoundPatternSectionStatement? DefaultPattern => this.PatternSections.SingleOrDefault( x => x.HasDefaultPattern );
 
@@ -82,13 +93,13 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundPatternSectionExpression : BoundExpression
     {
-        public BoundPatternSectionExpression( ImmutableArray<BoundPattern> patterns , BoundExpression expression )
+        public BoundPatternSectionExpression( SyntaxNode syntax , ImmutableArray<BoundPattern> patterns , BoundExpression expression )
+            : base( BoundNodeKind.PatternSectionExpression , syntax )
         {
             this.Patterns   = patterns;
             this.Expression = expression;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.PatternSectionExpression;
         public override TypeSymbol Type => this.Expression.Type;
 
         public ImmutableArray<BoundPattern> Patterns { get; }
@@ -98,13 +109,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundPatternSectionStatement : BoundStatement
     {
-        public BoundPatternSectionStatement( ImmutableArray<BoundPattern> patterns , BoundStatement statement )
+        public BoundPatternSectionStatement( SyntaxNode syntax , ImmutableArray<BoundPattern> patterns , BoundStatement statement )
+            : base( BoundNodeKind.PatternSectionStatement , syntax )
         {
             this.Patterns  = patterns;
             this.Statement = statement;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.PatternSectionStatement;
 
         public ImmutableArray<BoundPattern> Patterns { get; }
         public BoundStatement Statement { get; }
@@ -113,34 +123,41 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal abstract class BoundPattern : BoundNode
     {
+        public BoundPattern( BoundNodeKind kind , SyntaxNode syntax )
+            : base( kind , syntax )
+        {
+
+        }
     }
 
     internal sealed partial class BoundMatchAnyPattern : BoundPattern
     {
-        public override BoundNodeKind Kind => BoundNodeKind.MatchAnyPattern;
+        public BoundMatchAnyPattern( SyntaxNode syntax )
+            : base( BoundNodeKind.MatchAnyPattern , syntax )
+        {
+
+        }
     }
 
     internal sealed partial class BoundConstantPattern : BoundPattern
     {
-        public BoundConstantPattern( BoundExpression expression )
+        public BoundConstantPattern( SyntaxNode syntax , BoundExpression expression )
+            : base( BoundNodeKind.ConstantPattern , syntax )
         {
             this.Expression = expression;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.ConstantPattern;
 
         public BoundExpression Expression { get; }
     }
 
     internal sealed partial class BoundInfixPattern : BoundPattern
     {
-        public BoundInfixPattern( DeclaredFunctionSymbol infixFunction , BoundExpression expression )
+        public BoundInfixPattern( SyntaxNode syntax , DeclaredFunctionSymbol infixFunction , BoundExpression expression )
+            : base( BoundNodeKind.InfixPattern , syntax )
         {
             this.InfixFunction = infixFunction;
             this.Expression    = expression;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.InfixPattern;
 
         public DeclaredFunctionSymbol InfixFunction { get; }
         public BoundExpression Expression { get; }
@@ -148,20 +165,27 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundAssignmentExpression : BoundExpression
     {
-        public BoundAssignmentExpression( VariableSymbol variable , BoundExpression expression )
+        public BoundAssignmentExpression( SyntaxNode syntax , VariableSymbol variable , BoundExpression expression )
+            : base( BoundNodeKind.AssignmentExpression , syntax )
         {
             this.Variable   = variable;
             this.Expression = expression;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.AssignmentExpression;
         public override TypeSymbol Type => this.Expression.Type;
+
         public VariableSymbol Variable { get; }
         public BoundExpression Expression { get; }
     }
 
     internal abstract class BoundExpression : BoundNode
     {
+        public BoundExpression( BoundNodeKind kind , SyntaxNode syntax )
+            : base( kind , syntax )
+        {
+
+        }
+
         public abstract TypeSymbol Type { get; }
 
         public virtual BoundConstant? ConstantValue => null;
@@ -169,45 +193,47 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundConversionExpression : BoundExpression
     {
-        public BoundConversionExpression( TypeSymbol type , BoundExpression expression )
+        public BoundConversionExpression( SyntaxNode syntax , TypeSymbol type , BoundExpression expression )
+            : base( BoundNodeKind.ConversionExpression , syntax )
         {
             this.Type       = type;
             this.Expression = expression;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.ConversionExpression;
         public override TypeSymbol Type { get; }
         public BoundExpression Expression { get; }
     }
 
     internal sealed partial class BoundDeferStatement : BoundStatement
     {
-        public BoundDeferStatement( BoundExpression expression )
+        public BoundDeferStatement( SyntaxNode syntax , BoundExpression expression )
+            : base( BoundNodeKind.DeferStatement , syntax )
         {
             this.Expression = expression;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.DeferStatement;
 
         public BoundExpression Expression { get; }
     }
 
     internal sealed partial class BoundErrorExpression : BoundExpression
     {
-        public override BoundNodeKind Kind => BoundNodeKind.ErrorExpression;
+        public BoundErrorExpression( SyntaxNode syntax )
+            : base( BoundNodeKind.ErrorExpression , syntax )
+        {
+
+        }
+
         public override TypeSymbol Type => BuiltinTypes.Error;
     }
 
     internal sealed partial class BoundDoWhileStatement : BoundLoopStatement
     {
-        public BoundDoWhileStatement( BoundStatement body , BoundExpression condition , BoundLabel breakLabel , BoundLabel continueLabel )
-            : base( breakLabel , continueLabel )
+        public BoundDoWhileStatement( SyntaxNode syntax , BoundStatement body , BoundExpression condition , BoundLabel breakLabel , BoundLabel continueLabel )
+            : base( BoundNodeKind.DoWhileStatement , syntax  , breakLabel , continueLabel )
         {
             this.Body      = body;
             this.Condition = condition;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.DoWhileStatement;
 
         public BoundStatement Body { get; }
         public BoundExpression Condition { get; }
@@ -215,16 +241,14 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundForStatement : BoundLoopStatement
     {
-        public BoundForStatement( VariableSymbol variable , BoundExpression lowerBound , BoundExpression upperBound , BoundStatement body , BoundLabel breakLabel , BoundLabel continueLabel )
-            : base( breakLabel , continueLabel )
+        public BoundForStatement( SyntaxNode syntax , VariableSymbol variable , BoundExpression lowerBound , BoundExpression upperBound , BoundStatement body , BoundLabel breakLabel , BoundLabel continueLabel )
+            : base( BoundNodeKind.ForStatement , syntax  , breakLabel , continueLabel )
         {
             this.Variable   = variable;
             this.LowerBound = lowerBound;
             this.UpperBound = upperBound;
             this.Body       = body;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.ForStatement;
 
         public VariableSymbol Variable { get; }
         public BoundExpression LowerBound { get; }
@@ -234,55 +258,52 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundExpressionStatement : BoundStatement
     {
-        public BoundExpressionStatement( BoundExpression expression )
+        public BoundExpressionStatement( SyntaxNode syntax , BoundExpression expression )
+            : base( BoundNodeKind.ExpressionStatement , syntax )
         {
             this.Expression = expression;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.ExpressionStatement;
 
         public BoundExpression Expression { get; }
     }
 
     internal sealed partial class BoundReturnStatement : BoundStatement
     {
-        public BoundReturnStatement( BoundExpression? expression )
+        public BoundReturnStatement( SyntaxNode syntax , BoundExpression? expression )
+            : base( BoundNodeKind.ReturnStatement , syntax )
         {
             this.Expression = expression;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.ReturnStatement;
 
         public BoundExpression? Expression { get; }
     }
 
     internal sealed partial class BoundGotoStatement : BoundStatement
     {
-        public BoundGotoStatement( BoundLabel label )
+        public BoundGotoStatement( SyntaxNode syntax , BoundLabel label )
+            : base( BoundNodeKind.GotoStatement , syntax )
         {
             this.Label = label;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.GotoStatement;
 
         public BoundLabel Label { get; }
     }
 
     internal sealed partial class BoundLabelStatement : BoundStatement
     {
-        public BoundLabelStatement( BoundLabel label )
+        public BoundLabelStatement( SyntaxNode syntax , BoundLabel label )
+            : base( BoundNodeKind.LabelStatement , syntax )
         {
             this.Label = label;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.LabelStatement;
 
         public BoundLabel Label { get; }
     }
 
     internal abstract class BoundLoopStatement : BoundStatement
     {
-        protected BoundLoopStatement( BoundLabel breakLabel , BoundLabel continueLabel )
+        protected BoundLoopStatement( BoundNodeKind kind , SyntaxNode syntax , BoundLabel breakLabel , BoundLabel continueLabel )
+            : base( kind , syntax )
         {
             this.BreakLabel    = breakLabel;
             this.ContinueLabel = continueLabel;
@@ -294,14 +315,13 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundConditionalGotoStatement : BoundStatement
     {
-        public BoundConditionalGotoStatement( BoundLabel label , BoundExpression condition , bool jumpIfTrue = true )
+        public BoundConditionalGotoStatement( SyntaxNode syntax , BoundLabel label , BoundExpression condition , bool jumpIfTrue = true )
+            : base( BoundNodeKind.ConditionalGotoStatement , syntax )
         {
             this.Label      = label;
             this.Condition  = condition;
             this.JumpIfTrue = jumpIfTrue;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.ConditionalGotoStatement;
 
         public BoundLabel Label { get; }
         public BoundExpression Condition { get; }
@@ -310,18 +330,23 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal abstract class BoundStatement : BoundNode
     {
+        public BoundStatement( BoundNodeKind kind , SyntaxNode syntax )
+            : base( kind , syntax )
+        {
+
+        }
     }
 
     internal sealed partial class BoundUnaryExpression : BoundExpression
     {
-        public BoundUnaryExpression( BoundUnaryOperator @operator , BoundExpression expression )
+        public BoundUnaryExpression( SyntaxNode syntax , BoundUnaryOperator @operator , BoundExpression expression )
+            : base( BoundNodeKind.UnaryExpression , syntax )
         {
             this.Operator      = @operator;
             this.Expression    = expression;
             this.ConstantValue = ConstantFolding.Fold( @operator , expression );
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.UnaryExpression;
         public override TypeSymbol Type => this.Operator.Type;
         public override BoundConstant? ConstantValue { get; }
 
@@ -331,13 +356,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundVariableDeclaration : BoundStatement
     {
-        public BoundVariableDeclaration( VariableSymbol variable , BoundExpression initializer )
+        public BoundVariableDeclaration( SyntaxNode syntax , VariableSymbol variable , BoundExpression initializer )
+            : base( BoundNodeKind.VariableDeclaration , syntax )
         {
             this.Variable    = variable;
             this.Initializer = initializer;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.VariableDeclaration;
 
         public VariableSymbol Variable { get; }
         public BoundExpression Initializer { get; }
@@ -345,12 +369,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundVariableExpression : BoundExpression
     {
-        public BoundVariableExpression( VariableSymbol variable )
+        public BoundVariableExpression( SyntaxNode syntax , VariableSymbol variable )
+            : base( BoundNodeKind.VariableExpression , syntax )
         {
             this.Variable = variable;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.VariableExpression;
         public override TypeSymbol Type => this.Variable.Type;
         public override BoundConstant? ConstantValue => this.Variable.Constant;
 
@@ -359,13 +383,13 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundCallExpression : BoundExpression
     {
-        public BoundCallExpression( FunctionSymbol function , ImmutableArray<BoundExpression> arguments )
+        public BoundCallExpression( SyntaxNode syntax , FunctionSymbol function , ImmutableArray<BoundExpression> arguments )
+            : base( BoundNodeKind.CallExpression , syntax )
         {
             this.Function  = function;
             this.Arguments = arguments;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.CallExpression;
         public override TypeSymbol Type => this.Function.ReturnType;
         public FunctionSymbol Function { get; }
         public ImmutableArray<BoundExpression> Arguments { get; }
@@ -373,7 +397,8 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundBinaryExpression : BoundExpression
     {
-        public BoundBinaryExpression( BoundExpression lhs , BoundBinaryOperator op , BoundExpression rhs )
+        public BoundBinaryExpression( SyntaxNode syntax , BoundExpression lhs , BoundBinaryOperator op , BoundExpression rhs )
+            : base( BoundNodeKind.BinaryExpression , syntax )
         {
             this.Lhs      = lhs;
             this.Operator = op;
@@ -381,7 +406,6 @@ namespace NonConTroll.CodeAnalysis.Binding
             this.ConstantValue = ConstantFolding.Fold( lhs , op , rhs );
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression;
         public override TypeSymbol Type => this.Operator.Type;
         public override BoundConstant? ConstantValue { get; }
 
@@ -392,14 +416,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundWhileStatement : BoundLoopStatement
     {
-        public BoundWhileStatement( BoundExpression condition , BoundStatement body , BoundLabel breakLabel , BoundLabel continueLabel )
-            : base( breakLabel , continueLabel )
+        public BoundWhileStatement( SyntaxNode syntax , BoundExpression condition , BoundStatement body , BoundLabel breakLabel , BoundLabel continueLabel )
+            : base( BoundNodeKind.WhileStatement , syntax  , breakLabel , continueLabel )
         {
             this.Condition = condition;
             this.Body      = body;
         }
-
-        public override BoundNodeKind Kind => BoundNodeKind.WhileStatement;
 
         public BoundExpression Condition { get; }
         public BoundStatement Body { get; }
@@ -407,12 +429,12 @@ namespace NonConTroll.CodeAnalysis.Binding
 
     internal sealed partial class BoundBlockStatement : BoundStatement
     {
-        public BoundBlockStatement( ImmutableArray<BoundStatement> statements )
+        public BoundBlockStatement( SyntaxNode syntax , ImmutableArray<BoundStatement> statements )
+            : base( BoundNodeKind.BlockStatement , syntax )
         {
             this.Statements = statements;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.BlockStatement;
         public ImmutableArray<BoundStatement> Statements { get; }
     }
 

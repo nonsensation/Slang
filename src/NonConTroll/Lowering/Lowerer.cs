@@ -55,11 +55,11 @@ namespace NonConTroll.CodeAnalysis.Lowering
             {
                 if( builder.Count == 0 || CanFallThrough( builder.Last() ) )
                 {
-                    builder.Add( new BoundReturnStatement( null ) );
+                    builder.Add( new BoundReturnStatement( statement.Syntax , null ) );
                 }
             }
 
-            return new BoundBlockStatement( builder.ToImmutable() );
+            return new BoundBlockStatement( statement.Syntax , builder.ToImmutable() );
         }
 
         private static bool CanFallThrough( BoundStatement boundStatement )
@@ -83,7 +83,7 @@ namespace NonConTroll.CodeAnalysis.Lowering
                 }
             }
 
-            return new BoundBlockStatement( builder.ToImmutable() );
+            return new BoundBlockStatement( node.Syntax , builder.ToImmutable() );
         }
 
         #region Rewrite
@@ -348,7 +348,10 @@ namespace NonConTroll.CodeAnalysis.Lowering
 
         private BoundBlockStatement Block( params BoundStatement[] stmts )
         {
-            return new BoundBlockStatement( ImmutableArray.Create( stmts ) );
+            // HACK
+            var syntax = default( SyntaxNode );
+
+            return new BoundBlockStatement( syntax , ImmutableArray.Create( stmts ) );
         }
 
         private BoundUnaryExpression Not( BoundExpression expr )
@@ -385,21 +388,27 @@ namespace NonConTroll.CodeAnalysis.Lowering
         {
             var op = BoundBinaryOperator.Bind( kind , lhs.Type , rhs.Type )!;
 
-            return new BoundBinaryExpression( lhs , op , rhs );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundBinaryExpression( syntax , lhs , op , rhs );
         }
 
         private BoundUnaryExpression UnExpr( SyntaxKind kind , BoundExpression expr )
         {
             var op = BoundUnaryOperator.Bind( kind , expr.Type )!;
 
-            return new BoundUnaryExpression( op , expr );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundUnaryExpression( syntax , op , expr );
         }
 
         private BoundLiteralExpression Literal( object literal )
         {
             Debug.Assert( literal is string || literal is bool || literal is int );
 
-            return new BoundLiteralExpression( literal );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundLiteralExpression( syntax , literal );
         }
 
         private BoundStatement If( BoundExpression condition , BoundStatement thenStmt )
@@ -427,17 +436,23 @@ namespace NonConTroll.CodeAnalysis.Lowering
 
         private BoundGotoStatement Goto( BoundLabelStatement label )
         {
-            return new BoundGotoStatement( label.Label );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundGotoStatement( syntax , label.Label );
         }
 
         private BoundGotoStatement Goto( BoundLabel label )
         {
-            return new BoundGotoStatement( label );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundGotoStatement( syntax , label );
         }
 
         private BoundConditionalGotoStatement GotoIf( BoundLabelStatement label , BoundExpression condition , bool jumpIfTrue )
         {
-            return new BoundConditionalGotoStatement( label.Label , condition , jumpIfTrue );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundConditionalGotoStatement( syntax , label.Label , condition , jumpIfTrue );
         }
 
         private BoundConditionalGotoStatement GotoIfTrue( BoundLabelStatement label , BoundExpression condition )
@@ -456,13 +471,16 @@ namespace NonConTroll.CodeAnalysis.Lowering
         private BoundLabelStatement Label()
         {
             var label = this.GenerateLabel();
+            var syntax = default( SyntaxNode ); // HACK
 
-            return new BoundLabelStatement( label );
+            return new BoundLabelStatement( syntax , label );
         }
 
         private BoundLabelStatement Label( BoundLabel label )
         {
-            return new BoundLabelStatement( label );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundLabelStatement( syntax , label );
         }
 
         private BoundVariableDeclaration ConstantDeclaration( string name , BoundExpression initExpr , TypeSymbol? type = null )
@@ -474,23 +492,30 @@ namespace NonConTroll.CodeAnalysis.Lowering
         private BoundVariableDeclaration VariableDeclarationInternal( string name , BoundExpression initExpr , TypeSymbol? type , bool isReadOnly )
         {
             var symbol = Symbol( name , type ?? initExpr.Type , isReadOnly , initExpr.ConstantValue );
+            var syntax = default( SyntaxNode ); // HACK
 
-            return new BoundVariableDeclaration( symbol , initExpr );
+            return new BoundVariableDeclaration( syntax , symbol , initExpr );
         }
 
         private BoundVariableDeclaration VariableDeclaration( VariableSymbol symbol , BoundExpression initExpr )
         {
-            return new BoundVariableDeclaration( symbol , initExpr );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundVariableDeclaration( syntax , symbol , initExpr );
         }
 
         private BoundVariableExpression Variable( VariableSymbol symbol )
         {
-            return new BoundVariableExpression( symbol );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundVariableExpression( syntax , symbol );
         }
 
         private BoundVariableExpression Variable( BoundVariableDeclaration varDecl )
         {
-            return new BoundVariableExpression( varDecl.Variable );
+            var syntax = default( SyntaxNode ); // HACK
+
+            return new BoundVariableExpression( syntax , varDecl.Variable );
         }
 
         private LocalVariableSymbol Symbol( string name , TypeSymbol type , bool isReadOnly = true , BoundConstant? constant = null )
@@ -501,24 +526,27 @@ namespace NonConTroll.CodeAnalysis.Lowering
         private BoundWhileStatement While( BoundExpression condition , BoundStatement body , BoundLabel breakLabel )
         {
             var continueLabel = this.GenerateLabel();
+            var syntax = default( SyntaxNode ); // HACK
 
-            return new BoundWhileStatement( condition , body , breakLabel , continueLabel );
+            return new BoundWhileStatement( syntax , condition , body , breakLabel , continueLabel );
         }
 
         private BoundExpressionStatement Increment( BoundVariableExpression varExpr )
         {
             var incrByOne = Add( varExpr , Literal( 1 ) );
-            var incrAssign = new BoundAssignmentExpression( varExpr.Variable , incrByOne );
+            var syntax = default( SyntaxNode ); // HACK
+            var incrAssign = new BoundAssignmentExpression( syntax , varExpr.Variable , incrByOne );
 
-            return new BoundExpressionStatement( incrAssign );
+            return new BoundExpressionStatement( syntax , incrAssign );
         }
 
         private BoundExpressionStatement Decrement( BoundVariableExpression varExpr )
         {
             var incrByOne = Sub( varExpr , Literal( 1 ) );
-            var incrAssign = new BoundAssignmentExpression( varExpr.Variable , incrByOne );
+            var syntax = default( SyntaxNode ); // HACK
+            var incrAssign = new BoundAssignmentExpression( syntax , varExpr.Variable , incrByOne );
 
-            return new BoundExpressionStatement( incrAssign );
+            return new BoundExpressionStatement( syntax , incrAssign );
         }
 
         #endregion

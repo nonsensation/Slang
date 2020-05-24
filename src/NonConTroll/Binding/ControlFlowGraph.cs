@@ -307,12 +307,12 @@ namespace NonConTroll.CodeAnalysis.Binding
                 {
                     var value = (bool)literal.Value;
 
-                    return new BoundLiteralExpression( !value );
+                    return new BoundLiteralExpression( condition.Syntax , !value );
                 }
 
                 var op = BoundUnaryOperator.Bind( SyntaxKind.ExmToken , BuiltinTypes.Bool )!;
 
-                return new BoundUnaryExpression( op , condition );
+                return new BoundUnaryExpression( condition.Syntax , op , condition );
             }
         }
 

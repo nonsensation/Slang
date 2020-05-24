@@ -54,7 +54,7 @@ namespace NonConTroll.CodeAnalysis.Binding
 
             builder.AddRange( deferStmts.AsEnumerable().Reverse() );
 
-            return new BoundBlockStatement( builder.MoveToImmutable() );
+            return new BoundBlockStatement( node.Syntax , builder.MoveToImmutable() );
         }
 
         protected virtual BoundStatement RewriteVariableDeclaration( BoundVariableDeclaration node )
@@ -66,7 +66,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundVariableDeclaration( node.Variable , initializer );
+            return new BoundVariableDeclaration( node.Syntax , node.Variable , initializer );
         }
 
         protected virtual BoundStatement RewriteIfStatement( BoundIfStatement node )
@@ -82,7 +82,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundIfStatement( condition , thenStatement , elseStatement );
+            return new BoundIfStatement( node.Syntax , condition , thenStatement , elseStatement );
         }
 
         protected virtual BoundStatement RewriteWhileStatement( BoundWhileStatement node )
@@ -95,7 +95,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundWhileStatement( condition , body , node.BreakLabel , node.ContinueLabel );
+            return new BoundWhileStatement( node.Syntax , condition , body , node.BreakLabel , node.ContinueLabel );
         }
 
         protected virtual BoundStatement RewriteDoWhileStatement( BoundDoWhileStatement node )
@@ -108,7 +108,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundDoWhileStatement( body , condition , node.BreakLabel , node.ContinueLabel );
+            return new BoundDoWhileStatement( node.Syntax , body , condition , node.BreakLabel , node.ContinueLabel );
         }
 
         protected virtual BoundStatement RewriteForStatement( BoundForStatement node )
@@ -124,7 +124,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundForStatement( node.Variable , lowerBound , upperBound , body , node.BreakLabel , node.ContinueLabel );
+            return new BoundForStatement( node.Syntax , node.Variable , lowerBound , upperBound , body , node.BreakLabel , node.ContinueLabel );
         }
 
         protected virtual BoundStatement RewriteLabelStatement( BoundLabelStatement node )
@@ -146,7 +146,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundConditionalGotoStatement( node.Label , condition , node.JumpIfTrue );
+            return new BoundConditionalGotoStatement( node.Syntax , node.Label , condition , node.JumpIfTrue );
         }
 
         protected virtual BoundStatement RewriteReturnStatement( BoundReturnStatement node )
@@ -158,7 +158,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundReturnStatement( expression );
+            return new BoundReturnStatement( node.Syntax , expression );
         }
 
         protected virtual BoundStatement RewriteDeferStatement( BoundDeferStatement node )
@@ -170,7 +170,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundDeferStatement( expression );
+            return new BoundDeferStatement( node.Syntax , expression );
         }
 
         protected virtual BoundStatement RewriteExpressionStatement( BoundExpressionStatement node )
@@ -182,7 +182,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundExpressionStatement( expression );
+            return new BoundExpressionStatement( node.Syntax , expression );
         }
 
         #endregion
@@ -232,7 +232,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundAssignmentExpression( node.Variable , expression );
+            return new BoundAssignmentExpression( node.Syntax , node.Variable , expression );
         }
 
         protected virtual BoundExpression RewriteUnaryExpression( BoundUnaryExpression node )
@@ -244,7 +244,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundUnaryExpression( node.Operator , operand );
+            return new BoundUnaryExpression( node.Syntax , node.Operator , operand );
         }
 
         protected virtual BoundExpression RewriteBinaryExpression( BoundBinaryExpression node )
@@ -257,7 +257,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundBinaryExpression( lhs , node.Operator , rhs );
+            return new BoundBinaryExpression( node.Syntax , lhs , node.Operator , rhs );
         }
 
         protected virtual BoundExpression RewriteCallExpression( BoundCallExpression node )
@@ -269,7 +269,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundCallExpression( node.Function , args.ToImmutableArray() );
+            return new BoundCallExpression( node.Syntax , node.Function , args.ToImmutableArray() );
         }
 
         protected virtual BoundExpression RewriteConversionExpression( BoundConversionExpression node )
@@ -281,7 +281,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundConversionExpression( node.Type , expression );
+            return new BoundConversionExpression( node.Syntax , node.Type , expression );
         }
 
         public ImmutableArray<BoundExpression> RewriteExpressions( ImmutableArray<BoundExpression> expressions )
@@ -350,7 +350,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundMatchExpression( expr , patternSections );
+            return new BoundMatchExpression( node.Syntax , expr , patternSections );
         }
 
         protected virtual BoundStatement RewriteMatchStatement( BoundMatchStatement node )
@@ -363,7 +363,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundMatchStatement( expr , patternSections );
+            return new BoundMatchStatement( node.Syntax , expr , patternSections );
         }
 
         public ImmutableArray<BoundPatternSectionExpression> RewritePatternSectionExpressions( ImmutableArray<BoundPatternSectionExpression> patternSections )
@@ -404,7 +404,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundPatternSectionExpression( patterns , expr );
+            return new BoundPatternSectionExpression( node.Syntax , patterns , expr );
         }
 
         protected virtual BoundStatement RewritePatternSectionStatement( BoundPatternSectionStatement node )
@@ -417,7 +417,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundPatternSectionStatement( patterns , expr );
+            return new BoundPatternSectionStatement( node.Syntax , patterns , expr );
         }
 
         public ImmutableArray<BoundPattern> RewritePatterns( ImmutableArray<BoundPattern> patterns )
@@ -455,7 +455,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundInfixPattern( node.InfixFunction , expr );
+            return new BoundInfixPattern( node.Syntax , node.InfixFunction , expr );
         }
 
         private BoundPattern RewriteConstantPattern( BoundConstantPattern node )
@@ -467,7 +467,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 return node;
             }
 
-            return new BoundConstantPattern( expr );
+            return new BoundConstantPattern( node.Syntax , expr );
         }
 
         private BoundPattern RewriteMatchAnyPattern( BoundMatchAnyPattern node )
