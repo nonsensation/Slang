@@ -22,6 +22,7 @@ parameters:
   - Release
 
 jobs:
+
 - ${{ each c in parameters.configurations }}:
   - ${{ each os in parameters.operatingSystems }}:
     - job:  job${{ os.name }}${{ c }}
@@ -29,6 +30,13 @@ jobs:
       pool:
         vmImage:  ${{ os.vmImage }}
       steps:
+
+      - task: NugetToolInstaller@1
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: restore
+          projects: $(sln)
+
       - task: DotNetCoreCLI@2
         displayName: Build NonConTroll (${{ os.name }} ${{ c }})
         inputs:
