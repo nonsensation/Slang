@@ -13,17 +13,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
                             int position , string? text ,
                             ImmutableArray<SyntaxTrivia> leadingTrivia ,
                             ImmutableArray<SyntaxTrivia> trailingTrivia )
-            : base( syntaxTree )
+            : base( syntaxTree , kind )
         {
-            this.Kind           = kind;
-            this.Position       = position;
+             this.Position       = position;
             this.Text           = text ?? string.Empty;
             this.LeadingTrivia  = leadingTrivia;
             this.TrailingTrivia = trailingTrivia;
             this.IsMissing      = text == null;
         }
-
-        public override SyntaxKind Kind { get; }
 
         public override TextSpan FullSpan
         {

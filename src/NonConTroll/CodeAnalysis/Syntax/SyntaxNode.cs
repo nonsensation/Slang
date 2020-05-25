@@ -10,14 +10,13 @@ namespace NonConTroll.CodeAnalysis.Syntax
 {
     public abstract partial class SyntaxNode
     {
-        protected SyntaxNode( SyntaxTree syntaxTree )
+        protected SyntaxNode( SyntaxTree syntaxTree , SyntaxKind kind )
         {
             this.SyntaxTree = syntaxTree;
         }
 
         public SyntaxTree SyntaxTree { get; }
-
-        public abstract SyntaxKind Kind { get; }
+        public SyntaxKind Kind { get; }
 
         public TextLocation Location => new TextLocation( this.SyntaxTree.Text , this.Span );
 
