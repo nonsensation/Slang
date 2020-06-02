@@ -3,19 +3,30 @@ using System.Collections.Immutable;
 using System.Linq;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
 
-    internal sealed class BoundSequencePoint : BoundStatement
+    internal sealed class BoundNopStatement : BoundStatement
     {
-        public BoundSequencePoint( SyntaxNode syntax , BoundStatement? statement )
-            : base( BoundNodeKind.SequencePoint , syntax )
+        public BoundNopStatement( SyntaxNode syntax )
+            : base( BoundNodeKind.NopStatement , syntax )
+        {
+        }
+    }
+
+    internal sealed class BoundSequencePointStatement : BoundStatement
+    {
+        public BoundSequencePointStatement( SyntaxNode syntax , BoundStatement statement , TextLocation location )
+            : base( BoundNodeKind.SequencePointStatement , syntax )
         {
             this.Statement = statement;
+            this.Location  = location;
         }
 
-        public BoundStatement? Statement { get; }
+        public BoundStatement Statement { get; }
+        public TextLocation Location { get; }
     }
 
     internal sealed class BoundIfStatement : BoundStatement

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using NonConTroll.CodeAnalysis.Binding;
+using NonConTroll.CodeAnalysis.Emit;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.Emit;
@@ -173,9 +174,7 @@ namespace NonConTroll.CodeAnalysis
 
             var program = this.GetProgram();
 
-            // return Emitter.Emit( program , moduleName , references , outputPath );
-
-            throw new NotImplementedException();
+            return CilEmitter.Emit( program , moduleName , references , outputPath );
         }
     }
 }

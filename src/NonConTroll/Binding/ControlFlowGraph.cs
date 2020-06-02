@@ -111,9 +111,10 @@ namespace NonConTroll.CodeAnalysis.Binding
                             this.Statements.Add( statement );
                             this.StartBlock();
                             break;
-                        case BoundNodeKind.VariableDeclaration:
-                        case BoundNodeKind.ExpressionStatement:
                         case BoundNodeKind.DeferStatement:
+                        case BoundNodeKind.ExpressionStatement:
+                        case BoundNodeKind.SequencePointStatement:
+                        case BoundNodeKind.VariableDeclaration:
                             this.Statements.Add( statement );
                             break;
                         default:
@@ -219,6 +220,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                             case BoundNodeKind.VariableDeclaration:
                             case BoundNodeKind.LabelStatement:
                             case BoundNodeKind.ExpressionStatement:
+                            case BoundNodeKind.SequencePointStatement:
                             case BoundNodeKind.DeferStatement:
                             {
                                 if( isLastStatementInBlock )

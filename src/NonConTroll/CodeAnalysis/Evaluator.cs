@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using NonConTroll.CodeAnalysis.Binding;
 using NonConTroll.CodeAnalysis.Symbols;
 
@@ -69,20 +70,26 @@ namespace NonConTroll.CodeAnalysis
         private object? EvaluateStatement( BoundBlockStatement body )
         {
             var labelToIndex = new Dictionary<BoundLabel, int>();
+            var statements = body.Statements.ToArray();
 
-            for( var i = 0 ; i < body.Statements.Length ; i++ )
+            for( var i = 0 ; i < statements.Length ; i++ )
             {
-                if( body.Statements[ i ] is BoundLabelStatement l )
+                if( statements[ i ] is BoundLabelStatement l )
                 {
                     labelToIndex.Add( l.Label , i + 1 );
+                }
+
+                if( statements[ i ] is BoundSequencePointStatement seq )
+                {
+                    statements[ i ] = seq.Statement;
                 }
             }
 
             var index = 0;
 
-            while( index < body.Statements.Length )
+            while( index < statements.Length )
             {
-                var s = body.Statements[ index ];
+                var s = statements[ index ];
 
                 switch( s )
                 {

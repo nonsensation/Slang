@@ -13,12 +13,14 @@ namespace NonConTroll.CodeAnalysis.Syntax
         protected SyntaxNode( SyntaxTree syntaxTree , SyntaxKind kind )
         {
             this.SyntaxTree = syntaxTree;
+            this.Kind = kind;
         }
 
         public SyntaxTree SyntaxTree { get; }
         public SyntaxKind Kind { get; }
 
         public TextLocation Location => new TextLocation( this.SyntaxTree.Text , this.Span );
+        public SyntaxNode? Parent => this.SyntaxTree.GetParent( this );
 
         public virtual TextSpan Span {
             get {
@@ -38,6 +40,22 @@ namespace NonConTroll.CodeAnalysis.Syntax
 
                 return TextSpan.FromBounds( first.FullSpan.Start , last.FullSpan.End );
             }
+        }
+
+        public IEnumerable<SyntaxNode> AncestorsAndSelf()
+        {
+            var node = this;
+
+            while( node != null )
+            {
+                yield return node;
+                node = node.Parent;
+            }
+        }
+
+        public IEnumerable<SyntaxNode> Ancestors()
+        {
+            return AncestorsAndSelf().Skip( 1 );
         }
 
         public abstract IEnumerable<SyntaxNode> GetChildren();

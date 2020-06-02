@@ -27,10 +27,11 @@ jobs:
   - ${{ each os in parameters.operatingSystems }}:
     - job:  job${{ os.name }}${{ c }}
       displayName: ${{ c }} (${{ os.name }})
+      timeoutInMinutes: 3 # increase if needed
       pool:
         vmImage:  ${{ os.vmImage }}
       steps:
-
+      # HACK: for me, a nuget-restore prior is required...
       - task: NugetToolInstaller@1
       - task: DotNetCoreCLI@2
         inputs:

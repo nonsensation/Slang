@@ -91,12 +91,15 @@ namespace NonConTroll.CodeAnalysis.Symbols
     // TODO make parameter kind of standalone, not a variable
     public sealed class ParameterSymbol : LocalVariableSymbol
     {
-        public ParameterSymbol( string name , TypeSymbol type )
+        public ParameterSymbol( string name , TypeSymbol type , int ordinal )
             : base( name , isReadOnly: true , type , constant: null )
         {
+            this.Ordinal = ordinal;
         }
 
         public override SymbolKind Kind => SymbolKind.Parameter;
+
+        public int Ordinal { get; }
     }
 
     public abstract class TypeSymbol : Symbol

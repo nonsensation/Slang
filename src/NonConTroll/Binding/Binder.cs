@@ -199,19 +199,19 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
 
             var statements = globalScope.Statements;
+            var compilationUnit = statements.Any()
+                ? statements.First().Syntax.AncestorsAndSelf().LastOrDefault()
+                : null;
+            var syntax = compilationUnit!;
 
-            if( globalScope.MainFunction != null && globalScope.Statements.Any() )
+            if( globalScope.MainFunction != null && statements.Any() )
             {
-                SyntaxNode syntax = null; // HACK: syntax might be a new BoundSequencePoint( statements )
-
                 var body = Lowerer.Lower( globalScope.MainFunction , new BoundBlockStatement( syntax , statements ) );
 
                 functionBodies.Add( globalScope.MainFunction , body );
             }
             else if( globalScope.EvalFunction != null )
             {
-                SyntaxNode syntax = null; // HACK
-
                 if( statements.Length == 1 &&
                     statements.First() is BoundExpressionStatement exprStmt &&
                     exprStmt.Expression.Type != BuiltinTypes.Void )
@@ -220,7 +220,6 @@ namespace NonConTroll.CodeAnalysis.Binding
                 }
                 else if( statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement )
                 {
-                    // TODO: cant do 'null' right now
                     var nullValue = new BoundLiteralExpression( syntax , "" );
 
                     statements = statements.Add( new BoundReturnStatement( syntax , nullValue ) );
@@ -251,7 +250,7 @@ namespace NonConTroll.CodeAnalysis.Binding
                 }
                 else
                 {
-                    parameters.Add( new ParameterSymbol( parameterName , parameterType ) );
+                    parameters.Add( new ParameterSymbol( parameterName , parameterType , parameters.Count() ) );
                 }
             }
 

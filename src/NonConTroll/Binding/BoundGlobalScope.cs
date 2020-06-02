@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using NonConTroll.CodeAnalysis.Symbols;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {

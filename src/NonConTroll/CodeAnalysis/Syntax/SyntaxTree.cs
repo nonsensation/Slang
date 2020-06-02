@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System;
+using System.Threading;
 using System.IO;
 using NonConTroll.CodeAnalysis.Text;
 
@@ -26,6 +28,8 @@ namespace NonConTroll.CodeAnalysis.Syntax
         public SourceText Text { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
         public CompilationUnitSyntax Root { get; }
+
+        private Dictionary<SyntaxNode,SyntaxNode?>? Parents;
 
         public static SyntaxTree Load( string fileName )
         {
@@ -101,6 +105,39 @@ namespace NonConTroll.CodeAnalysis.Syntax
             diagnostics = tree.Diagnostics.ToImmutableArray();
 
             return tokens.ToImmutableArray();
+        }
+
+        internal SyntaxNode? GetParent( SyntaxNode node )
+        {
+            if( this.Parents == null )
+            {
+                var parents = this.CreateParentDictionary( this.Root );
+
+                Interlocked.CompareExchange( ref this.Parents , parents , null );
+            }
+
+            return this.Parents[ node ];
+        }
+
+        private Dictionary<SyntaxNode,SyntaxNode?> CreateParentDictionary( CompilationUnitSyntax root )
+        {
+            var result = new Dictionary<SyntaxNode , SyntaxNode?> {
+                { root , null }
+            };
+
+            this.CreateParentDictionary( result , root );
+
+            return result;
+        }
+
+        private void CreateParentDictionary( Dictionary<SyntaxNode , SyntaxNode?> result , SyntaxNode node )
+        {
+            foreach( var child in node.GetChildren() )
+            {
+                result.Add( child , node );
+
+                this.CreateParentDictionary( result , child );
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using System.IO;
 using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 using NonConTroll.CodeAnalysis.IO;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Binding
 {
@@ -26,36 +27,59 @@ namespace NonConTroll.CodeAnalysis.Binding
         {
             switch( boundNode )
             {
-                case BoundBlockStatement node:           WriteBlockStatement( node ,           writer ); break;
-                case BoundVariableDeclaration node:      WriteVariableDeclaration( node ,      writer ); break;
-                case BoundIfStatement node:              WriteIfStatement( node ,              writer ); break;
-                case BoundWhileStatement node:           WriteWhileStatement( node ,           writer ); break;
                 // case BoundDoWhileStatement node:         WriteDoWhileStatement( node ,         writer ); break;
-                case BoundForStatement node:             WriteForStatement( node ,             writer ); break;
-                case BoundLabelStatement node:           WriteLabelStatement( node ,           writer ); break;
-                case BoundGotoStatement node:            WriteGotoStatement( node ,            writer ); break;
-                case BoundConditionalGotoStatement node: WriteConditionalGotoStatement( node , writer ); break;
-                case BoundDeferStatement node:           WriteDeferStatement( node ,           writer ); break;
-                case BoundReturnStatement node:          WriteReturnStatement( node ,          writer ); break;
-                case BoundExpressionStatement node:      WriteExpressionStatement( node ,      writer ); break;
-                case BoundErrorExpression node:          WriteErrorExpression( node ,          writer ); break;
-                case BoundLiteralExpression node:        WriteLiteralExpression( node ,        writer ); break;
-                case BoundVariableExpression node:       WriteVariableExpression( node ,       writer ); break;
                 case BoundAssignmentExpression node:     WriteAssignmentExpression( node ,     writer ); break;
-                case BoundUnaryExpression node:          WriteUnaryExpression( node ,          writer ); break;
                 case BoundBinaryExpression node:         WriteBinaryExpression( node ,         writer ); break;
+                case BoundBlockStatement node:           WriteBlockStatement( node ,           writer ); break;
                 case BoundCallExpression node:           WriteCallExpression( node ,           writer ); break;
-                case BoundConversionExpression node:     WriteConversionExpression( node ,     writer ); break;
-                case BoundMatchStatement node:           WriteMatchStatement( node ,           writer ); break;
-                case BoundMatchExpression node:          WriteMatchExpression( node ,          writer ); break;
-                case BoundPatternSectionStatement node:  WritePatternSectionStatement( node ,  writer ); break;
-                case BoundPatternSectionExpression node: WritePatternSectionExpression( node , writer ); break;
+                case BoundConditionalGotoStatement node: WriteConditionalGotoStatement( node , writer ); break;
                 case BoundConstantPattern node:          WriteConstantPattern( node ,          writer ); break;
+                case BoundConversionExpression node:     WriteConversionExpression( node ,     writer ); break;
+                case BoundDeferStatement node:           WriteDeferStatement( node ,           writer ); break;
+                case BoundErrorExpression node:          WriteErrorExpression( node ,          writer ); break;
+                case BoundExpressionStatement node:      WriteExpressionStatement( node ,      writer ); break;
+                case BoundForStatement node:             WriteForStatement( node ,             writer ); break;
+                case BoundGotoStatement node:            WriteGotoStatement( node ,            writer ); break;
+                case BoundIfStatement node:              WriteIfStatement( node ,              writer ); break;
                 case BoundInfixPattern node:             WriteInfixPattern( node ,             writer ); break;
+                case BoundLabelStatement node:           WriteLabelStatement( node ,           writer ); break;
+                case BoundLiteralExpression node:        WriteLiteralExpression( node ,        writer ); break;
                 case BoundMatchAnyPattern node:          WriteMatchAnyPattern( node ,          writer ); break;
+                case BoundMatchExpression node:          WriteMatchExpression( node ,          writer ); break;
+                case BoundMatchStatement node:           WriteMatchStatement( node ,           writer ); break;
+                case BoundPatternSectionExpression node: WritePatternSectionExpression( node , writer ); break;
+                case BoundPatternSectionStatement node:  WritePatternSectionStatement( node ,  writer ); break;
+                case BoundReturnStatement node:          WriteReturnStatement( node ,          writer ); break;
+                case BoundSequencePointStatement node:   WriteSequencePointStatement( node ,   writer ); break;
+                case BoundUnaryExpression node:          WriteUnaryExpression( node ,          writer ); break;
+                case BoundVariableDeclaration node:      WriteVariableDeclaration( node ,      writer ); break;
+                case BoundVariableExpression node:       WriteVariableExpression( node ,       writer ); break;
+                case BoundWhileStatement node:           WriteWhileStatement( node ,           writer ); break;
                 default:
                     throw new Exception( $"Unexpected node {boundNode.Kind}" );
             }
+        }
+
+        private static void WriteSequencePointStatement( BoundSequencePointStatement node , IndentedTextWriter writer )
+        {
+            var sourceText = node.Location.Text;
+            var span = node.Location.Span;
+            var startLine = sourceText.GetLineIndex( span.Start );
+            var endLine = sourceText.GetLineIndex( span.End - 1 );
+
+            for( var i = startLine ; i <= endLine ; i++ )
+            {
+                var line = sourceText.Lines[ i ];
+                var start = Math.Max( line.Start , span.Start );
+                var end = Math.Min( line.End , span.End );
+                var lineSpan = TextSpan.FromBounds( start , end );
+                var text = sourceText.ToString( lineSpan );
+
+                writer.WriteComment( text );
+            }
+
+            writer.WriteLine();
+            node.Statement.WriteTo( writer );
         }
 
         private static void WriteMatchExpression( BoundMatchExpression node , IndentedTextWriter writer )
@@ -365,7 +389,7 @@ namespace NonConTroll.CodeAnalysis.Binding
             }
             else if( node.Type == BuiltinTypes.String )
             {
-                value = "\"" + value.Replace( "\"" , "\"\"" ) + "\"";
+                value = "\"" + value.Trim( '\\' , '\"' ) + "\"";
                 writer.WriteString( value );
             }
             else

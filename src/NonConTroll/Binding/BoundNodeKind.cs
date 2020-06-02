@@ -19,6 +19,8 @@ namespace NonConTroll.CodeAnalysis.Binding
         DeferStatement,
         MatchStatement,
         PatternSectionStatement,
+        SequencePointStatement,
+        NopStatement,
 
         #endregion
 
@@ -39,7 +41,5 @@ namespace NonConTroll.CodeAnalysis.Binding
         MatchAnyPattern,
         ConstantPattern,
         InfixPattern,
-
-        SequencePoint,
     }
 }

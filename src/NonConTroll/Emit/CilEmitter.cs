@@ -10,6 +10,8 @@ using NonConTroll.CodeAnalysis.Syntax;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using System.IO;
+using NonConTroll.CodeAnalysis.Text;
 
 namespace NonConTroll.CodeAnalysis.Emit
 {
@@ -44,6 +46,7 @@ namespace NonConTroll.CodeAnalysis.Emit
 
         private TypeDefinition TypeDefinition;
         private FieldDefinition? RandomFieldDefinition;
+
 
         private CilEmitter( string moduleName , string[] references )
         {
@@ -85,10 +88,11 @@ namespace NonConTroll.CodeAnalysis.Emit
 
             TypeReference ResolveType( string? minskName , string metadataName )
             {
-                var foundTypes = assemblies.SelectMany( a => a.Modules )
-                                           .SelectMany( m => m.Types )
-                                           .Where( t => t.FullName == metadataName )
-                                           .ToArray();
+                var foundTypes = assemblies
+                    .SelectMany( a => a.Modules )
+                    .SelectMany( m => m.Types )
+                    .Where( t => t.FullName == metadataName )
+                    .ToArray();
 
                 if( foundTypes.Length == 1 )
                 {
@@ -213,14 +217,16 @@ namespace NonConTroll.CodeAnalysis.Emit
                 return this.Diagnostics.ToImmutableArray();
             }
 
-            foreach( var functionWithBody in program.Functions )
+            foreach( var (symbol,boundBlock) in program.Functions )
             {
-                this.EmitFunctionDeclaration( functionWithBody.Key );
+                this.EmitFunctionDeclaration( symbol );
             }
 
-            foreach( var functionWithBody in program.Functions )
+            foreach( var (symbol,boundBlock) in program.Functions )
             {
-                this.EmitFunctionBody( functionWithBody.Key , functionWithBody.Value );
+                var document = new Document( boundBlock.Syntax.Location.FileName );
+
+                this.EmitFunctionBody( symbol , boundBlock );
             }
 
             if( program.MainFunction != null )
@@ -228,7 +234,18 @@ namespace NonConTroll.CodeAnalysis.Emit
                 this.AssemblyDefinition.EntryPoint = this.Methods[ program.MainFunction ];
             }
 
-            this.AssemblyDefinition.Write( outputPath );
+            var symbolPath = Path.ChangeExtension( outputPath , ".pdb" );
+
+            using var symbolStream = File.Create( symbolPath );
+            using var outputStream = File.Create( outputPath );
+
+            var writerParameters = new WriterParameters {
+                WriteSymbols = true,
+                SymbolStream = symbolStream ,
+                SymbolWriterProvider = new PortablePdbWriterProvider() ,
+            };
+
+            this.AssemblyDefinition.Write( outputPath , writerParameters );
 
             return this.Diagnostics.ToImmutableArray();
         }
@@ -395,41 +412,45 @@ namespace NonConTroll.CodeAnalysis.Emit
 
         private void EmitConstantExpression( ILProcessor ilProcessor , BoundExpression node )
         {
-            // Debug.Assert( node.ConstantValue != null );
+            Debug.Assert( node.ConstantValue != null );
 
-            // if( node.Type == BuiltinTypes.Bool )
-            // {
-            //     var value = (bool)node.ConstantValue.Value;
-            //     var instruction = value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            //     ilProcessor.Emit( instruction );
-            // }
-            // else if( node.Type == BuiltinTypes.Int )
-            // {
-            //     var value = (int)node.ConstantValue.Value;
-            //     ilProcessor.Emit( OpCodes.Ldc_I4 , value );
-            // }
-            // else if( node.Type == BuiltinTypes.String )
-            // {
-            //     var value = (string)node.ConstantValue.Value;
-            //     ilProcessor.Emit( OpCodes.Ldstr , value );
-            // }
-            // else
-            // {
-            //     throw new Exception( $"Unexpected constant expression type: {node.Type}" );
-            // }
+            if( node.Type == BuiltinTypes.Bool )
+            {
+                var value = (bool)node.ConstantValue.Value;
+                var instruction = value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+
+                ilProcessor.Emit( instruction );
+            }
+            else if( node.Type == BuiltinTypes.Int )
+            {
+                var value = (int)node.ConstantValue.Value;
+
+                ilProcessor.Emit( OpCodes.Ldc_I4 , value );
+            }
+            else if( node.Type == BuiltinTypes.String )
+            {
+                var value = (string)node.ConstantValue.Value;
+
+                ilProcessor.Emit( OpCodes.Ldstr , value );
+            }
+            else
+            {
+                throw new Exception( $"Unexpected constant expression type: {node.Type}" );
+            }
         }
 
         private void EmitVariableExpression( ILProcessor ilProcessor , BoundVariableExpression node )
         {
-            // if( node.Variable is ParameterSymbol parameter )
-            // {
-            //     ilProcessor.Emit( OpCodes.Ldarg , parameter.Ordinal );
-            // }
-            // else
-            // {
-            //     var variableDefinition = this.Locals[node.Variable];
-            //     ilProcessor.Emit( OpCodes.Ldloc , variableDefinition );
-            // }
+            if( node.Variable is ParameterSymbol parameter )
+            {
+                ilProcessor.Emit( OpCodes.Ldarg , parameter.Ordinal );
+            }
+            else
+            {
+                var variableDefinition = this.Locals[node.Variable];
+
+                ilProcessor.Emit( OpCodes.Ldloc , variableDefinition );
+            }
         }
 
         private void EmitAssignmentExpression( ILProcessor ilProcessor , BoundAssignmentExpression node )
@@ -573,7 +594,7 @@ namespace NonConTroll.CodeAnalysis.Emit
             // This approach enables constant folding of non-sibling nodes, which cannot be done in the ConstantFolding class as it would require changing the tree.
             // Example: folding b and c in ((a + b) + c) if they are constant.
 
-            var nodes = FoldConstants( Flatten( node ) ).ToList();
+            var nodes = FoldConstants( node.Syntax , Flatten( node ) ).ToList();
 
             switch( nodes.Count )
             {
@@ -652,39 +673,39 @@ namespace NonConTroll.CodeAnalysis.Emit
             }
 
             // [a, "foo", "bar", b, ""] --> [a, "foobar", b]
-            static IEnumerable<BoundExpression> FoldConstants( IEnumerable<BoundExpression> nodes )
+            static IEnumerable<BoundExpression> FoldConstants( SyntaxNode syntax , IEnumerable<BoundExpression> nodes )
             {
                 StringBuilder? sb = null;
 
-                // foreach( var node in nodes )
-                // {
-                //     if( node.ConstantValue != null )
-                //     {
-                //         var stringValue = (string)node.ConstantValue.Value;
+                foreach( var node in nodes )
+                {
+                    if( node.ConstantValue != null )
+                    {
+                        var stringValue = (string)node.ConstantValue.Value;
 
-                //         if( string.IsNullOrEmpty( stringValue ) )
-                //             continue;
+                        if( string.IsNullOrEmpty( stringValue ) )
+                        {
+                            continue;
+                        }
 
-                //         sb ??= new StringBuilder();
-                //         sb.Append( stringValue );
-                //     }
-                //     else
-                //     {
-                //         if( sb?.Length > 0 )
-                //         {
-                //             yield return new BoundLiteralExpression( sb.ToString() );
-                //             sb.Clear();
-                //         }
+                        sb ??= new StringBuilder();
+                        sb.Append( stringValue );
+                    }
+                    else
+                    {
+                        if( sb?.Length > 0 )
+                        {
+                            yield return new BoundLiteralExpression( syntax , sb.ToString() );
 
-                //         yield return node;
-                //     }
-                // }
+                            sb.Clear();
+                        }
+
+                        yield return node;
+                    }
+                }
 
                 if( sb?.Length > 0 )
                 {
-                    // HACK
-                    var syntax = default( SyntaxNode );
-
                     yield return new BoundLiteralExpression( syntax , sb.ToString() );
                 }
             }
@@ -790,6 +811,38 @@ namespace NonConTroll.CodeAnalysis.Emit
             {
                 throw new Exception( $"Unexpected convertion from {node.Expression.Type} to {node.Type}" );
             }
+        }
+
+        private SequencePoint CreateSequencePoint( TextLocation location , Instruction instruction , Document document )
+        {
+            return new SequencePoint( instruction , document ) {
+                StartLine   = location.StartLine + 1 ,
+                StartColumn = location.StartCharacter + 1 ,
+                EndLine     = location.EndLine + 1 ,
+                EndColumn   = location.EndCharacter + 1 ,
+            };
+        }
+
+        private Dictionary<SourceText,Document> Documents = new Dictionary<SourceText, Document>();
+
+        private void EmitSequencePointStatement( ILProcessor ilProcessor , BoundSequencePointStatement node )
+        {
+            var index = ilProcessor.Body.Instructions.Count();
+            var location = node.Location;
+
+            this.EmitStatement( ilProcessor , node.Statement );
+
+            if( !this.Documents.TryGetValue( location.Text , out var document ) )
+            {
+                document = new Document( location.Text.FileName );
+
+                this.Documents.Add( location.Text , document );
+            }
+
+            var instruction = ilProcessor.Body.Instructions[ index ];
+            var sequencePoint = CreateSequencePoint( location , instruction , document );
+
+            ilProcessor.Body.Method.DebugInformation.SequencePoints.Add( sequencePoint );
         }
     }
 }

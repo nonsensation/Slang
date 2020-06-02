@@ -80,6 +80,13 @@ namespace NonConTroll.CodeAnalysis.IO
             writer.WritePunctuation( " " );
         }
 
+        public static void WriteComment( this TextWriter writer , string comment )
+        {
+            writer.SetForeground( ConsoleColor.DarkGray );
+            writer.Write( "# " + comment );
+            writer.ResetColor();
+        }
+
         public static void WritePunctuation( this TextWriter writer , SyntaxKind tokenType )
         {
             writer.WritePunctuation( tokenType.GetText() );
@@ -94,17 +101,13 @@ namespace NonConTroll.CodeAnalysis.IO
 
         public static void WriteDiagnostics( this TextWriter writer , IEnumerable<Diagnostic> diagnostics )
         {
-
             foreach( var diagnostic in diagnostics.Where( diag => diag.Location.Text == null ) )
             {
-                if( diagnostic.Location.FileName == null )
-                {
-                    Console.WriteLine();
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.Write( diagnostic.Message );
-                    Console.WriteLine( diagnostic );
-                    Console.ResetColor();
-                }
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.Write( diagnostic.Message );
+                Console.WriteLine( diagnostic );
+                Console.ResetColor();
             }
 
             var diags = diagnostics

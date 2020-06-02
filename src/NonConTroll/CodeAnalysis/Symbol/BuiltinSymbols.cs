@@ -9,7 +9,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
     {
         public static readonly BuiltinFunctionSymbol Print
             = new BuiltinFunctionSymbol( "print" ,
-                                         ImmutableArray.Create( new ParameterSymbol( "text" , BuiltinTypes.Any ) ) ,
+                                         ImmutableArray.Create( new ParameterSymbol( "text" , BuiltinTypes.Any , 0 ) ) ,
                                          BuiltinTypes.Void , null );
         public static readonly BuiltinFunctionSymbol Input
             = new BuiltinFunctionSymbol( "input" ,
@@ -17,7 +17,7 @@ namespace NonConTroll.CodeAnalysis.Symbols
                                          BuiltinTypes.String , null );
         public static readonly BuiltinFunctionSymbol Rnd
             = new BuiltinFunctionSymbol( "rnd" ,
-                                         ImmutableArray.Create( new ParameterSymbol( "max" , BuiltinTypes.Int ) ) ,
+                                         ImmutableArray.Create( new ParameterSymbol( "max" , BuiltinTypes.Int , 0 ) ) ,
                                          BuiltinTypes.Int , null );
 
         public static IEnumerable<BuiltinFunctionSymbol> GetAll()
