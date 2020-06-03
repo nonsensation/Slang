@@ -16,8 +16,16 @@
             // "cwd": "${workspaceFolder}/samples",
 
             "program": "${workspaceFolder}/src/NonConTroll.Repl/bin/Debug/netcoreapp3.1/NonConTroll.Repl.dll",
-            "args": [],
+            // "program": "${workspaceFolder}/src/NonConTroll.Compiler/bin/Debug/netcoreapp3.1/NonConTroll.Compiler.dll",
+            "args": [
+                // "${workspaceFolder}/samples/hello/hello.sl",
+                // "/o","${workspaceFolder}/samples/hello/bin/Debug/hello.dll",
+                // "/r","C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/3.1.0/ref/netcoreapp3.1/System.Console.dll",
+                // "/r","C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/3.1.0/ref/netcoreapp3.1/System.Runtime.dll",
+                // "/r","C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/3.1.0/ref/netcoreapp3.1/System.Runtime.Extensions.dll"
+            ],
             "cwd": "${workspaceFolder}/src/NonConTroll.Repl",
+            // "cwd": "${workspaceFolder}/src/NonConTroll.Compiler",
 
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
             "console": "externalTerminal",

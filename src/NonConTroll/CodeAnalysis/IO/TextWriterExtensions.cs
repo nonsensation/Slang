@@ -103,10 +103,8 @@ namespace NonConTroll.CodeAnalysis.IO
         {
             foreach( var diagnostic in diagnostics.Where( diag => diag.Location.Text == null ) )
             {
-                Console.WriteLine();
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.Write( diagnostic.Message );
-                Console.WriteLine( diagnostic );
+                Console.WriteLine( diagnostic.Message );
                 Console.ResetColor();
             }
 

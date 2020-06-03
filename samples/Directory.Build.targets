@@ -11,17 +11,17 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <MinskCompilerArgs>@(Compile->'"%(Identity)"', ' ')</MinskCompilerArgs>
-      <MinskCompilerArgs>$(MinskCompilerArgs) /o "@(IntermediateAssembly)"</MinskCompilerArgs>
-      <MinskCompilerArgs>$(MinskCompilerArgs) @(ReferencePath->'/r "%(Identity)"', ' ')</MinskCompilerArgs>
+      <NonConTrollCompilerArgs>@(Compile->'"%(Identity)"', ' ')</NonConTrollCompilerArgs>
+      <NonConTrollCompilerArgs>$(NonConTrollCompilerArgs) /o "@(IntermediateAssembly)"</NonConTrollCompilerArgs>
+      <NonConTrollCompilerArgs>$(NonConTrollCompilerArgs) @(ReferencePath->'/r "%(Identity)"', ' ')</NonConTrollCompilerArgs>
 
-      <MinskScriptExt Condition="$([MSBuild]::IsOSUnixLike())">.sh</MinskScriptExt>
-      <MinskScriptExt Condition="$([MSBuild]::IsOSPlatform('Windows'))">.cmd</MinskScriptExt>
-      <MinskCompilerScript Condition="'$(MinskCompilerScript)' == ''">compiler$(MinskScriptExt)</MinskCompilerScript>
-      <MinskCompileCommand>"$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\', '$(MinskCompilerScript)'))" $(MinskCompilerArgs)</MinskCompileCommand>
+      <NonConTrollScriptExt Condition="$([MSBuild]::IsOSUnixLike())">.sh</NonConTrollScriptExt>
+      <NonConTrollScriptExt Condition="$([MSBuild]::IsOSPlatform('Windows'))">.cmd</NonConTrollScriptExt>
+      <NonConTrollCompilerScript Condition="'$(NonConTrollCompilerScript)' == ''">compiler$(NonConTrollScriptExt)</NonConTrollCompilerScript>
+      <NonConTrollCompileCommand>"$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\', '$(NonConTrollCompilerScript)'))" $(NonConTrollCompilerArgs)</NonConTrollCompileCommand>
     </PropertyGroup>
-
-    <Exec Command="$(MinskCompileCommand)" />
+    <!-- <Message Text="$(NonConTrollCompileCommand)" /> -->
+    <Exec Command="$(NonConTrollCompileCommand)" />
   </Target>
 
 </Project>

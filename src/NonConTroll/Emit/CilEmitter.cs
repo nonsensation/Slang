@@ -26,6 +26,7 @@ namespace NonConTroll.CodeAnalysis.Emit
         private readonly Dictionary<TypeSymbol , TypeReference> KnownTypes;
 
         private readonly TypeReference RandomReference;
+        private readonly MethodReference DebuggableAttributeCtorReference;
         private readonly MethodReference ObjectEqualsReference;
         private readonly MethodReference ConsoleReadLineReference;
         private readonly MethodReference ConsoleWriteLineReference;
@@ -46,7 +47,6 @@ namespace NonConTroll.CodeAnalysis.Emit
 
         private TypeDefinition TypeDefinition;
         private FieldDefinition? RandomFieldDefinition;
-
 
         private CilEmitter( string moduleName , string[] references )
         {
@@ -85,6 +85,8 @@ namespace NonConTroll.CodeAnalysis.Emit
 
                 this.KnownTypes.Add( type , typeReference );
             }
+
+            this.RandomReference            = ResolveType( null , "System.Random" );
 
             TypeReference ResolveType( string? minskName , string metadataName )
             {
@@ -168,20 +170,19 @@ namespace NonConTroll.CodeAnalysis.Emit
                 return null!;
             }
 
-            this.RandomReference            = ResolveType( null , "System.Random" );
-
-            this.ObjectEqualsReference      = ResolveMethod( "System.Object"  , "Equals"        , new[] { "System.Object" , "System.Object" }                                     );
-            this.ConsoleReadLineReference   = ResolveMethod( "System.Console" , "ReadLine"      , Array.Empty<string>()                                                           );
-            this.ConsoleWriteLineReference  = ResolveMethod( "System.Console" , "WriteLine"     , new[] { "System.Object" }                                                       );
-            this.StringConcat2Reference     = ResolveMethod( "System.String"  , "Concat"        , new[] { "System.String" , "System.String" }                                     );
-            this.StringConcat3Reference     = ResolveMethod( "System.String"  , "Concat"        , new[] { "System.String" , "System.String" , "System.String" }                   );
-            this.StringConcat4Reference     = ResolveMethod( "System.String"  , "Concat"        , new[] { "System.String" , "System.String" , "System.String" , "System.String" } );
-            this.StringConcatArrayReference = ResolveMethod( "System.String"  , "Concat"        , new[] { "System.String[]" }                                                     );
-            this.ConvertToBooleanReference  = ResolveMethod( "System.Convert" , "ToBoolean"     , new[] { "System.Object" }                                                       );
-            this.ConvertToInt32Reference    = ResolveMethod( "System.Convert" , "ToInt32"       , new[] { "System.Object" }                                                       );
-            this.ConvertToStringReference   = ResolveMethod( "System.Convert" , "ToString"      , new[] { "System.Object" }                                                       );
-            this.RandomCtorReference        = ResolveMethod( "System.Random"  , ".ctor"         , Array.Empty<string>()                                                           );
-            this.RandomNextReference        = ResolveMethod( "System.Random"  , "Next"          , new[] { "System.Int32" }                                                        );
+            this.DebuggableAttributeCtorReference = ResolveMethod( "System.Diagnostics.DebuggableAttribute" , ".ctor"     , new[] { "System.Boolean" , "System.Boolean" }                                   );
+            this.ObjectEqualsReference            = ResolveMethod( "System.Object"                          , "Equals"    , new[] { "System.Object" , "System.Object" }                                     );
+            this.ConsoleReadLineReference         = ResolveMethod( "System.Console"                         , "ReadLine"  , Array.Empty<string>()                                                           );
+            this.ConsoleWriteLineReference        = ResolveMethod( "System.Console"                         , "WriteLine" , new[] { "System.Object" }                                                       );
+            this.StringConcat2Reference           = ResolveMethod( "System.String"                          , "Concat"    , new[] { "System.String" , "System.String" }                                     );
+            this.StringConcat3Reference           = ResolveMethod( "System.String"                          , "Concat"    , new[] { "System.String" , "System.String" , "System.String" }                   );
+            this.StringConcat4Reference           = ResolveMethod( "System.String"                          , "Concat"    , new[] { "System.String" , "System.String" , "System.String" , "System.String" } );
+            this.StringConcatArrayReference       = ResolveMethod( "System.String"                          , "Concat"    , new[] { "System.String[]" }                                                     );
+            this.ConvertToBooleanReference        = ResolveMethod( "System.Convert"                         , "ToBoolean" , new[] { "System.Object" }                                                       );
+            this.ConvertToInt32Reference          = ResolveMethod( "System.Convert"                         , "ToInt32"   , new[] { "System.Object" }                                                       );
+            this.ConvertToStringReference         = ResolveMethod( "System.Convert"                         , "ToString"  , new[] { "System.Object" }                                                       );
+            this.RandomCtorReference              = ResolveMethod( "System.Random"                          , ".ctor"     , Array.Empty<string>()                                                           );
+            this.RandomNextReference              = ResolveMethod( "System.Random"                          , "Next"      , new[] { "System.Int32" }                                                        );
 
             var objectType = this.KnownTypes[ BuiltinTypes.Any ];
 
@@ -234,6 +235,17 @@ namespace NonConTroll.CodeAnalysis.Emit
                 this.AssemblyDefinition.EntryPoint = this.Methods[ program.MainFunction ];
             }
 
+            { // see: https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.debuggableattribute
+                var debuggableAttribute    = new CustomAttribute( this.DebuggableAttributeCtorReference );
+                var isJITTrackingEnabled   = new CustomAttributeArgument( this.KnownTypes[ BuiltinTypes.Bool ] , true );
+                var isJITOptimizerDisabled = new CustomAttributeArgument( this.KnownTypes[ BuiltinTypes.Bool ] , true );
+
+                debuggableAttribute.ConstructorArguments.Add( isJITTrackingEnabled );
+                debuggableAttribute.ConstructorArguments.Add( isJITOptimizerDisabled );
+
+                this.AssemblyDefinition.CustomAttributes.Add( debuggableAttribute );
+            }
+
             var symbolPath = Path.ChangeExtension( outputPath , ".pdb" );
 
             using var symbolStream = File.Create( symbolPath );
@@ -245,7 +257,7 @@ namespace NonConTroll.CodeAnalysis.Emit
                 SymbolWriterProvider = new PortablePdbWriterProvider() ,
             };
 
-            this.AssemblyDefinition.Write( outputPath , writerParameters );
+            this.AssemblyDefinition.Write( outputStream , writerParameters );
 
             return this.Diagnostics.ToImmutableArray();
         }
@@ -301,9 +313,9 @@ namespace NonConTroll.CodeAnalysis.Emit
         {
             switch( node.Kind )
             {
-                // case BoundNodeKind.NopStatement:
-                //     EmitNopStatement( ilProcessor , (BoundNopStatement)node );
-                //     break;
+                case BoundNodeKind.NopStatement:
+                    EmitNopStatement( ilProcessor , (BoundNopStatement)node );
+                    break;
                 case BoundNodeKind.VariableDeclaration:
                     EmitVariableDeclaration( ilProcessor , (BoundVariableDeclaration)node );
                     break;
@@ -322,15 +334,18 @@ namespace NonConTroll.CodeAnalysis.Emit
                 case BoundNodeKind.ExpressionStatement:
                     EmitExpressionStatement( ilProcessor , (BoundExpressionStatement)node );
                     break;
+                case BoundNodeKind.SequencePointStatement:
+                    EmitSequencePointStatement( ilProcessor , (BoundSequencePointStatement)node );
+                    break;
                 default:
                     throw new Exception( $"Unexpected node kind {node.Kind}" );
             }
         }
 
-        // private void EmitNopStatement( ILProcessor ilProcessor , BoundNopStatement node )
-        // {
-        //     ilProcessor.Emit( OpCodes.Nop );
-        // }
+        private void EmitNopStatement( ILProcessor ilProcessor , BoundNopStatement node )
+        {
+            ilProcessor.Emit( OpCodes.Nop );
+        }
 
         private void EmitVariableDeclaration( ILProcessor ilProcessor , BoundVariableDeclaration node )
         {
@@ -391,11 +406,12 @@ namespace NonConTroll.CodeAnalysis.Emit
 
         private void EmitExpression( ILProcessor ilProcessor , BoundExpression node )
         {
-            // if( node.ConstantValue != null )
-            // {
-            //     EmitConstantExpression( ilProcessor , node );
-            //     return;
-            // }
+            if( node.ConstantValue != null )
+            {
+                EmitConstantExpression( ilProcessor , node );
+
+                return;
+            }
 
             switch( node )
             {
@@ -834,7 +850,9 @@ namespace NonConTroll.CodeAnalysis.Emit
 
             if( !this.Documents.TryGetValue( location.Text , out var document ) )
             {
-                document = new Document( location.Text.FileName );
+                var fullPath = Path.GetFullPath( location.Text.FileName );
+
+                document = new Document( fullPath );
 
                 this.Documents.Add( location.Text , document );
             }

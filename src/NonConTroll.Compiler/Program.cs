@@ -7,7 +7,6 @@ using Mono.Options;
 
 using NonConTroll.CodeAnalysis;
 using NonConTroll.CodeAnalysis.IO;
-using NonConTroll.CodeAnalysis.Symbols;
 using NonConTroll.CodeAnalysis.Syntax;
 
 namespace NonConTroll
@@ -23,11 +22,11 @@ namespace NonConTroll
             var referencePaths = new List<string>();
 
             var options = new OptionSet {
-                "usage: NonConTroll.Compiler <source-files> [options]" ,
-                { "-r=" , "The {path} of an assembly reference" , x => referencePaths.Add( x ) } ,
-                { "-o=" , "The output {path} of the assembly to create" , x => outputPath = x } ,
-                { "-m=" , "The name of the module" , x => moduleName = x } ,
-                { "-?|-h|--help" , "Prints help" , x => helpRequested = true } ,
+                "usge: NonConTroll.Compiler <source-files> [options]" ,
+                { "r=" , "The {path} of an assembly reference" , x => referencePaths.Add( x ) } ,
+                { "o=" , "The output {path} of the assembly to create" , x => outputPath = x } ,
+                { "m=" , "The name of the module" , x => moduleName = x } ,
+                { "?|h|help" , "Prints help" , x => helpRequested = true } ,
                 { "<>" , x => sourcePaths.Add( x ) } ,
             };
 

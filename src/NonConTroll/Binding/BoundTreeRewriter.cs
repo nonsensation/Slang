@@ -28,13 +28,19 @@ namespace NonConTroll.CodeAnalysis.Binding
                 case BoundExpressionStatement b:      return this.RewriteExpressionStatement( b );
                 case BoundMatchStatement b:           return this.RewriteMatchStatement( b );
                 case BoundPatternSectionStatement b:  return this.RewritePatternSectionStatement( b );
-                case BoundSequencePointStatement b:            return this.RewriteSequencePointStatement( b );
+                // case BoundSequencePointStatement b:   return this.RewriteSequencePointStatement( b );
+                case BoundNopStatement b:             return this.RewriteNopStatement( b );
                 default:
                     throw new Exception( $"Unexpected node: {node.Kind}" );
             }
         }
 
-        private BoundStatement RewriteSequencePointStatement( BoundSequencePointStatement node )
+        protected virtual BoundStatement RewriteNopStatement( BoundNopStatement node )
+        {
+            return node;
+        }
+
+        protected virtual BoundStatement RewriteSequencePointStatement( BoundSequencePointStatement node )
         {
             var statement = this.RewriteStatement( node.Statement );
 
