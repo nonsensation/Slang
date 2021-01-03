@@ -1,4 +1,4 @@
-#NonConTroll
+# Slang - Programming language experiment
 
 [![Build Status](https://nonsensation.visualstudio.com/NonConTroll/_apis/build/status/nonsensation.non?branchName=master)](https://nonsensation.visualstudio.com/NonConTroll/_build/latest?definitionId=4&branchName=master)
 
